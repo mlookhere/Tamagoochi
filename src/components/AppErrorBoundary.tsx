@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, type ReactNode } from 'react';
 import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 type Props = Readonly<{ children: ReactNode }>;
@@ -10,8 +10,6 @@ export class AppErrorBoundary extends Component<Props, State> {
   static getDerivedStateFromError(error: Error): State {
     return { error };
   }
-
-  componentDidCatch(_error: Error, _info: ErrorInfo) {}
 
   private retry = () => {
     this.setState({ error: null });
