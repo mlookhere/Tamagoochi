@@ -12,7 +12,7 @@ if (coverage) {
     '--test-coverage-exclude=src/domain/**/*.test.ts',
   );
 }
-args.push('src/domain/pet/state.test.ts', 'scripts/vendor-security.test.mjs');
+args.push(\n  'src/domain/pet/state.test.ts',\n  'src/config/public.test.ts',\n  'scripts/vendor-security.test.mjs',\n);
 const result = spawnSync(process.execPath, args, { stdio: 'inherit' });
 if (result.error) {
   process.stderr.write(String(result.error) + '\n');

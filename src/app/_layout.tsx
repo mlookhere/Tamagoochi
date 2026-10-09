@@ -1,6 +1,10 @@
 import { Tabs } from 'expo-router';
+import { AppErrorBoundary } from '../components/AppErrorBoundary';
+import { getPublicConfig } from '../config/public';
 
-export default function RootLayout() {
+function AppTabs() {
+  getPublicConfig();
+
   return (
     <Tabs
       screenOptions={{
@@ -22,5 +26,13 @@ export default function RootLayout() {
       <Tabs.Screen name="memories" options={{ title: 'Memories' }} />
       <Tabs.Screen name="friends" options={{ title: 'Friends' }} />
     </Tabs>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AppErrorBoundary>
+      <AppTabs />
+    </AppErrorBoundary>
   );
 }
