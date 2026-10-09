@@ -59,6 +59,11 @@ jobs:
           cache: npm
       - run: ./scripts/bootstrap --ci
       - run: ./ci/run fast
+      - name: Diagnose exact Prettier changes (does not alter the gate)
+        if: failure()
+        run: |
+          npm run format
+          git diff -- src/app/index.tsx src/components/Page.tsx src/domain/pet/state.test.ts tsconfig.json
       - name: Upload deterministic gate report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
