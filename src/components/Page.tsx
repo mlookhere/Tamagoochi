@@ -24,8 +24,24 @@ export function Page({ eyebrow, title, description, children }: Props) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F6F7ED' },
   content: { flexGrow: 1, padding: 26, paddingTop: 42 },
-  eyebrow: { fontSize: 11, fontWeight: '800', letterSpacing: 2, color: '#718875' },
-  title: { marginTop: 13, fontSize: 35, fontWeight: '800', color: '#253F32', letterSpacing: -1 },
-  description: { marginTop: 12, fontSize: 16, lineHeight: 25, color: '#627368' },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 2,
+    color: '#718875',
+  },
+  title: {
+    marginTop: 13,
+    fontSize: 35,
+    fontWeight: '800',
+    color: '#253F32',
+    letterSpacing: -1,
+  },
+  description: {
+    marginTop: 12,
+    fontSize: 16,
+    lineHeight: 25,
+    color: '#627368',
+  },
   body: { flex: 1, paddingTop: 30 },
 });

@@ -5,7 +5,12 @@ import { clean, createCompanion, feed, play } from './state.ts';
 test('starter companion has valid bounded needs', () => {
   const pet = createCompanion('Pip');
   assert.equal(pet.name, 'Pip');
-  for (const value of [pet.hunger, pet.happiness, pet.energy, pet.cleanliness]) {
+  for (const value of [
+    pet.hunger,
+    pet.happiness,
+    pet.energy,
+    pet.cleanliness,
+  ]) {
     assert.ok(value >= 0 && value <= 100);
   }
 });
@@ -24,7 +29,13 @@ test('care actions return new state and never mutate the original', () => {
 });
 
 test('repeated care actions clamp needs at boundaries', () => {
-  const maxed = { ...createCompanion(), hunger: 99, happiness: 99, cleanliness: 99, energy: 2 };
+  const maxed = {
+    ...createCompanion(),
+    hunger: 99,
+    happiness: 99,
+    cleanliness: 99,
+    energy: 2,
+  };
   assert.equal(feed(maxed).hunger, 100);
   assert.equal(play(maxed).happiness, 100);
   assert.equal(play(maxed).energy, 0);
