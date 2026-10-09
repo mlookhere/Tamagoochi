@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import test from 'node:test';
 
 const require = createRequire(import.meta.url);
-const braces = require('braces');
+const micromatchRequire = createRequire(require.resolve('micromatch'));\nconst braces = micromatchRequire('braces');
 const JSBN = require('node-forge/lib/jsbn');
 const MD = require('node-forge/lib/md.all');
 const RSA = require('node-forge/lib/rsa');
