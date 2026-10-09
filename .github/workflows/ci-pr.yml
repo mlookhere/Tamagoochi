@@ -57,6 +57,8 @@ jobs:
         with:
           node-version: "22"
           cache: npm
+      - name: Resolve temporary security overrides for lockfile capture
+        run: npm install --package-lock-only --ignore-scripts
       - run: ./scripts/bootstrap --ci
       - run: ./ci/run fast
       - name: Upload deterministic gate report
@@ -99,8 +101,15 @@ jobs:
         with:
           node-version: "22"
           cache: npm
+      - name: Resolve temporary security overrides for lockfile capture
+        run: npm install --package-lock-only --ignore-scripts
       - run: ./scripts/bootstrap --ci
       - run: ./ci/run audit
+      - name: Capture regenerated dependency lockfile
+        if: always()
+        run: |
+          mkdir -p artifacts/ci
+          cp package-lock.json artifacts/ci/security-override-package-lock.json
       - name: Upload audit report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -128,6 +137,8 @@ jobs:
         with:
           node-version: "22"
           cache: npm
+      - name: Resolve temporary security overrides for lockfile capture
+        run: npm install --package-lock-only --ignore-scripts
       - run: ./scripts/bootstrap --ci
       - run: ./ci/run pr
       - name: Upload PR gate report
