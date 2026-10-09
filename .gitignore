@@ -33,3 +33,19 @@ artifacts/claude/
 
 # Project Python environment
 .venv/
+
+# Node / Expo
+node_modules/
+.expo/
+.expo-shared/
+web-build/
+coverage/
+*.tsbuildinfo
+
+# Mobile build output
+android/.gradle/
+ios/Pods/
+
+# OS
+.DS_Store
+Thumbs.db
