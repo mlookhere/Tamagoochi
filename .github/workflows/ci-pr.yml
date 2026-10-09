@@ -101,37 +101,6 @@ jobs:
           cache: npm
       - run: ./scripts/bootstrap --ci
       - run: ./ci/run audit
-      - name: Capture npm audit repair candidates without changing audit result
-        if: failure()
-        run: |
-          if npm audit fix --package-lock-only --ignore-scripts; then
-            echo "Compatible audit fixes applied to the diagnostic lockfile."
-          else
-            echo "Some vulnerabilities remain; preserving the partial repair for review."
-          fi
-          mkdir -p artifacts/ci
-          cp package-lock.json artifacts/ci/audit-repair-package-lock.json
-          python3 - <<'PY'
-          import base64
-          import json
-          import subprocess
-          from pathlib import Path
-
-          old = json.loads(subprocess.check_output(["git", "show", "HEAD:package-lock.json"]))
-          new = json.loads(Path("package-lock.json").read_text())
-          previous = old["packages"]
-          current = new["packages"]
-          delta = {
-              "set": {key: value for key, value in current.items() if previous.get(key) != value},
-              "delete": [key for key in previous if key not in current],
-          }
-          raw = json.dumps(delta, separators=(",", ":"), ensure_ascii=True)
-          encoded = base64.b64encode(raw.encode("utf-8")).decode("ascii")
-          print("AUDIT_LOCK_DELTA_BEGIN")
-          for pos in range(0, len(encoded), 1800):
-              print("AUDIT_LOCK_DELTA_CHUNK:" + encoded[pos:pos + 1800])
-          print("AUDIT_LOCK_DELTA_END")
-          PY
       - name: Upload audit report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
