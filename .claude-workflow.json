@@ -2,7 +2,7 @@
   "version": 2,
   "branches": {
     "integration": "dev",
-    "production": "master"
+    "production": "main"
   },
   "worktrees": {
     "root": "../.worktrees",
@@ -33,25 +33,31 @@
         "**/schema.*"
       ],
       "risk:security": [
-        "**/auth/**",
-        "**/security/**",
-        "**/*permission*",
-        "**/*authorization*",
-        ".env.example"
+        "src/**/auth/**",
+        "src/**/security/**",
+        "src/**/location/**",
+        "src/**/permissions/**",
+        "src/**/*permission*",
+        "src/**/*privacy*",
+        ".env.example",
+        "app.json",
+        "app.config.*"
       ],
       "risk:deployment": [
-        "ops/**",
-        "infra/**",
-        "Dockerfile",
-        "k8s/**",
-        "helm/**"
+        ".github/workflows/**",
+        "app.json",
+        "app.config.*",
+        "eas.json",
+        "ios/**",
+        "android/**"
       ],
       "risk:dependencies": [
-        "pyproject.toml",
-        "requirements.txt",
-        "ci/requirements-ci.txt",
-        "uv.lock",
-        "poetry.lock"
+        "package.json",
+        "package-lock.json",
+        "npm-shrinkwrap.json",
+        "app.json",
+        "eas.json",
+        "ci/requirements-ci.txt"
       ]
     },
     "branch_protection": {
@@ -75,10 +81,10 @@
       }
     },
     "expected_owner": "mlookhere",
-    "expected_repository": "CI-Pipline"
+    "expected_repository": "Tamagoochi"
   },
   "project": {
-    "package_dir": "",
+    "package_dir": ".",
     "packaged_assets": [],
     "typed_advisory_witness": "",
     "executables": [],
@@ -91,37 +97,36 @@
   },
   "commands": {
     "bootstrap_local": [
-      "\"$CI_PYTHON\" -m pytest --version",
-      "\"$CI_PYTHON\" -m mypy --version",
-      "\"$CI_PYTHON\" -m ruff --version",
-      "\"$CI_PYTHON\" -m pip_audit --version"
+      "node --version",
+      "npm --version"
     ],
     "bootstrap_ci": [
-      "\"$CI_PYTHON\" -m pytest --version",
-      "\"$CI_PYTHON\" -m mypy --version",
-      "\"$CI_PYTHON\" -m ruff --version",
-      "\"$CI_PYTHON\" -m pip_audit --version"
+      "node --version",
+      "npm --version"
     ],
     "format_check": [
-      "ruff format --check ."
+      "npm run format:check"
     ],
     "lint": [
-      "ruff check ."
+      "npm run lint"
     ],
     "typecheck": [
-      "mypy"
+      "npm run typecheck"
     ],
     "unit": [
-      "\"$PROJECT_PYTHON\" -m pytest -q"
+      "npm test -- --runInBand"
     ],
     "coverage": [
-      "\"$PROJECT_PYTHON\" -m pytest tests -q --cov=workflow --cov=ci --cov-report=term --cov-fail-under=52"
+      "npm run test:coverage"
     ],
     "security": [
-      "pip-audit -r ci/requirements-ci.txt --strict"
+      "npm audit --audit-level=high"
     ],
     "workflow_self_test": [
       "\"$CI_PYTHON\" workflow/self_test.py --ci"
+    ],
+    "build": [
+      "npm run build:ci"
     ]
   },
   "stages": {
@@ -134,17 +139,20 @@
     ],
     "pr": [
       "unit",
-      "coverage"
+      "coverage",
+      "build"
     ],
     "release": [
       "security",
       "unit",
-      "coverage"
+      "coverage",
+      "build"
     ],
     "nightly": [
       "security",
       "unit",
-      "coverage"
+      "coverage",
+      "build"
     ],
     "audit": [
       "security"
@@ -173,12 +181,21 @@
       ".md",
       ".mdx",
       ".txt",
-      ".py"
+      ".py",
+      ".js",
+      ".jsx",
+      ".ts",
+      ".tsx",
+      ".json",
+      ".yml",
+      ".yaml"
     ],
     "source_extensions": [
       ".py",
       ".js",
-      ".ts"
+      ".jsx",
+      ".ts",
+      ".tsx"
     ],
     "exclude_globs": [
       "**/node_modules/**",
@@ -192,7 +209,9 @@
       "**/*.map",
       "**/fixtures/**",
       "uv.lock",
-      "poetry.lock"
+      "poetry.lock",
+      "**/.expo/**",
+      "**/web-build/**"
     ],
     "max_identical_command_failures": 3,
     "max_pr_files": 80,
