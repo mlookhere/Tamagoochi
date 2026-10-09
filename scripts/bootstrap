@@ -61,6 +61,15 @@ for tool in ruff mypy pytest lizard detect-secrets-hook pip-audit; do
   fi
 done
 
+if [[ -f "$ROOT/package-lock.json" ]]; then
+  command -v node >/dev/null 2>&1 || { echo "Node.js is required" >&2; exit 1; }
+  command -v npm >/dev/null 2>&1 || { echo "npm is required" >&2; exit 1; }
+  (cd "$ROOT" && npm ci)
+elif [[ -f "$ROOT/package.json" ]]; then
+  echo "package.json exists without package-lock.json; deterministic CI requires the lockfile." >&2
+  exit 1
+fi
+
 if [[ "$CI_MODE" == false ]]; then
   "$CI_PYTHON" -m pre_commit install --hook-type pre-commit --hook-type pre-push
   "$ROOT/ci/run" bootstrap-local
