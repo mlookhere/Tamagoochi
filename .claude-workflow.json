@@ -84,7 +84,7 @@
     "expected_repository": "Tamagoochi"
   },
   "project": {
-    "package_dir": ".",
+    "package_dir": "",
     "packaged_assets": [],
     "typed_advisory_witness": "",
     "executables": [],
