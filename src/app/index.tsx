@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { APP_ASSETS } from '../assets';
 import { Page } from '../components/Page';
 import { clean, createCompanion, feed, play } from '../domain/pet/state';
 
@@ -32,6 +33,11 @@ export default function Home() {
       description="Meet your little companion. Taking care of each other is just the beginning."
     >
       <View style={styles.habitat}>
+        <Image
+          accessibilityLabel="Companion seed"
+          source={APP_ASSETS.companionSeed}
+          style={styles.seedAsset}
+        />
         <View style={styles.sun} />
         <View style={styles.floor} />
         <View style={styles.pet}>
@@ -104,6 +110,13 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingBottom: 15,
     backgroundColor: '#DCEBCD',
+  },
+  seedAsset: {
+    position: 'absolute',
+    top: 20,
+    left: 24,
+    width: 38,
+    height: 38,
   },
   sun: {
     position: 'absolute',
