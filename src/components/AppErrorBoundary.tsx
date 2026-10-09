@@ -26,7 +26,8 @@ export class AppErrorBoundary extends Component<Props, State> {
           <Text style={styles.eyebrow}>SOMETHING WENT WRONG</Text>
           <Text style={styles.title}>Your companion is still safe.</Text>
           <Text style={styles.body}>
-            Tamagoochi hit an unexpected error. Try loading the current screen again.
+            Tamagoochi hit an unexpected error. Try loading the current screen
+            again.
           </Text>
           <Pressable
             accessibilityRole="button"

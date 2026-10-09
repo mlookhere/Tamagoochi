@@ -35,10 +35,15 @@ test('patched node-forge rejects nested DigestAlgorithm garbage', () => {
       ASN1.create(ASN1.Class.UNIVERSAL, ASN1.Type.OCTETSTRING, false, 'x'),
     ],
   );
-  const digestInfo = ASN1.create(ASN1.Class.UNIVERSAL, ASN1.Type.SEQUENCE, true, [
-    digestAlgorithm,
-    ASN1.create(ASN1.Class.UNIVERSAL, ASN1.Type.OCTETSTRING, false, digest),
-  ]);
+  const digestInfo = ASN1.create(
+    ASN1.Class.UNIVERSAL,
+    ASN1.Type.SEQUENCE,
+    true,
+    [
+      digestAlgorithm,
+      ASN1.create(ASN1.Class.UNIVERSAL, ASN1.Type.OCTETSTRING, false, digest),
+    ],
+  );
   const der = ASN1.toDer(digestInfo).getBytes();
   const encodedLength = Math.ceil(keyPair.publicKey.n.bitLength() / 8);
   const paddingLength = encodedLength - der.length - 3;
