@@ -4,7 +4,7 @@ on:
   pull_request:
   merge_group:
   push:
-    branches: [master, dev]
+    branches: [main, dev]
   schedule:
     - cron: '17 4 * * 3'
   workflow_dispatch:
