@@ -5,9 +5,10 @@ import test from 'node:test';
 const require = createRequire(import.meta.url);
 const micromatchRequire = createRequire(require.resolve('micromatch'));
 const braces = micromatchRequire('braces');
-const ASN1 = require('node-forge/lib/asn1');
-const MD = require('node-forge/lib/md.all');
-const RSA = require('node-forge/lib/rsa');
+const forge = require('node-forge');
+const ASN1 = forge.asn1;
+const MD = forge.md;
+const RSA = forge.pki.rsa;
 
 test('patched braces rejects excessive recursive nesting', () => {
   const nested = '{'.repeat(101) + 'a,b' + '}'.repeat(101);
