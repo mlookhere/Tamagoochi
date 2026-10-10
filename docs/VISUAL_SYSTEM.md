@@ -66,3 +66,9 @@ The shared native `WorldGlyph` component creates original home, compass, keepsak
 Eight original 128×128 transparent RGBA illustrations now live in `assets/world/`: sunberries, watering can, lantern, seed pouch, meadow, grove, pond and winding trail. `src/assets/world.ts` is their typed static Metro registry and `src/theme/world.ts` is the platform-independent descriptive content source; `src/components/WorldDiscoveryPreview.tsx` shows the sketches on the Adventure destination. These are not currently collectible, and the UI explicitly says so. The visual language is deliberately botanical, with paper medallions, rounded silhouettes and the signature three-seed motif. Automated checks verify transparent image formats, names, uniqueness and declared imports.
 
 This is a foundation for Item #9 art acceptance, not a claim that the full inventory or exploration gameplay is built. Final production illustration sign-off and native-device visual review remain outstanding.
+
+## Motion playback and adaptable room height
+
+Ambient motions (idle, walk, sleep, sad and curious) repeat; interactions and one-time responses (eat, clean, play, happy, startled, pickup, return and evolution) complete a single authored cycle. Replaying a pose resets the cycle, and changing the OS Reduce Motion preference stops its native animations and returns the sprite to a still state. This distinction is enforced in `src/theme/motion.test.ts`, alongside the 13-pose and 39-stage review coverage.
+
+The home room uses a minimum height rather than a fixed height, so large-font character names and feedback can expand the scene vertically instead of being clipped within a 315-point frame. Device-native inspection is still required at supported accessibility font sizes.

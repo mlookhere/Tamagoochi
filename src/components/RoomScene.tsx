@@ -57,7 +57,7 @@ export function RoomScene({ name, pose, reactionId, message }: Props) {
 
 const styles = StyleSheet.create({
   room: {
-    height: 315,
+    minHeight: 315,
     overflow: 'hidden',
     borderRadius: 25,
     backgroundColor: colors.meadow,

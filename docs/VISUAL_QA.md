@@ -45,3 +45,7 @@ The 39-case matrix is maintained in `src/theme/motion-review.ts` with a determin
 For each iOS and Android platform, review representative narrow and large devices, default font scale and largest comfortable accessibility text size, with Reduce Motion both enabled and disabled. With the route open, change the OS setting and confirm animations stop/start without restarting the app. Select and replay all 39 cases, checking sprite clipping, transparent borders, expression readability, labels and hit areas. Include VoiceOver/TalkBack passes. Report each issue with `stage-pose`, device/OS, font scale, Reduce Motion state, reproduction steps and screenshots. No device pass is claimed until those reports exist.
 
 The browser screenshot baselines still cover the four player-facing routes, not this developer-only inspection screen. Native validation is a release prerequisite and cannot be inferred from tests of the matrix or a web export.
+
+## Native animation sequencing check
+
+In `/motion-review`, confirm idle/walk/sleep/sad/curious repeat smoothly, while eat/clean/play/happy/startled/pickup/return/evolution stop naturally after one complete cycle. Press Replay to restart a completed one-shot gesture, then switch Reduce Motion on in device Settings and confirm the motion stops immediately. Repeat at enlarged dynamic type and verify the Home room grows vertically rather than cutting off the companion's name or feedback.

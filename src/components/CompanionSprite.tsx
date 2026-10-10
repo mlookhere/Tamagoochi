@@ -8,7 +8,12 @@ import {
 } from 'react-native';
 import { getCompanionArtwork } from '../assets/companions';
 import type { CompanionStage } from '../assets/companions';
-import { type CompanionPose, expressionFor, motionFor } from '../theme/motion';
+import {
+  type CompanionPose,
+  expressionFor,
+  motionFor,
+  playbackFor,
+} from '../theme/motion';
 
 type Props = Readonly<{
   name: string;
@@ -52,38 +57,38 @@ export function CompanionSprite({
     const { lift: height, duration } = motionFor(pose, reduceMotion);
     if (!height) return;
 
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(lift, {
-            toValue: -height,
-            duration,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(phase, {
-            toValue: 1,
-            duration,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.parallel([
-          Animated.timing(lift, {
-            toValue: 0,
-            duration,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(phase, {
-            toValue: 0,
-            duration,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-        ]),
+    const cycle = Animated.sequence([
+      Animated.parallel([
+        Animated.timing(lift, {
+          toValue: -height,
+          duration,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(phase, {
+          toValue: 1,
+          duration,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
       ]),
-    );
+      Animated.parallel([
+        Animated.timing(lift, {
+          toValue: 0,
+          duration,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(phase, {
+          toValue: 0,
+          duration,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    ]);
+    const animation =
+      playbackFor(pose) === 'loop' ? Animated.loop(cycle) : cycle;
     animation.start();
     return () => animation.stop();
   }, [lift, phase, pose, reactionId, reduceMotion]);

@@ -24,6 +24,28 @@ export function motionFor(pose: CompanionPose, reduceMotion: boolean) {
   return companionMotion[pose];
 }
 
+
+// Idle and sustained activities repeat; care gestures and reactions play once.
+export const companionPlayback = {
+  idle: 'loop',
+  walk: 'loop',
+  eat: 'once',
+  sleep: 'loop',
+  clean: 'once',
+  play: 'once',
+  happy: 'once',
+  sad: 'loop',
+  curious: 'loop',
+  startled: 'once',
+  pickup: 'once',
+  return: 'once',
+  evolution: 'once',
+} as const satisfies Record<CompanionPose, 'loop' | 'once'>;
+
+export function playbackFor(pose: CompanionPose): 'loop' | 'once' {
+  return companionPlayback[pose];
+}
+
 export const companionExpressions = {
   idle: 'neutral',
   walk: 'neutral',
