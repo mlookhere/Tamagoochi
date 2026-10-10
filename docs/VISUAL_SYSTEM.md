@@ -13,6 +13,12 @@
 - Keep four top-level destinations. Each screen must show a readable state even when its full gameplay is not implemented.
 - No real geographic coordinates, personal photos, or identity details appear on an exported card without explicit preview and consent.
 
+## Implemented scene
+
+`RoomScene` composes native platform views into a shelf, seed keepsake, arched landscape window, rug, feeding bowl, and houseplant behind the companion. Decorations are hidden from screen readers, but the character and feedback text stay readable. All scene art is an original, dependency-free first pass; the creature and environment art still require production illustration before this Issue can close.
+
+The palette has automated WCAG AA contrast tests for the combinations used by critical text. Room feedback uses dark ink against the light floor to avoid low contrast. This is a design-system regression check, not a replacement for visual screenshot comparisons on devices.
+
 ## Companion anatomy
 
 The starter companion has two outward-leaning ears, a rounded cream body, dark eyes, short mouth, and subtle cheeks. Expressions are primarily communicated by posture and movement, not walls of text. When production illustration replaces this view-based sprite, preserve the distinctive silhouette and keep animation state names stable.

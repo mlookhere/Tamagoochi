@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 12,
     fontWeight: '600',
-    color: colors.muted,
+    color: colors.ink,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
