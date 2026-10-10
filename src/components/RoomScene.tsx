@@ -64,7 +64,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border,
   },
-  decor: { ...StyleSheet.absoluteFillObject },
+  decor: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   window: {
     position: 'absolute',
     top: 22,

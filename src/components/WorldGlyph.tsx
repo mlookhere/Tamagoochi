@@ -1,7 +1,7 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type ColorValue } from 'react-native';
 import { type GlyphKind } from '../theme/iconography';
 
-type Props = Readonly<{ kind: GlyphKind; color: string }>;
+type Props = Readonly<{ kind: GlyphKind; color: ColorValue }>;
 
 export function WorldGlyph({ kind, color }: Props) {
   return (
