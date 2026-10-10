@@ -36,3 +36,11 @@ Final exported sprites must have transparent backgrounds, consistent baselines a
 ## Accessibility
 
 All important actions are native labeled controls. Text and background combinations must pass WCAG contrast checks before final approval. Animation cannot carry the only meaning of pet state. Touch areas must meet platform guidelines. System reduced-motion preferences are honored even when changed while the app is open.
+
+## Exported original creature artwork
+
+Seven original alpha-channel RGBA PNG assets (256×256) are stored in `assets/companions/`: five seedling expressions (neutral, joyful, sad, asleep, surprised) and preliminary bud/bloom neutral forms. The app resolves images through fixed Metro-compatible imports in `src/assets/companions.ts`; `CompanionSprite` now uses these assets rather than assembling the mascot exclusively from platform shapes. No additional rendering dependencies were added.
+
+The artwork was authored procedurally for this repository from original ellipse, line, gradient and palette primitives; it is not copied or traced from another game. It includes an original botanical three-seed body mark and sprout/bud/flower growth motif. Asset format and static linkage are covered by `src/assets/companions.test.ts`.
+
+The current prototype includes only neutral artwork for the later two stages. Those stages are **not yet implemented as gameplay evolutions**. Additional original expressions, story illustrations, animations, and device rendering validation remain within Issue #9.

@@ -37,6 +37,9 @@ export const companionExpressions = {
   evolution: 'joyful',
 } as const satisfies Record<CompanionPose, string>;
 
-export function expressionFor(pose: CompanionPose) {
+export type CompanionExpression =
+  (typeof companionExpressions)[CompanionPose];
+
+export function expressionFor(pose: CompanionPose): CompanionExpression {
   return companionExpressions[pose];
 }

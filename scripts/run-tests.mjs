@@ -18,6 +18,7 @@ args.push(
   'src/theme/motion.test.ts',
   'src/theme/palette.test.ts',
   'src/theme/scenes.test.ts',
+  'src/assets/companions.test.ts',
   'scripts/vendor-security.test.mjs',
 );
 const result = spawnSync(process.execPath, args, { stdio: 'inherit' });

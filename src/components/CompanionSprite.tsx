@@ -3,10 +3,10 @@ import {
   AccessibilityInfo,
   Animated,
   Easing,
+  Image,
   StyleSheet,
-  View,
 } from 'react-native';
-import { colors } from '../theme';
+import { getCompanionArtwork } from '../assets/companions';
 import { type CompanionPose, expressionFor, motionFor } from '../theme/motion';
 
 type Props = Readonly<{
@@ -68,105 +68,22 @@ export function CompanionSprite({ name, pose, reactionId }: Props) {
       accessibilityLabel={`${name}, your companion, ${pose}`}
       style={[styles.sprite, { transform: [{ translateY: lift }] }]}
     >
-      <View style={[styles.ear, styles.leftEar]} />
-      <View style={[styles.ear, styles.rightEar]} />
-      <View style={styles.body}>
-        <View style={styles.eyes}>
-          <View
-            style={[
-              styles.eye,
-              expression === 'asleep' && styles.sleepingEye,
-              expression === 'sad' && styles.sadEye,
-            ]}
-          />
-          <View
-            style={[
-              styles.eye,
-              expression === 'asleep' && styles.sleepingEye,
-              expression === 'sad' && styles.sadEye,
-            ]}
-          />
-        </View>
-        <View
-          style={[
-            styles.mouth,
-            expression === 'joyful' && styles.joyfulMouth,
-            expression === 'surprised' && styles.surprisedMouth,
-          ]}
-        />
-        <View style={[styles.cheek, styles.leftCheek]} />
-        <View style={[styles.cheek, styles.rightCheek]} />
-      </View>
+      <Image
+        accessible={false}
+        source={getCompanionArtwork(expression)}
+        resizeMode="contain"
+        style={styles.artwork}
+      />
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   sprite: {
-    width: 138,
-    height: 128,
-    position: 'relative',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  ear: {
-    position: 'absolute',
-    top: 3,
-    width: 43,
-    height: 64,
-    backgroundColor: colors.petEar,
-    borderRadius: 23,
-  },
-  leftEar: { left: 20, transform: [{ rotate: '-23deg' }] },
-  rightEar: { right: 20, transform: [{ rotate: '23deg' }] },
-  body: {
-    width: 135,
-    height: 110,
-    borderRadius: 58,
-    backgroundColor: colors.pet,
-    borderWidth: 3,
-    borderColor: colors.petOutline,
-    alignItems: 'center',
+    width: 175,
+    height: 175,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  eyes: {
-    width: 65,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  eye: {
-    width: 13,
-    height: 19,
-    backgroundColor: colors.petFace,
-    borderRadius: 7,
-  },
-  sleepingEye: { height: 3, marginTop: 12, marginBottom: 4 },
-  sadEye: { height: 11, marginTop: 8 },
-  joyfulMouth: { width: 23, height: 11, borderBottomWidth: 3 },
-  surprisedMouth: {
-    width: 11,
-    height: 13,
-    borderWidth: 2,
-    borderRadius: 8,
-    backgroundColor: colors.petFace,
-  },
-  mouth: {
-    width: 15,
-    height: 7,
-    borderBottomWidth: 2,
-    borderColor: colors.petFace,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
-    marginTop: 8,
-  },
-  cheek: {
-    width: 14,
-    height: 8,
-    backgroundColor: colors.blush,
-    borderRadius: 8,
-    position: 'absolute',
-    top: 62,
-  },
-  leftCheek: { left: 21 },
-  rightCheek: { right: 21 },
+  artwork: { width: 175, height: 175 },
 });
