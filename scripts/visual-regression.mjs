@@ -37,7 +37,9 @@ function findBrowser() {
       return name;
     }
   }
-  throw new Error('Chrome/Chromium is required for rendered visual regression.');
+  throw new Error(
+    'Chrome/Chromium is required for rendered visual regression.',
+  );
 }
 
 async function webFile(urlPath) {
@@ -62,16 +64,20 @@ async function webFile(urlPath) {
 }
 
 async function runChrome(browser, args) {
-  const child = spawn(browser, [
-    '--headless=new',
-    '--no-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-gpu',
-    '--hide-scrollbars',
-    '--force-device-scale-factor=1',
-    '--virtual-time-budget=5000',
-    ...args,
-  ], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(
+    browser,
+    [
+      '--headless=new',
+      '--no-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--hide-scrollbars',
+      '--force-device-scale-factor=1',
+      '--virtual-time-budget=5000',
+      ...args,
+    ],
+    { stdio: ['ignore', 'pipe', 'pipe'] },
+  );
 
   let stdout = '';
   let stderr = '';
@@ -94,7 +100,9 @@ async function runChrome(browser, args) {
     }),
   ]);
   if (exit !== 0) {
-    throw new Error(`Browser capture failed (${String(exit)}): ${stderr.slice(-1600)}`);
+    throw new Error(
+      `Browser capture failed (${String(exit)}): ${stderr.slice(-1600)}`,
+    );
   }
   return stdout;
 }
@@ -111,7 +119,8 @@ function decodePng(buffer) {
   while (offset < buffer.length) {
     const length = buffer.readUInt32BE(offset);
     const kind = buffer.toString('ascii', offset + 4, offset + 8);
-    if (kind === 'IDAT') chunks.push(buffer.subarray(offset + 8, offset + 8 + length));
+    if (kind === 'IDAT')
+      chunks.push(buffer.subarray(offset + 8, offset + 8 + length));
     offset += length + 12;
     if (kind === 'IEND') break;
   }
@@ -124,7 +133,8 @@ function decodePng(buffer) {
     for (let x = 0; x < stride; x++) {
       const left = x < channels ? 0 : pixels[y * stride + x - channels];
       const up = y === 0 ? 0 : pixels[(y - 1) * stride + x];
-      const topLeft = x < channels || y === 0 ? 0 : pixels[(y - 1) * stride + x - channels];
+      const topLeft =
+        x < channels || y === 0 ? 0 : pixels[(y - 1) * stride + x - channels];
       const value = raw[rowOffset++];
       let predictor = 0;
       if (filter === 1) predictor = left;
@@ -150,15 +160,18 @@ function signature(png) {
   const samples = [];
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
-      const px = Math.floor((x + 0.5) * png.width / cols);
-      const py = Math.floor((y + 0.5) * png.height / rows);
+      const px = Math.floor(((x + 0.5) * png.width) / cols);
+      const py = Math.floor(((y + 0.5) * png.height) / rows);
       const start = (py * png.width + px) * png.channels;
       for (let channel = 0; channel < 3; channel++) {
         samples.push(Math.round(png.pixels[start + channel] / 16));
       }
     }
   }
-  assert.ok(new Set(samples).size >= 6, 'Screenshot appears blank or monochrome');
+  assert.ok(
+    new Set(samples).size >= 6,
+    'Screenshot appears blank or monochrome',
+  );
   return { width: png.width, height: png.height, samples };
 }
 
@@ -170,13 +183,19 @@ function compare(key, actual, expected) {
   for (let index = 0; index < actual.samples.length; index += 3) {
     const deviation = [0, 1, 2].reduce(
       (highest, c) =>
-        Math.max(highest, Math.abs(actual.samples[index + c] - expected.samples[index + c])),
+        Math.max(
+          highest,
+          Math.abs(actual.samples[index + c] - expected.samples[index + c]),
+        ),
       0,
     );
     if (deviation > 3) changed++;
   }
   const ratio = changed / (actual.samples.length / 3);
-  assert.ok(ratio <= 0.12, `${key}: ${changed} visual anchor cells changed (${Math.round(ratio * 100)}%)`);
+  assert.ok(
+    ratio <= 0.12,
+    `${key}: ${changed} visual anchor cells changed (${Math.round(ratio * 100)}%)`,
+  );
 }
 
 async function main() {
@@ -185,7 +204,8 @@ async function main() {
   const browser = findBrowser();
   const server = createServer(async (request, response) => {
     try {
-      const requested = new URL(request.url ?? '/', 'http://localhost').pathname;
+      const requested = new URL(request.url ?? '/', 'http://localhost')
+        .pathname;
       const file = await webFile(requested);
       if (!file) {
         response.writeHead(404).end();
@@ -193,13 +213,17 @@ async function main() {
       }
       const content = await readFile(file);
       const ext = file.slice(file.lastIndexOf('.'));
-      response.writeHead(200, { 'content-type': contentTypes[ext] ?? 'application/octet-stream' });
+      response.writeHead(200, {
+        'content-type': contentTypes[ext] ?? 'application/octet-stream',
+      });
       response.end(content);
     } catch {
       response.writeHead(500).end();
     }
   });
-  await new Promise((resolveStart) => server.listen(0, '127.0.0.1', resolveStart));
+  await new Promise((resolveStart) =>
+    server.listen(0, '127.0.0.1', resolveStart),
+  );
   const port = server.address().port;
   const signatures = {};
   try {
@@ -209,9 +233,16 @@ async function main() {
         const url = `http://127.0.0.1:${port}${screen.route}`;
         const browserSize = `--window-size=${viewport.width},${viewport.height}`;
         const dom = await runChrome(browser, [browserSize, '--dump-dom', url]);
-        assert.ok(dom.includes(screen.text), `${key}: expected screen copy not rendered`);
+        assert.ok(
+          dom.includes(screen.text),
+          `${key}: expected screen copy not rendered`,
+        );
         const screenshot = join(output, `${key}.png`);
-        await runChrome(browser, [browserSize, `--screenshot=${screenshot}`, url]);
+        await runChrome(browser, [
+          browserSize,
+          `--screenshot=${screenshot}`,
+          url,
+        ]);
         signatures[key] = signature(decodePng(await readFile(screenshot)));
         console.log(`Captured and inspected ${key}`);
       }
@@ -224,7 +255,11 @@ async function main() {
     const home = signatures[`home-${viewport.name}`];
     for (const screen of screens.slice(1)) {
       const other = signatures[`${screen.name}-${viewport.name}`];
-      assert.notDeepEqual(other.samples, home.samples, 'Distinct screens must render distinct artwork');
+      assert.notDeepEqual(
+        other.samples,
+        home.samples,
+        'Distinct screens must render distinct artwork',
+      );
     }
   }
 
@@ -235,14 +270,18 @@ async function main() {
     console.log('VISUAL_BASELINE_BEGIN');
     console.log(JSON.stringify({ version: 1, signatures }));
     console.log('VISUAL_BASELINE_END');
-    throw new Error('Reviewed visual baseline missing. Commit the captured baseline before enabling this gate.');
+    throw new Error(
+      'Reviewed visual baseline missing. Commit the captured baseline before enabling this gate.',
+    );
   }
   assert.equal(baseline.version, 1);
   assert.deepEqual(Object.keys(signatures), Object.keys(baseline.signatures));
   for (const [key, actual] of Object.entries(signatures)) {
     compare(key, actual, baseline.signatures[key]);
   }
-  console.log('Rendered browser screenshots match all approved visual anchors.');
+  console.log(
+    'Rendered browser screenshots match all approved visual anchors.',
+  );
 }
 
 main().catch((error) => {

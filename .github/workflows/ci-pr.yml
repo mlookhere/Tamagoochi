@@ -59,13 +59,6 @@ jobs:
           cache: npm
       - run: ./scripts/bootstrap --ci
       - run: ./ci/run fast
-      - name: Print formatter proposal on failure
-        if: failure()
-        run: |
-          echo 'VISUAL_FORMAT_BEGIN'
-          ./node_modules/.bin/prettier scripts/visual-regression.mjs | base64 -w0
-          echo
-          echo 'VISUAL_FORMAT_END'
       - name: Upload deterministic gate report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
