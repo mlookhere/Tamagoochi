@@ -1,12 +1,14 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { WORLD_ART } from '../assets/world';
-import { WORLD_ILLUSTRATIONS, type WorldArtCategory } from '../theme/world';
 import { colors } from '../theme';
+import { WORLD_ILLUSTRATIONS, type WorldArtCategory } from '../theme/world';
 
 type KindProps = Readonly<{ category: WorldArtCategory }>;
 
 function IllustrationGroup({ category }: KindProps) {
-  const entries = WORLD_ILLUSTRATIONS.filter((entry) => entry.category === category);
+  const entries = WORLD_ILLUSTRATIONS.filter(
+    (entry) => entry.category === category,
+  );
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>

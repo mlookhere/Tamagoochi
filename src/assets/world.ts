@@ -1,3 +1,5 @@
+import type { WorldArtKey } from '../theme/world';
+
 // Every illustration is bundled statically so Metro can validate asset paths.
 export const WORLD_ART = {
   berry: require('../../assets/world/berry.png') as number,
@@ -10,4 +12,3 @@ export const WORLD_ART = {
   trail: require('../../assets/world/trail.png') as number,
 } as const satisfies Record<WorldArtKey, number>;
 
-import type { WorldArtKey } from '../theme/world';
