@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  type CompanionPose,
   companionMotion,
   companionPlayback,
   expressionFor,
@@ -49,14 +50,24 @@ test('expressions convey authored emotions without movement', () => {
 test('sustained motions loop and interactions finish after one gesture', () => {
   assert.deepEqual(Object.keys(companionPlayback), Object.keys(companionMotion));
   const sustained = ['idle', 'walk', 'sleep', 'sad', 'curious'];
-  for (const pose of Object.keys(companionMotion) as (keyof typeof companionMotion)[]) {
+  const poses = Object.keys(companionMotion) as CompanionPose[];
+  for (const pose of poses) {
     assert.equal(
       playbackFor(pose),
       sustained.includes(pose) ? 'loop' : 'once',
       `Incorrect playback mode for ${pose}`,
     );
   }
-  for (const pose of ['eat', 'clean', 'play', 'startled', 'pickup', 'return', 'evolution'] as const) {
+  const reactions = [
+    'eat',
+    'clean',
+    'play',
+    'startled',
+    'pickup',
+    'return',
+    'evolution',
+  ] as const;
+  for (const pose of reactions) {
     assert.equal(playbackFor(pose), 'once');
   }
 });

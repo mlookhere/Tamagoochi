@@ -24,7 +24,6 @@ export function motionFor(pose: CompanionPose, reduceMotion: boolean) {
   return companionMotion[pose];
 }
 
-
 // Idle and sustained activities repeat; care gestures and reactions play once.
 export const companionPlayback = {
   idle: 'loop',
