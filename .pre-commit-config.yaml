@@ -4,22 +4,22 @@ default_install_hook_types: [pre-commit, pre-push]
 repos:
   - repo: local
     hooks:
-      - id: claude-quality-staged
+      - id: chatfreept-quality-staged
         name: Deterministic staged-file gates
         entry: ./ci/run quality-staged
         language: system
         pass_filenames: false
         stages: [pre-commit]
 
-      - id: claude-workflow-policy
-        name: Workflow and hook policy
+      - id: chatfreept-workflow-policy
+        name: GitHub workflow and policy checks
         entry: ./scripts/validate-workflow
         language: system
         pass_filenames: false
-        files: ^(?:\.claude/|\.github/workflows/|workflow/|ci/|scripts/|\.claude-workflow\.json)
+        files: ^(?:\.chatfreept/|\.github/workflows/|workflow/|ci/|scripts/)
         stages: [pre-commit]
 
-      - id: claude-fast-pre-push
+      - id: chatfreept-fast-pre-push
         name: Fast pre-push gates
         entry: ./ci/run fast
         language: system

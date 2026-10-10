@@ -1,0 +1,228 @@
+{
+  "version": 3,
+  "branches": {
+    "integration": "dev",
+    "production": "main"
+  },
+  "worktrees": {
+    "branch_prefix": "work"
+  },
+  "github": {
+    "control_issue_title": "[CONTROL] Current repository state",
+    "release_title_prefix": "[RELEASE]",
+    "state_labels": [
+      "state:ready",
+      "state:active",
+      "state:blocked",
+      "state:review",
+      "state:release-ready"
+    ],
+    "risk_paths": {
+      "risk:ci": [
+        ".github/workflows/**",
+        ".github/actions/**",
+        "ci/**",
+        "workflow/**",
+        ".chatfreept/**",
+        "docs/CHATFREEPT_CI.md"
+      ],
+      "risk:database": [
+        "**/migrations/**",
+        "**/schema/**",
+        "**/schema.*"
+      ],
+      "risk:security": [
+        "src/**/auth/**",
+        "src/**/security/**",
+        "src/**/location/**",
+        "src/**/permissions/**",
+        "src/**/*permission*",
+        "src/**/*privacy*",
+        ".env.example",
+        "app.json",
+        "app.config.*",
+        "workflow/check_workflow_policy.py",
+        "workflow/validate_pr.py"
+      ],
+      "risk:deployment": [
+        ".github/workflows/**",
+        "app.json",
+        "app.config.*",
+        "eas.json",
+        "ios/**",
+        "android/**"
+      ],
+      "risk:dependencies": [
+        "package.json",
+        "package-lock.json",
+        "npm-shrinkwrap.json",
+        "app.json",
+        "eas.json",
+        "ci/requirements-ci.txt"
+      ]
+    },
+    "branch_protection": {
+      "integration": {
+        "required_checks": [
+          "PR metadata",
+          "Fast deterministic gates",
+          "PR test/build gates",
+          "Dependency audit",
+          "Workflow policy"
+        ],
+        "required_approving_reviews": 0
+      },
+      "production": {
+        "required_checks": [
+          "Release metadata",
+          "Full regression and production build",
+          "Workflow policy"
+        ],
+        "required_approving_reviews": 0
+      }
+    },
+    "expected_owner": "mlookhere",
+    "expected_repository": "Tamagoochi"
+  },
+  "project": {
+    "package_dir": "",
+    "packaged_assets": [],
+    "typed_advisory_witness": "",
+    "executables": [
+      "flow",
+      "ci/run",
+      "scripts/bootstrap",
+      "scripts/setup-github",
+      "scripts/validate-workflow"
+    ],
+    "forbidden_call_sites": []
+  },
+  "commands": {
+    "bootstrap_local": [
+      "node --version",
+      "npm --version"
+    ],
+    "bootstrap_ci": [
+      "node --version",
+      "npm --version"
+    ],
+    "format_check": [
+      "npm run format:check"
+    ],
+    "lint": [
+      "npm run lint"
+    ],
+    "typecheck": [
+      "npm run typecheck"
+    ],
+    "unit": [
+      "npm test -- --runInBand"
+    ],
+    "coverage": [
+      "npm run test:coverage"
+    ],
+    "security": [
+      "npm audit --audit-level=high"
+    ],
+    "workflow_self_test": [
+      "\"$CI_PYTHON\" workflow/self_test.py --ci"
+    ],
+    "build": [
+      "npm run build:ci"
+    ]
+  },
+  "stages": {
+    "fast": [
+      "workflow_self_test",
+      "quality",
+      "format_check",
+      "lint",
+      "typecheck"
+    ],
+    "pr": [
+      "unit",
+      "coverage",
+      "build"
+    ],
+    "release": [
+      "security",
+      "unit",
+      "coverage",
+      "build"
+    ],
+    "nightly": [
+      "security",
+      "unit",
+      "coverage",
+      "build"
+    ],
+    "audit": [
+      "security"
+    ],
+    "bootstrap-local": [
+      "bootstrap_local"
+    ],
+    "bootstrap-ci": [
+      "bootstrap_ci"
+    ]
+  },
+  "quality": {
+    "base_ref": "origin/dev",
+    "max_changed_file_lines": 1500,
+    "max_function_lines": 120,
+    "max_cyclomatic_complexity": 15,
+    "require_issue_for_todo": true,
+    "banned_phrases": [
+      "in today's fast-paced",
+      "it is important to note",
+      "delve into",
+      "seamlessly integrates",
+      "robust and scalable solution"
+    ],
+    "text_extensions": [
+      ".md",
+      ".mdx",
+      ".txt",
+      ".py",
+      ".js",
+      ".jsx",
+      ".ts",
+      ".tsx",
+      ".json",
+      ".yml",
+      ".yaml"
+    ],
+    "source_extensions": [
+      ".py",
+      ".js",
+      ".jsx",
+      ".ts",
+      ".tsx"
+    ],
+    "exclude_globs": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/coverage/**",
+      "**/.ci-venv/**",
+      "data/**",
+      "artifacts/**",
+      "**/*.min.js",
+      "**/*.map",
+      "**/fixtures/**",
+      "uv.lock",
+      "poetry.lock",
+      "**/.expo/**",
+      "**/web-build/**"
+    ],
+    "max_identical_command_failures": 3,
+    "max_pr_files": 80,
+    "max_pr_changed_lines": 4000
+  },
+  "tracking": {
+    "require_issue_for_mutation_prompts": true,
+    "lease_ttl_seconds": 28800,
+    "optimistic_issue_updates": true,
+    "control_issue_max_active_rows": 20
+  }
+}

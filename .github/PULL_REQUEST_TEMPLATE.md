@@ -19,14 +19,13 @@ transcript. Call out anything a reviewer would not predict from the diff.
 - [ ] Regression coverage added or updated for behavior changes
 - [ ] Required GitHub checks are green
 
-Paste the exact commands run and their results. For a change to answering
-behavior, state how grounding, citation, and refusal-when-unsourced were
-verified.
+Paste the exact commands run and their results. For changes affecting user-facing behavior, explain how the relevant
+screens, accessibility controls, and regressions were verified.
 
 ## Risk
 
 Database, security, deployment, dependency, compatibility, and rollback
-implications. Risk labels applied per `risk_paths` in `.claude-workflow.json`:
+implications. Risk labels applied per `risk_paths` in `.chatfreept/project.json`:
 yes/no. Write `Low — <concrete reason>` only with a concrete reason.
 
 ## Remaining work
