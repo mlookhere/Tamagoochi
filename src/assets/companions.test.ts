@@ -15,10 +15,9 @@ const exported = [
 ];
 
 test('every companion sprite is registered as a static Metro image', () => {
-  const required = Array.from(
-    registry.matchAll(/require\('..\/..\/assets\/companions\/([\w-]+)\.png'\)/g),
-    (match) => match[1],
-  );
+  const pathRegex = /companions\/([\w-]+)\.png'\s*,?\s*\)/g;
+  const required = Array.from(registry.matchAll(pathRegex), (match) => match[1]);
+  assert.equal((registry.match(/require\(/g) ?? []).length, exported.length);
   assert.deepEqual(required, exported);
 });
 
