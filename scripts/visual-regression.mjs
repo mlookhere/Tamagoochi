@@ -237,6 +237,19 @@ async function main() {
           dom.includes(screen.text),
           `${key}: expected screen copy not rendered`,
         );
+        if (screen.name === 'adventure') {
+          const labels = [
+            'Small wonders, close to home.',
+            'Sunberries',
+            'Willow pond',
+          ];
+          for (const label of labels) {
+            assert.ok(
+              dom.includes(label),
+              `${key}: missing preview text: ${label}`,
+            );
+          }
+        }
         const screenshot = join(output, `${key}.png`);
         await runChrome(browser, [
           browserSize,

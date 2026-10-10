@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { inflateSync } from 'node:zlib';
 import { WORLD_ILLUSTRATIONS } from '../theme/world.ts';
 
 const filenames = {
@@ -43,7 +44,15 @@ test('world imagery has static Metro imports and transparent RGBA pixels', () =>
     assert.equal(file.readUInt32BE(16), 128);
     assert.equal(file.readUInt32BE(20), 128);
     assert.equal(file[25], 6, 'Artwork must be RGBA');
-    assert.equal(file.readUInt32BE(33) > 0, true);
+    const idatBytes = file.readUInt32BE(33);
+    assert.ok(idatBytes > 0);
+    const pixels = inflateSync(file.subarray(41, 41 + idatBytes));
+    assert.equal(pixels.length, 128 * 513);
+    function alphaAt(x: number, y: number) {
+      return pixels[y * 513 + 1 + x * 4 + 3];
+    }
+    assert.equal(alphaAt(0, 0), 0, 'Edges must remain transparent');
+    assert.ok(alphaAt(64, 60) > 200, 'Artwork center must be visible');
     images.add(file.toString('base64'));
   }
   assert.equal(images.size, 8, 'Each artwork file must be visually distinct');

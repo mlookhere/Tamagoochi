@@ -11,4 +11,3 @@ export const WORLD_ART = {
   pond: require('../../assets/world/pond.png') as number,
   trail: require('../../assets/world/trail.png') as number,
 } as const satisfies Record<WorldArtKey, number>;
-
