@@ -72,7 +72,7 @@ def issue_table(issues: list[dict[str, Any]], prs: list[dict[str, Any]]) -> str:
         state = next((v.split(":", 1)[1] for v in sorted(labels) if v.startswith("state:")), "active")
         risks = ", ".join(sorted(x.split(":", 1)[1] for x in labels if x.startswith("risk:"))) or "—"
         detail = f"[#{pr['number']}]({pr['url']}) / {checks_summary(pr)}" if pr else "—"
-        rows.append(f"| [#{number}]({issue['url']}) {issue['title']} | \`{branch}\` | {state} | {risks} | {detail} |")
+        rows.append(f"| [#{number}]({issue['url']}) {issue['title']} | `{branch}` | {state} | {risks} | {detail} |")
     return "\n".join(rows) if rows else "| — | — | no active task Issues | — | — |"
 
 
@@ -92,8 +92,8 @@ def control_header(config: dict[str, Any]) -> str:
         MARKER_START,
         "## Branch state",
         "",
-        f"- Production: \`{branches['production']}@{heads.get(branches['production'], 'unknown')}\`",
-        f"- Integration: \`{branches['integration']}@{heads.get(branches['integration'], 'unknown')}\`",
+        f"- Production: `{branches['production']}@{heads.get(branches['production'], 'unknown')}`",
+        f"- Integration: `{branches['integration']}@{heads.get(branches['integration'], 'unknown')}`",
         f"- Current release Issue: {current}",
         "",
         "## Active work",
