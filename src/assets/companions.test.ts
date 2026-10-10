@@ -45,8 +45,7 @@ test('companion art maintains visible silhouettes and distinct expressions', () 
     const pixels = inflateSync(file.subarray(41, 41 + payloadLength));
     assert.equal(pixels.length, 256 * 1025);
 
-    const alphaAt = (x: number, y: number) =>
-      pixels[y * 1025 + 1 + x * 4 + 3];
+    const alphaAt = (x: number, y: number) => pixels[y * 1025 + 1 + x * 4 + 3];
 
     assert.equal(alphaAt(0, 0), 0, 'Corners must be transparent');
     assert.ok(alphaAt(128, 150) > 200, 'Mascot body must be opaque');

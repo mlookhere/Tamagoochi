@@ -34,21 +34,27 @@ function AppTabs() {
         name="adventure"
         options={{
           title: 'Adventure',
-          tabBarIcon: ({ color }) => <WorldGlyph kind="adventure" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <WorldGlyph kind="adventure" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="memories"
         options={{
           title: 'Memories',
-          tabBarIcon: ({ color }) => <WorldGlyph kind="memories" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <WorldGlyph kind="memories" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="friends"
         options={{
           title: 'Friends',
-          tabBarIcon: ({ color }) => <WorldGlyph kind="friends" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <WorldGlyph kind="friends" color={color} />
+          ),
         }}
       />
     </Tabs>

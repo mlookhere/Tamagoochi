@@ -13,7 +13,10 @@ export function WorldGlyph({ kind, color }: Props) {
       {kind === 'home' && (
         <>
           <View
-            style={[styles.roof, { borderTopColor: color, borderLeftColor: color }]}
+            style={[
+              styles.roof,
+              { borderTopColor: color, borderLeftColor: color },
+            ]}
           />
           <View style={[styles.house, { borderColor: color }]} />
           <View style={[styles.door, { backgroundColor: color }]} />

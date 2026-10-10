@@ -9,7 +9,9 @@ export const COMPANION_ART = {
     joyful: require('../../assets/companions/seedling-joyful.png') as number,
     sad: require('../../assets/companions/seedling-sad.png') as number,
     asleep: require('../../assets/companions/seedling-asleep.png') as number,
-    surprised: require('../../assets/companions/seedling-surprised.png') as number,
+    surprised: require(
+      '../../assets/companions/seedling-surprised.png',
+    ) as number,
   },
   bud: {
     neutral: require('../../assets/companions/bud-neutral.png') as number,

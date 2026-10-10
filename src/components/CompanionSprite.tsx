@@ -6,10 +6,7 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import {
-  type CompanionStage,
-  getCompanionArtwork,
-} from '../assets/companions';
+import { type CompanionStage, getCompanionArtwork } from '../assets/companions';
 import { type CompanionPose, expressionFor, motionFor } from '../theme/motion';
 
 type Props = Readonly<{
