@@ -25,7 +25,9 @@ test('every authored companion pose has an animated and static presentation', ()
     const reduced = motionFor(pose, true);
     assert.ok(normal.lift > 0 && normal.duration > 0);
     assert.ok(normal.lift <= 16 && normal.duration <= 2400);
-    assert.deepEqual(reduced, { lift: 0, duration: 0 });
+    assert.ok(normal.tilt >= 0 && normal.tilt <= 20);
+    assert.ok(normal.pulse >= -0.1 && normal.pulse <= 0.2);
+    assert.deepEqual(reduced, { lift: 0, tilt: 0, pulse: 0, duration: 0 });
   }
 });
 

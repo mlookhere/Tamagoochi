@@ -1,24 +1,27 @@
-// Motion metadata is data, not coupled to the animation renderer.
+// Each pose has a movement signature, not just a different speed.
 export const companionMotion = {
-  idle: { lift: 3, duration: 1250 },
-  walk: { lift: 7, duration: 320 },
-  eat: { lift: 5, duration: 260 },
-  sleep: { lift: 1, duration: 2200 },
-  clean: { lift: 6, duration: 400 },
-  play: { lift: 12, duration: 380 },
-  happy: { lift: 9, duration: 460 },
-  sad: { lift: 1, duration: 1700 },
-  curious: { lift: 4, duration: 850 },
-  startled: { lift: 13, duration: 180 },
-  pickup: { lift: 10, duration: 370 },
-  return: { lift: 8, duration: 410 },
-  evolution: { lift: 15, duration: 650 },
+  idle: { lift: 3, tilt: 2, pulse: 0.02, duration: 1250 },
+  walk: { lift: 7, tilt: 8, pulse: 0.01, duration: 320 },
+  eat: { lift: 5, tilt: 3, pulse: 0.07, duration: 260 },
+  sleep: { lift: 1, tilt: 2, pulse: -0.02, duration: 2200 },
+  clean: { lift: 6, tilt: 8, pulse: 0.04, duration: 400 },
+  play: { lift: 12, tilt: 12, pulse: 0.05, duration: 380 },
+  happy: { lift: 9, tilt: 6, pulse: 0.07, duration: 460 },
+  sad: { lift: 1, tilt: 3, pulse: -0.04, duration: 1700 },
+  curious: { lift: 4, tilt: 13, pulse: 0.01, duration: 850 },
+  startled: { lift: 13, tilt: 2, pulse: 0.12, duration: 180 },
+  pickup: { lift: 10, tilt: 14, pulse: 0.04, duration: 370 },
+  return: { lift: 8, tilt: 9, pulse: 0.02, duration: 410 },
+  evolution: { lift: 15, tilt: 18, pulse: 0.16, duration: 650 },
 } as const;
 
 export type CompanionPose = keyof typeof companionMotion;
 
 export function motionFor(pose: CompanionPose, reduceMotion: boolean) {
-  return reduceMotion ? { lift: 0, duration: 0 } : companionMotion[pose];
+  if (reduceMotion) {
+    return { lift: 0, tilt: 0, pulse: 0, duration: 0 };
+  }
+  return companionMotion[pose];
 }
 
 export const companionExpressions = {

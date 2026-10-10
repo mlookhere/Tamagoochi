@@ -44,3 +44,7 @@ Seven original alpha-channel RGBA PNG assets (256×256) are stored in `assets/co
 The artwork was authored procedurally for this repository from original ellipse, line, gradient and palette primitives; it is not copied or traced from another game. It includes an original botanical three-seed body mark and sprout/bud/flower growth motif. Asset format and static linkage are covered by `src/assets/companions.test.ts`.
 
 The current prototype includes only neutral artwork for the later two stages. Those stages are **not yet implemented as gameplay evolutions**. Additional original expressions, story illustrations, animations, and device rendering validation remain within Issue #9.
+
+## Motion differentiation
+
+Every named pose has an authored combination of vertical travel, tilt, scale pulse and cadence. The components interpolate these values through the built-in React Native native animation driver without adding a runtime package. Motion is automatically suppressed when Reduce Motion is enabled, even when the system preference changes during use. Expression and animation are independent so more complete art sets can be introduced without changing care-domain state.
