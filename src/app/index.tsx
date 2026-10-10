@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { RoomScene } from '../components/RoomScene';
 import { Page } from '../components/Page';
 import { clean, createCompanion, feed, play } from '../domain/pet/state';
 import { useSystemReduceMotion } from '../hooks/useSystemReduceMotion';
 import { colors } from '../theme';
 import { motionDisabled } from '../theme/accessibility';
+import { stackCareActions } from '../theme/layout';
 import { type CompanionPose, reactionResetDelay } from '../theme/motion';
 
 type StatProps = Readonly<{ label: string; value: number }>;
@@ -26,6 +27,8 @@ function Stat({ label, value }: StatProps) {
 }
 
 export default function Home() {
+  const { fontScale } = useWindowDimensions();
+  const stackedActions = stackCareActions(fontScale);
   const reducedMotion = motionDisabled(useSystemReduceMotion());
   const [pet, setPet] = useState(() => createCompanion());
   const [message, setMessage] = useState(
@@ -69,11 +72,11 @@ export default function Home() {
         <Stat label="Cleanliness" value={pet.cleanliness} />
       </View>
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, stackedActions && styles.actionsStacked]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Feed companion"
-          style={styles.action}
+          style={[styles.action, stackedActions && styles.actionStacked]}
           onPress={() => {
             setPet(feed);
             setMessage('A happy little snack break.');
@@ -88,7 +91,7 @@ export default function Home() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Play with companion"
-          style={styles.action}
+          style={[styles.action, stackedActions && styles.actionStacked]}
           onPress={() => {
             setPet(play);
             setMessage('That was fun!');
@@ -103,7 +106,7 @@ export default function Home() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Clean companion"
-          style={styles.action}
+          style={[styles.action, stackedActions && styles.actionStacked]}
           onPress={() => {
             setPet(clean);
             setMessage('Fresh and ready for adventure.');
@@ -134,6 +137,7 @@ const styles = StyleSheet.create({
   },
   fill: { height: '100%', borderRadius: 8, backgroundColor: colors.fern },
   actions: { flexDirection: 'row', gap: 10, marginTop: 28, marginBottom: 25 },
+  actionsStacked: { flexDirection: 'column' },
   action: {
     flex: 1,
     borderRadius: 15,
@@ -141,5 +145,6 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
   },
+  actionStacked: { flex: 0, width: '100%', minHeight: 48, justifyContent: 'center' },
   actionTitle: { color: colors.white, fontSize: 14, fontWeight: '800' },
 });

@@ -1,11 +1,14 @@
 import { Tabs } from 'expo-router';
+import { useWindowDimensions } from 'react-native';
 import { AppErrorBoundary } from '../components/AppErrorBoundary';
 import { WorldGlyph } from '../components/WorldGlyph';
 import { getPublicConfig } from '../config/public';
 import { colors } from '../theme';
+import { tabBarHeight } from '../theme/layout';
 
 function AppTabs() {
   getPublicConfig();
+  const { fontScale } = useWindowDimensions();
 
   return (
     <Tabs
@@ -16,7 +19,7 @@ function AppTabs() {
         tabBarStyle: {
           backgroundColor: colors.paper,
           borderTopColor: colors.border,
-          height: 76,
+          height: tabBarHeight(fontScale),
           paddingTop: 8,
           paddingBottom: 10,
         },

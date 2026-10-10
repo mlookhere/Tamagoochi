@@ -57,3 +57,7 @@ In `/motion-review`, confirm idle/walk/sleep/sad/curious repeat smoothly, while 
 ## Home reaction reset timing
 
 The Home screen no longer uses one hard-coded timeout for every reaction. Each non-looping gesture stays visible until both authored motion halves have completed plus an 80 ms settle time; when system Reduce Motion is active or unresolved, the corresponding static expression is held for 400 ms before returning to idle. Each successive user interaction increments a nonce, so an earlier timer cannot reset a newer reaction. Deterministic tests cover all one-shot and looping poses, but device confirmation still needs to verify real rendered motion and rapid repeated taps.
+
+## Dynamic Type navigation and care controls
+
+The four-tab navigation retains its existing baseline 76-point bar at default font size, and grows its height with system font scaling (bounded to a maximum 4× multiplier). On Home, Feed/Play/Clean remain in a single row at ordinary font sizes but switch into full-width, minimum 48-point-high buttons when the system font scale reaches 1.6. Layout rules are deterministic and covered in `src/theme/layout.test.ts`. Test the transitions on actual iOS/Android devices with large accessibility text, VoiceOver/TalkBack and each tab selected; the source/layout contracts do not prove that native glyphs and labels are unclipped.
