@@ -20,11 +20,13 @@ test('three onboarding studies are unique and explicitly descriptive', () => {
   }
 });
 
-test('native onboard art has explicit static Metro imports and RGBA pixels', () => {
+test('onboarding art has static native imports and RGBA pixels', () => {
   const registry = readFileSync('src/assets/onboarding.ts', 'utf8');
   const seen = new Set<string>();
   for (const name of names) {
-    assert.ok(registry.includes(`${name}: require('../../assets/onboarding/${name}.png')`));
+    assert.ok(
+      registry.includes(`${name}: require('../../assets/onboarding/${name}.png')`),
+    );
     const file = readFileSync(`assets/onboarding/${name}.png`);
     assert.deepEqual(
       Array.from(file.subarray(0, 8)),
@@ -56,9 +58,12 @@ test('native onboard art has explicit static Metro imports and RGBA pixels', () 
   assert.equal(seen.size, names.length, 'Every storyboard image must differ');
 });
 
-test('onboarding artwork is in the developer-only review, not a first-run claim', () => {
+test('onboarding art stays in the developer-only review', () => {
   const review = readFileSync('src/app/motion-review.tsx', 'utf8');
-  const storyboard = readFileSync('src/components/OnboardingStoryboard.tsx', 'utf8');
+  const storyboard = readFileSync(
+    'src/components/OnboardingStoryboard.tsx',
+    'utf8',
+  );
   assert.match(review, /<OnboardingStoryboard \/>/);
   assert.match(review, /if \(!__DEV__\)/);
   assert.match(storyboard, /ONBOARDING_ILLUSTRATIONS\.map/);
