@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { APP_ASSETS } from '../assets';
-import { CompanionSprite } from '../components/CompanionSprite';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { RoomScene } from '../components/RoomScene';
 import { Page } from '../components/Page';
 import { clean, createCompanion, feed, play } from '../domain/pet/state';
 import { colors } from '../theme';
@@ -43,18 +42,7 @@ export default function Home() {
       title="Home is wherever you are."
       description="Meet your little companion. Taking care of each other is just the beginning."
     >
-      <View style={styles.habitat}>
-        <Image
-          accessibilityLabel="Companion seed"
-          source={APP_ASSETS.companionSeed}
-          style={styles.seedAsset}
-        />
-        <View style={styles.sun} />
-        <View style={styles.floor} />
-        <CompanionSprite name={pet.name} pose={pose} />
-        <Text style={styles.name}>{pet.name}</Text>
-        <Text style={styles.mood}>{message}</Text>
-      </View>
+      <RoomScene name={pet.name} pose={pose} message={message} />
 
       <View style={styles.stats}>
         <Stat label="Fullness" value={pet.hunger} />
@@ -106,40 +94,6 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  habitat: {
-    height: 275,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    overflow: 'hidden',
-    borderRadius: 25,
-    paddingBottom: 15,
-    backgroundColor: colors.meadow,
-  },
-  seedAsset: {
-    position: 'absolute',
-    top: 20,
-    left: 24,
-    width: 38,
-    height: 38,
-  },
-  sun: {
-    position: 'absolute',
-    top: 24,
-    right: 32,
-    width: 54,
-    height: 54,
-    backgroundColor: colors.sun,
-    borderRadius: 27,
-  },
-  floor: {
-    position: 'absolute',
-    bottom: 0,
-    height: 82,
-    width: '100%',
-    backgroundColor: colors.meadowFloor,
-  },
-  name: { marginTop: 9, fontSize: 21, fontWeight: '800', color: colors.ink },
-  mood: { marginTop: 3, color: colors.muted, fontSize: 12, fontWeight: '600' },
   stats: { paddingTop: 22, gap: 14 },
   stat: { gap: 6 },
   statLabels: { flexDirection: 'row', justifyContent: 'space-between' },
