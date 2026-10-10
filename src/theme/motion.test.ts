@@ -4,8 +4,19 @@ import { companionMotion, motionFor } from './motion.ts';
 
 test('every authored companion pose has an animated and static presentation', () => {
   const poses = [
-    'idle', 'walk', 'eat', 'sleep', 'clean', 'play', 'happy',
-    'sad', 'curious', 'startled', 'pickup', 'return', 'evolution',
+    'idle',
+    'walk',
+    'eat',
+    'sleep',
+    'clean',
+    'play',
+    'happy',
+    'sad',
+    'curious',
+    'startled',
+    'pickup',
+    'return',
+    'evolution',
   ] as const;
 
   assert.deepEqual(Object.keys(companionMotion), poses);

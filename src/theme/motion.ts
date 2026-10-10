@@ -18,7 +18,5 @@ export const companionMotion = {
 export type CompanionPose = keyof typeof companionMotion;
 
 export function motionFor(pose: CompanionPose, reduceMotion: boolean) {
-  return reduceMotion
-    ? { lift: 0, duration: 0 }
-    : companionMotion[pose];
+  return reduceMotion ? { lift: 0, duration: 0 } : companionMotion[pose];
 }
