@@ -17,3 +17,7 @@ These fifteen transparent PNGs cover five core expressions across seedling, bud,
 ## Future art pipeline
 
 Before store release, review and expand authored pose frames for all three stages, item and ecology markers, onboarding illustrations, and platform icon/splash masters. Maintain vector masters and generated pixel assets together, export at platform-native densities, and review visual diffs on real iOS and Android devices.
+
+## World art provenance
+
+Eight original item and environment artworks (`assets/world/*.png`, 128×128 RGBA) were painted procedurally from novel shapes and the Tamagoochi woodland palette. The source concepts are sunberries, watering can, glow lantern, seed pouch, meadow, grove, pond and trail. They do not trace protected third-party game icons. The static registry is `src/assets/world.ts`; no remote asset service is used. These designs require final platform/store review before being described as release-ready.

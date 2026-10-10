@@ -60,3 +60,9 @@ The original lowercase Tamagoochi wordmark is implemented in `src/components/Bra
 ## Original iconography
 
 The shared native `WorldGlyph` component creates original home, compass, keepsake, friends, seed, nature and bowl marks using small platform views rather than fetching icon fonts or referencing third-party game assets. The first four glyphs now appear in the main tab bar, retaining platform-native press targets and labels. `src/theme/iconography.ts` provides typed semantic keys with contract tests.
+
+## Original world and item illustrations
+
+Eight original 128×128 transparent RGBA illustrations now live in `assets/world/`: sunberries, watering can, lantern, seed pouch, meadow, grove, pond and winding trail. `src/assets/world.ts` is their typed static Metro registry and descriptive content source; `src/components/WorldDiscoveryPreview.tsx` shows the sketches on the Adventure destination. These are not currently collectible, and the UI explicitly says so. The visual language is deliberately botanical, with paper medallions, rounded silhouettes and the signature three-seed motif. Automated checks verify transparent image formats, names, uniqueness and declared imports.
+
+This is a foundation for Item #9 art acceptance, not a claim that the full inventory or exploration gameplay is built. Final production illustration sign-off and native-device visual review remain outstanding.
