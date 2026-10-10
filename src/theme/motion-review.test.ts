@@ -28,5 +28,9 @@ test('motion review is excluded from player navigation and redirects in producti
   assert.match(route, /if \(!__DEV__\)/);
   assert.match(route, /return <Redirect href="\/" \/>/);
   assert.match(route, /<CompanionSprite/);
-  assert.match(route, /AccessibilityInfo\.addEventListener/);
+  const observer = readFileSync('src/hooks/useSystemReduceMotion.ts', 'utf8');
+  assert.match(route, /useSystemReduceMotion\(\)/);
+  assert.match(observer, /AccessibilityInfo\.addEventListener/);
+  assert.match(observer, /isReduceMotionEnabled\(\)/);
+  assert.match(observer, /\.catch\(\)/);
 });
