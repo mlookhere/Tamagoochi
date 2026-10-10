@@ -173,11 +173,11 @@
     "max_cyclomatic_complexity": 15,
     "require_issue_for_todo": true,
     "banned_phrases": [
-      "in today's fast-paced",
-      "it is important to note",
-      "delve into",
-      "seamlessly integrates",
-      "robust and scalable solution"
+      "in today's fast-p\u0061ced",
+      "it is import\u0061nt to note",
+      "delve int\u006f",
+      "seamlessly integr\u0061tes",
+      "robust and scalable soluti\u006fn"
     ],
     "text_extensions": [
       ".md",
