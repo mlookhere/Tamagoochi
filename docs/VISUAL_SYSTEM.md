@@ -9,7 +9,7 @@
 - Put the pet first. A room is a setting, not a dashboard; the companion remains the largest focal point.
 - Use rounded organic shapes, subtle borders, cream surfaces, woodland-green lettering, and one warm sunlight accent. Never use competitive-game gradients or glossy loot-box framing.
 - Use the same visual tokens across Home, Adventure, Memories, and Friends. Source of truth: `src/theme/index.ts`.
-- Use `src/components/CompanionSprite.tsx` for the starter silhouette. It is an original in-app vector-style prototype, not final production character art.
+- Use `src/components/CompanionSprite.tsx` and the explicit PNG registry for original creature art. The starter exports are a first production-intent asset pass, subject to device review and iteration.
 - Keep four top-level destinations. Each screen must show a readable state even when its full gameplay is not implemented.
 - No real geographic coordinates, personal photos, or identity details appear on an exported card without explicit preview and consent.
 
@@ -21,7 +21,7 @@ The palette has automated WCAG AA contrast tests for the combinations used by cr
 
 ## Companion anatomy
 
-The starter companion has two outward-leaning ears, a rounded cream body, dark eyes, short mouth, and subtle cheeks. Expressions are primarily communicated by posture and movement, not walls of text. When production illustration replaces this view-based sprite, preserve the distinctive silhouette and keep animation state names stable.
+The starter companion has two outward-leaning ears, a rounded cream body, dark eyes, short mouth, and subtle cheeks. Expressions are primarily communicated by posture and movement, not walls of text. The native component now renders original transparent PNG artwork. Preserve its silhouette and the stable animation-state names as future art replaces the current exports.
 
 ## Motion language
 
@@ -51,7 +51,7 @@ Every named pose has an authored combination of vertical travel, tilt, scale pul
 
 ## Brand implementation
 
-The original lowercase Tamagoochi wordmark is implemented in `src/components/BrandMark.tsx` as native typography with a sprouting-seed emblem. The shared `Page` frame renders it across all four destinations. It requires no icon font, remote image, or network request, and scales with the platform's font rendering. A vector master/icon-export source and final typographic sign-off remain open production tasks.
+The original lowercase Tamagoochi wordmark is implemented in `src/components/BrandMark.tsx` as native typography with a sprouting-seed emblem. The shared `Page` frame renders it across all four destinations. It requires no icon font, remote image, or network request, and scales with the platform's font rendering. An editable sprouting-mark vector reference exists in `assets/source/sprouting-mark.svg`; final typography, exported platform icons, and visual approval remain open.
 
 ## Original illustrated app states
 

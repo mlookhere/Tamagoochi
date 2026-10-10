@@ -8,7 +8,7 @@ The illustrations and assets in this project are original designs made for Tamag
 
 The files in `assets/companions/` are 256×256 transparent RGBA PNG exports. They were authored from procedural shape-and-shading primitives for this repository, not copied from third-party sources. Native builds load them from explicit static `require()` statements in `src/assets/companions.ts`. The runtime uses no third-party illustration CDN.
 
-These seven exports currently serve as a baseline art pass. Later-stage variants are not yet fully authored. The pixel-format and Git-blob identity checks in `src/assets/companions.test.ts` prevent accidental file replacement; intentional revisions must update the baseline hashes after visual inspection.
+These seven exports currently serve as a baseline art pass. Later-stage variants are not yet fully authored. The asset tests verify dimensions, transparency, static Metro registration, and visual distinctness between sprite variants. A separate rendered-screen screenshot baseline is still required before this slice is complete.
 
 ## Editable design references
 
