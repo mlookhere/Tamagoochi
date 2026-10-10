@@ -47,7 +47,10 @@ export function playbackFor(pose: CompanionPose): 'loop' | 'once' {
 
 // One-shot reactions use two equal animated halves; a short settle prevents
 // Home from interrupting the last frame. Static reactions remain perceivable.
-export function reactionResetDelay(pose: CompanionPose, reduced: boolean): number {
+export function reactionResetDelay(
+  pose: CompanionPose,
+  reduced: boolean,
+): number {
   if (playbackFor(pose) === 'loop') return 0;
   if (reduced) return 400;
   return companionMotion[pose].duration * 2 + 80;
