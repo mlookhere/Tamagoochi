@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { RoomScene } from '../components/RoomScene';
 import { Page } from '../components/Page';
 import { clean, createCompanion, feed, play } from '../domain/pet/state';
@@ -145,6 +151,11 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
   },
-  actionStacked: { flex: 0, width: '100%', minHeight: 48, justifyContent: 'center' },
+  actionStacked: {
+    flex: 0,
+    width: '100%',
+    minHeight: 48,
+    justifyContent: 'center',
+  },
   actionTitle: { color: colors.white, fontSize: 14, fontWeight: '800' },
 });
