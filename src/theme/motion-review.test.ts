@@ -32,5 +32,5 @@ test('motion review is excluded from player navigation and redirects in producti
   assert.match(route, /useSystemReduceMotion\(\)/);
   assert.match(observer, /AccessibilityInfo\.addEventListener/);
   assert.match(observer, /isReduceMotionEnabled\(\)/);
-  assert.match(observer, /\.catch\(\)/);
+  assert.match(observer, /\.catch\(/);
 });

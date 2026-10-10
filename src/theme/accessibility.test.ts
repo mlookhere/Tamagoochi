@@ -1,9 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {
-  motionDisabled,
-  reduceMotionDescription,
-} from './accessibility.ts';
+import { motionDisabled, reduceMotionDescription } from './accessibility.ts';
 
 test('unknown Reduce Motion state is safe and remains static', () => {
   assert.equal(motionDisabled(null), true);
