@@ -9,7 +9,7 @@ const root = resolve('dist');
 const output = resolve('artifacts/visual');
 const baselinePath = resolve('tests/visual-baseline.json');
 const screens = [
-  { name: 'home', route: '/', text: 'Your little companion' },
+  { name: 'home', route: '/', text: 'Home is wherever you are.' },
   { name: 'adventure', route: '/adventure', text: 'The world is waiting.' },
   { name: 'memories', route: '/memories', text: 'A life in little moments.' },
   { name: 'friends', route: '/friends', text: 'Better together.' },
@@ -217,6 +217,14 @@ async function main() {
     }
   } finally {
     await new Promise((resolveClose) => server.close(resolveClose));
+  }
+
+  for (const viewport of viewports) {
+    const home = signatures[`home-${viewport.name}`];
+    for (const screen of screens.slice(1)) {
+      const other = signatures[`${screen.name}-${viewport.name}`];
+      assert.notDeepEqual(other.samples, home.samples, 'Distinct screens must render distinct artwork');
+    }
   }
 
   let baseline;
