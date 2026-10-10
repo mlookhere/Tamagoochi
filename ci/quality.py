@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SELF_PATH = "ci/quality.py"
-CONFIG = json.loads((ROOT / ".claude-workflow.json").read_text(encoding="utf-8"))
+CONFIG = json.loads((ROOT / ".chatfreept/project.json").read_text(encoding="utf-8"))
 QUALITY = CONFIG.get("quality", {})
 
 SECRET_PATTERNS = {
@@ -139,7 +139,7 @@ TODO_WITHOUT_ISSUE = re.compile(r"\b(?:TODO|FIXME)\b(?![^\n]{0,80}(?:#\d+|https:
 
 
 class Limits:
-    """Quality thresholds resolved once from .claude-workflow.json."""
+    """Quality thresholds resolved once from .chatfreept/project.json."""
 
     def __init__(self) -> None:
         self.max_lines = int(QUALITY.get("max_changed_file_lines", 0) or 0)

@@ -13,7 +13,7 @@ fi
 # this script at the first command it runs.
 SYSTEM_PYTHON="$(resolve_system_python)"
 
-CI_HOME="${CLAUDE_CI_HOME:-$HOME/.local/share/claude-code-ci/v2}"
+CI_HOME="${CHATFREEPT_CI_HOME:-$HOME/.local/share/chatfreept-ci/v2}"
 CI_VENV="$CI_HOME/venv"
 mkdir -p "$CI_HOME"
 
@@ -79,4 +79,4 @@ fi
 
 printf '\nGlobal CI runtime: %s\n' "$CI_VENV"
 printf 'Project environment: %s\n' "$ROOT/.venv"
-printf 'Bootstrap complete. Run: ./flow doctor\n'
+printf 'Bootstrap complete. Run: ./ci/run list\n'
