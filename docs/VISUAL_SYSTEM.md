@@ -56,3 +56,7 @@ The original lowercase Tamagoochi wordmark is implemented in `src/components/Bra
 ## Original illustrated app states
 
 `StatusIllustration` provides a shared original motif for welcome, loading, empty, and error states, with distinct descriptive screen-reader labels from `src/theme/status.ts`. The error boundary now renders the error illustration. These assets are deliberately static, providing a reduced-motion-safe baseline. The welcome/loading/empty variants are reusable in future onboarding and asynchronous screens rather than triggering artificial loading behavior today.
+
+## Original iconography
+
+The shared native `WorldGlyph` component creates original home, compass, keepsake, friends, seed, nature and bowl marks using small platform views rather than fetching icon fonts or referencing third-party game assets. The first four glyphs now appear in the main tab bar, retaining platform-native press targets and labels. `src/theme/iconography.ts` provides typed semantic keys with contract tests.

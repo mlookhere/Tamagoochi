@@ -19,6 +19,7 @@ args.push(
   'src/theme/palette.test.ts',
   'src/theme/scenes.test.ts',
   'src/theme/status.test.ts',
+  'src/theme/iconography.test.ts',
   'src/assets/companions.test.ts',
   'scripts/vendor-security.test.mjs',
 );
