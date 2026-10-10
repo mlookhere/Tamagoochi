@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { WORLD_ART, WORLD_ILLUSTRATIONS } from '../assets/world';
-import type { WorldArtCategory } from '../assets/world';
+import { WORLD_ART } from '../assets/world';
+import { WORLD_ILLUSTRATIONS, type WorldArtCategory } from '../theme/world';
 import { colors } from '../theme';
 
 type KindProps = Readonly<{ category: WorldArtCategory }>;
