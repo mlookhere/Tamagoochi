@@ -52,3 +52,7 @@ Every named pose has an authored combination of vertical travel, tilt, scale pul
 ## Brand implementation
 
 The original lowercase Tamagoochi wordmark is implemented in `src/components/BrandMark.tsx` as native typography with a sprouting-seed emblem. The shared `Page` frame renders it across all four destinations. It requires no icon font, remote image, or network request, and scales with the platform's font rendering. A vector master/icon-export source and final typographic sign-off remain open production tasks.
+
+## Original illustrated app states
+
+`StatusIllustration` provides a shared original motif for welcome, loading, empty, and error states, with distinct descriptive screen-reader labels from `src/theme/status.ts`. The error boundary now renders the error illustration. These assets are deliberately static, providing a reduced-motion-safe baseline. The welcome/loading/empty variants are reusable in future onboarding and asynchronous screens rather than triggering artificial loading behavior today.

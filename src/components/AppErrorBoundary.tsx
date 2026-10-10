@@ -1,6 +1,7 @@
 import { Component, type ReactNode } from 'react';
 import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme';
+import { StatusIllustration } from './StatusIllustration';
 
 type Props = Readonly<{ children: ReactNode }>;
 type State = Readonly<{ error: Error | null }>;
@@ -24,6 +25,7 @@ export class AppErrorBoundary extends Component<Props, State> {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.card}>
+          <StatusIllustration kind="error" />
           <Text style={styles.eyebrow}>SOMETHING WENT WRONG</Text>
           <Text style={styles.title}>Your companion is still safe.</Text>
           <Text style={styles.body}>
