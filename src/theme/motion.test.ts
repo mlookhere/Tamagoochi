@@ -48,7 +48,10 @@ test('expressions convey authored emotions without movement', () => {
 });
 
 test('sustained motions loop and interactions finish after one gesture', () => {
-  assert.deepEqual(Object.keys(companionPlayback), Object.keys(companionMotion));
+  assert.deepEqual(
+    Object.keys(companionPlayback),
+    Object.keys(companionMotion),
+  );
   const sustained = ['idle', 'walk', 'sleep', 'sad', 'curious'];
   const poses = Object.keys(companionMotion) as CompanionPose[];
   for (const pose of poses) {
