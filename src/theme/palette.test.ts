@@ -2,14 +2,17 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { colors } from './index.ts';
 
+function linearChannel(hex: string, offset: number) {
+  const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
+  if (value <= 0.04045) return value / 12.92;
+  return ((value + 0.055) / 1.055) ** 2.4;
+}
+
 function luminance(hex: string) {
-  const channels = [1, 3, 5].map((offset) => {
-    const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
-    return value <= 0.04045
-      ? value / 12.92
-      : ((value + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+  const red = linearChannel(hex, 1);
+  const green = linearChannel(hex, 3);
+  const blue = linearChannel(hex, 5);
+  return red * 0.2126 + green * 0.7152 + blue * 0.0722;
 }
 
 function contrast(foreground: string, background: string) {
@@ -35,9 +38,7 @@ test('essential text combinations maintain WCAG AA contrast', () => {
   ] as const;
 
   for (const [foreground, background] of pairs) {
-    assert.ok(
-      contrast(foreground, background) >= 4.5,
-      `Insufficient contrast for ${foreground} on ${background}`,
-    );
+    const ratio = contrast(foreground, background);
+    assert.ok(ratio >= 4.5, `Insufficient contrast: ${ratio}`);
   }
 });

@@ -3,14 +3,8 @@ import test from 'node:test';
 import { sceneCopy } from './scenes.ts';
 
 test('secondary scenes use unique accessible illustrations', () => {
-  assert.deepEqual(Object.keys(sceneCopy), [
-    'adventure',
-    'memories',
-    'friends',
-  ]);
-  const labels = Object.values(sceneCopy).map(
-    (scene) => scene.accessibilityLabel,
-  );
+  assert.deepEqual(Object.keys(sceneCopy), ['adventure', 'memories', 'friends']);
+  const labels = Object.values(sceneCopy).map((scene) => scene.accessibilityLabel);
   assert.equal(new Set(labels).size, labels.length);
   for (const scene of Object.values(sceneCopy)) {
     assert.ok(scene.title.length > 15);
