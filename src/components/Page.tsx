@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme';
+import { BrandMark } from './BrandMark';
 
 type Props = Readonly<{
   eyebrow: string;
@@ -13,6 +14,7 @@ export function Page({ eyebrow, title, description, children }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
+        <BrandMark />
         <Text style={styles.eyebrow}>{eyebrow.toUpperCase()}</Text>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.description}>{description}</Text>

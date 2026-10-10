@@ -48,3 +48,7 @@ The current prototype includes only neutral artwork for the later two stages. Th
 ## Motion differentiation
 
 Every named pose has an authored combination of vertical travel, tilt, scale pulse and cadence. The components interpolate these values through the built-in React Native native animation driver without adding a runtime package. Motion is automatically suppressed when Reduce Motion is enabled, even when the system preference changes during use. Expression and animation are independent so more complete art sets can be introduced without changing care-domain state.
+
+## Brand implementation
+
+The original lowercase Tamagoochi wordmark is implemented in `src/components/BrandMark.tsx` as native typography with a sprouting-seed emblem. The shared `Page` frame renders it across all four destinations. It requires no icon font, remote image, or network request, and scales with the platform's font rendering. A vector master/icon-export source and final typographic sign-off remain open production tasks.
