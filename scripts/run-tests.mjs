@@ -17,6 +17,7 @@ args.push(
   'src/config/public.test.ts',
   'src/theme/motion.test.ts',
   'src/theme/motion-review.test.ts',
+  'src/theme/accessibility.test.ts',
   'src/theme/palette.test.ts',
   'src/theme/scenes.test.ts',
   'src/theme/status.test.ts',

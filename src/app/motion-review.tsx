@@ -1,7 +1,6 @@
 import { Redirect } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
-  AccessibilityInfo,
   Pressable,
   StyleSheet,
   Text,
@@ -10,6 +9,8 @@ import {
 } from 'react-native';
 import type { CompanionStage } from '../assets/companions';
 import { CompanionSprite } from '../components/CompanionSprite';
+import { useSystemReduceMotion } from '../hooks/useSystemReduceMotion';
+import { reduceMotionDescription } from '../theme/accessibility';
 import { Page } from '../components/Page';
 import { colors } from '../theme';
 import type { CompanionPose } from '../theme/motion';
@@ -46,27 +47,8 @@ function MotionReviewContent() {
   const [stage, setStage] = useState<CompanionStage>('seedling');
   const [pose, setPose] = useState<CompanionPose>('idle');
   const [reactionId, setReactionId] = useState(0);
-  const [reducedMotion, setReducedMotion] = useState<boolean | null>(null);
+  const reducedMotion = useSystemReduceMotion();
   const { width, height, fontScale } = useWindowDimensions();
-
-  useEffect(() => {
-    let mounted = true;
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((enabled) => {
-        if (mounted) setReducedMotion(enabled);
-      })
-      .catch(() => {
-        if (mounted) setReducedMotion(null);
-      });
-    const subscription = AccessibilityInfo.addEventListener(
-      'reduceMotionChanged',
-      setReducedMotion,
-    );
-    return () => {
-      mounted = false;
-      subscription.remove();
-    };
-  }, []);
 
   const choosePose = (value: CompanionPose) => {
     setPose(value);
@@ -76,12 +58,7 @@ function MotionReviewContent() {
     setStage(value);
     setReactionId((current) => current + 1);
   };
-  const motionState =
-    reducedMotion === null
-      ? 'not available'
-      : reducedMotion
-        ? 'enabled'
-        : 'disabled';
+  const motionState = reduceMotionDescription(reducedMotion);
 
   return (
     <Page

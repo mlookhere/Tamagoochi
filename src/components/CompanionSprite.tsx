@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  AccessibilityInfo,
   Animated,
   Easing,
   Image,
@@ -8,6 +7,8 @@ import {
 } from 'react-native';
 import { getCompanionArtwork } from '../assets/companions';
 import type { CompanionStage } from '../assets/companions';
+import { useSystemReduceMotion } from '../hooks/useSystemReduceMotion';
+import { motionDisabled } from '../theme/accessibility';
 import {
   type CompanionPose,
   expressionFor,
@@ -28,26 +29,11 @@ export function CompanionSprite({
   reactionId,
   stage = 'seedling',
 }: Props) {
-  const [reduceMotion, setReduceMotion] = useState(true);
+  const reduceMotion = motionDisabled(useSystemReduceMotion());
   const [lift] = useState(() => new Animated.Value(0));
   const [phase] = useState(() => new Animated.Value(0));
   const expression = expressionFor(pose);
   const motion = motionFor(pose, reduceMotion);
-
-  useEffect(() => {
-    let mounted = true;
-    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
-      if (mounted) setReduceMotion(enabled);
-    });
-    const listener = AccessibilityInfo.addEventListener(
-      'reduceMotionChanged',
-      setReduceMotion,
-    );
-    return () => {
-      mounted = false;
-      listener.remove();
-    };
-  }, []);
 
   useEffect(() => {
     lift.stopAnimation();

@@ -49,3 +49,7 @@ The browser screenshot baselines still cover the four player-facing routes, not 
 ## Native animation sequencing check
 
 In `/motion-review`, confirm idle/walk/sleep/sad/curious repeat smoothly, while eat/clean/play/happy/startled/pickup/return/evolution stop naturally after one complete cycle. Press Replay to restart a completed one-shot gesture, then switch Reduce Motion on in device Settings and confirm the motion stops immediately. Repeat at enlarged dynamic type and verify the Home room grows vertically rather than cutting off the companion's name or feedback.
+
+## Shared system Reduce Motion observer
+
+`src/hooks/useSystemReduceMotion.ts` is the single React Native accessibility subscription used by both `CompanionSprite` and the development-only inspection screen. A missing or rejected OS query is treated as reduced motion for animations, and a live change event takes precedence over a pending initial query. Native reviewers must confirm the status indicator and sprite agree when the OS preference changes; static unit tests verify only the policy for true, false and unknown preference values.
