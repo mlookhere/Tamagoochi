@@ -21,3 +21,7 @@ Before store release, review and expand authored pose frames for all three stage
 ## World art provenance
 
 Eight original item and environment artworks (`assets/world/*.png`, 128×128 RGBA) were painted procedurally from novel shapes and the Tamagoochi woodland palette. The source concepts are sunberries, watering can, glow lantern, seed pouch, meadow, grove, pond and trail. They do not trace protected third-party game icons. The static registry is `src/assets/world.ts`; no remote asset service is used. These designs require final platform/store review before being described as release-ready.
+
+## Onboarding artwork provenance
+
+Three original transparent 320×240 RGBA PNG studies are stored in `assets/onboarding/`: welcome (a happy sprout companion), care (a watering-can/flower moment), and explore (a companion following a garden trail). They were generated from original geometric shapes and the existing woodland palette; no third-party characters, photographs, or copyrighted game compositions were used. `src/assets/onboarding.ts` registers the exact native PNG files through static Metro imports. `src/theme/onboarding.ts` stores the accessible descriptive copy and `src/components/OnboardingStoryboard.tsx` displays them only in the developer motion-review route. These are native illustration concepts, **not** a completed first-run onboarding flow or platform-approved release imagery. Review on real iOS/Android devices and obtain final artwork approval before shipping.

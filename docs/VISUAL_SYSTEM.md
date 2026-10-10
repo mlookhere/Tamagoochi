@@ -72,3 +72,7 @@ This is a foundation for Item #9 art acceptance, not a claim that the full inven
 Ambient motions (idle, walk, sleep, sad and curious) repeat; interactions and one-time responses (eat, clean, play, happy, startled, pickup, return and evolution) complete a single authored cycle. Replaying a pose resets the cycle, and changing the OS Reduce Motion preference stops its native animations and returns the sprite to a still state. This distinction is enforced in `src/theme/motion.test.ts`, alongside the 13-pose and 39-stage review coverage.
 
 The home room uses a minimum height rather than a fixed height, so large-font character names and feedback can expand the scene vertically instead of being clipped within a 315-point frame. Device-native inspection is still required at supported accessibility font sizes.
+
+## First-moment illustrations
+
+Three original 320×240 RGBA artwork concepts — meeting the seedling, caring for its garden, and exploring a small world — are bundled in `assets/onboarding/`. Their typed native registry and platform-independent metadata are in `src/assets/onboarding.ts` and `src/theme/onboarding.ts`. `OnboardingStoryboard` gives artists an accessible native preview on the developer-only review screen; the first-run user journey, persistence and onboarding interactions belong to later gameplay slices.

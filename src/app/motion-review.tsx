@@ -10,6 +10,7 @@ import {
 import type { CompanionStage } from '../assets/companions';
 import { CompanionSprite } from '../components/CompanionSprite';
 import { Page } from '../components/Page';
+import { OnboardingStoryboard } from '../components/OnboardingStoryboard';
 import { useSystemReduceMotion } from '../hooks/useSystemReduceMotion';
 import { colors } from '../theme';
 import { reduceMotionDescription } from '../theme/accessibility';
@@ -118,6 +119,7 @@ function MotionReviewContent() {
         stays visible, labels remain understandable, and enlarged text does not
         overlap controls. Record OS, device, font scale, and any failing case.
       </Text>
+      <OnboardingStoryboard />
     </Page>
   );
 }

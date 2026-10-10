@@ -61,3 +61,7 @@ The Home screen no longer uses one hard-coded timeout for every reaction. Each n
 ## Dynamic Type navigation and care controls
 
 The four-tab navigation retains its existing baseline 76-point bar at default font size, and grows its height with system font scaling (bounded to a maximum 4× multiplier). On Home, Feed/Play/Clean remain in a single row at ordinary font sizes but switch into full-width, minimum 48-point-high buttons when the system font scale reaches 1.6. Layout rules are deterministic and covered in `src/theme/layout.test.ts`. Test the transitions on actual iOS/Android devices with large accessibility text, VoiceOver/TalkBack and each tab selected; the source/layout contracts do not prove that native glyphs and labels are unclipped.
+
+## Native onboarding-art storyboard review
+
+The development-only `/motion-review` screen includes three original onboarding illustrations beneath the 39-case motion laboratory. Review welcome, care and explore panels at both compact and large native viewports, default and enlarged font sizes, and with screen readers enabled. The images have explicit accessibility descriptions; storyboard copy must remain readable and the 4:3 images must not crop. Automated PNG tests verify correct RGBA dimensions, transparency, visible center and unique exports, but cannot replace a real platform screenshot. No first-run onboarding sequence is implemented in this issue.

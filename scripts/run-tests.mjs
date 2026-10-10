@@ -25,6 +25,7 @@ args.push(
   'src/theme/iconography.test.ts',
   'src/assets/companions.test.ts',
   'src/assets/world.test.ts',
+  'src/assets/onboarding.test.ts',
   'scripts/vendor-security.test.mjs',
 );
 const result = spawnSync(process.execPath, args, { stdio: 'inherit' });
