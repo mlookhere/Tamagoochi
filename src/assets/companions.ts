@@ -14,9 +14,17 @@ export const COMPANION_ART = {
   },
   bud: {
     neutral: require('../../assets/companions/bud-neutral.png') as number,
+    joyful: require('../../assets/companions/bud-joyful.png') as number,
+    sad: require('../../assets/companions/bud-sad.png') as number,
+    asleep: require('../../assets/companions/bud-asleep.png') as number,
+    surprised: require('../../assets/companions/bud-surprised.png') as number,
   },
   bloom: {
     neutral: require('../../assets/companions/bloom-neutral.png') as number,
+    joyful: require('../../assets/companions/bloom-joyful.png') as number,
+    sad: require('../../assets/companions/bloom-sad.png') as number,
+    asleep: require('../../assets/companions/bloom-asleep.png') as number,
+    surprised: require('../../assets/companions/bloom-surprised.png') as number,
   },
 } as const;
 
@@ -24,7 +32,5 @@ export function getCompanionArtwork(
   expression: CompanionExpression,
   stage: CompanionStage = 'seedling',
 ): number {
-  if (stage === 'bud') return COMPANION_ART.bud.neutral;
-  if (stage === 'bloom') return COMPANION_ART.bloom.neutral;
-  return COMPANION_ART.seedling[expression];
+  return COMPANION_ART[stage][expression];
 }

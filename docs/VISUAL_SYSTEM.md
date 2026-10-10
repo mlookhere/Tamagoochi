@@ -39,11 +39,11 @@ All important actions are native labeled controls. Text and background combinati
 
 ## Exported original creature artwork
 
-Seven original alpha-channel RGBA PNG assets (256×256) are stored in `assets/companions/`: five seedling expressions (neutral, joyful, sad, asleep, surprised) and preliminary bud/bloom neutral forms. The app resolves images through fixed Metro-compatible imports in `src/assets/companions.ts`; `CompanionSprite` now uses these assets rather than assembling the mascot exclusively from platform shapes. No additional rendering dependencies were added.
+Fifteen original alpha-channel RGBA PNG assets (256×256) are stored in `assets/companions/`: five expressions (neutral, joyful, sad, asleep, surprised) for each seedling, bud, and bloom stage. The app resolves images through fixed Metro-compatible imports in `src/assets/companions.ts`; `CompanionSprite` now uses these assets rather than assembling the mascot exclusively from platform shapes. No additional rendering dependencies were added.
 
 The artwork was authored procedurally for this repository from original ellipse, line, gradient and palette primitives; it is not copied or traced from another game. It includes an original botanical three-seed body mark and sprout/bud/flower growth motif. Asset format and static linkage are covered by `src/assets/companions.test.ts`.
 
-The current prototype includes only neutral artwork for the later two stages. Those stages are **not yet implemented as gameplay evolutions**. Additional original expressions, story illustrations, animations, and device rendering validation remain within Issue #9.
+All three stages now have a corresponding illustration for each core expression, but **stages are not yet wired into gameplay evolution**. The images are a first-pass original art family; additional full-body pose frames, story illustrations, and real-device rendering review remain within Issue #9.
 
 ## Motion differentiation
 

@@ -11,7 +11,15 @@ const exported = [
   'seedling-asleep',
   'seedling-surprised',
   'bud-neutral',
+  'bud-joyful',
+  'bud-sad',
+  'bud-asleep',
+  'bud-surprised',
   'bloom-neutral',
+  'bloom-joyful',
+  'bloom-sad',
+  'bloom-asleep',
+  'bloom-surprised',
 ];
 
 test('every companion sprite is registered as a static Metro image', () => {
@@ -53,13 +61,17 @@ test('companion art maintains visible silhouettes and distinct expressions', () 
     decoded.set(name, pixels);
   }
 
-  const reference = decoded.get('seedling-neutral');
-  assert.ok(reference);
-  for (const name of exported.slice(1)) {
-    assert.notDeepEqual(
-      decoded.get(name),
-      reference,
-      `Artwork should be visually distinct: ${name}`,
-    );
+  for (const stage of ['seedling', 'bud', 'bloom']) {
+    const names = exported.filter((name) => name.startsWith(stage));
+    const reference = decoded.get(`${stage}-neutral`);
+    assert.ok(reference);
+    assert.equal(names.length, 5);
+    for (const name of names.slice(1)) {
+      assert.notDeepEqual(
+        decoded.get(name),
+        reference,
+        `Stage expression should be distinct: ${name}`,
+      );
+    }
   }
 });

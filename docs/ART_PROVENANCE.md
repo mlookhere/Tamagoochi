@@ -8,7 +8,7 @@ The illustrations and assets in this project are original designs made for Tamag
 
 The files in `assets/companions/` are 256×256 transparent RGBA PNG exports. They were authored from procedural shape-and-shading primitives for this repository, not copied from third-party sources. Native builds load them from explicit static `require()` statements in `src/assets/companions.ts`. The runtime uses no third-party illustration CDN.
 
-These seven exports currently serve as a baseline art pass. Later-stage variants are not yet fully authored. The asset tests verify dimensions, transparency, static Metro registration, and visual distinctness between sprite variants. A separate rendered-screen screenshot baseline is still required before this slice is complete.
+These fifteen transparent PNGs cover five core expressions across seedling, bud, and bloom stages as an original first-pass character family. The asset tests verify dimensions, transparency, static Metro registration, and visual distinctness between sprite variants. A separate rendered-screen screenshot baseline is still required before this slice is complete.
 
 ## Editable design references
 
@@ -16,4 +16,4 @@ These seven exports currently serve as a baseline art pass. Later-stage variants
 
 ## Future art pipeline
 
-Before store release, add the full expression/pose exports for the bud and bloom families, item and ecology markers, onboarding and error-state illustrations, and platform icon/splash masters. Maintain vector masters and generated pixel assets together, export at platform-native densities, and review visual diffs on real iOS and Android devices.
+Before store release, review and expand authored pose frames for all three stages, item and ecology markers, onboarding illustrations, and platform icon/splash masters. Maintain vector masters and generated pixel assets together, export at platform-native densities, and review visual diffs on real iOS and Android devices.
