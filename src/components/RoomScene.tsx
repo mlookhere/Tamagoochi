@@ -7,10 +7,11 @@ import { CompanionSprite } from './CompanionSprite';
 type Props = Readonly<{
   name: string;
   pose: CompanionPose;
+  reactionId: number;
   message: string;
 }>;
 
-export function RoomScene({ name, pose, message }: Props) {
+export function RoomScene({ name, pose, reactionId, message }: Props) {
   return (
     <View style={styles.room}>
       <View
@@ -46,7 +47,7 @@ export function RoomScene({ name, pose, message }: Props) {
       </View>
 
       <View style={styles.foreground}>
-        <CompanionSprite name={name} pose={pose} />
+        <CompanionSprite name={name} pose={pose} reactionId={reactionId} />
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.message}>{message}</Text>
       </View>

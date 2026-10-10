@@ -28,13 +28,19 @@ export default function Home() {
     'A new little friend is waiting for you.',
   );
 
-  const [pose, setPose] = useState<CompanionPose>('idle');
+  const [reaction, setReaction] = useState<{ pose: CompanionPose; nonce: number }>({
+    pose: 'idle',
+    nonce: 0,
+  });
 
   useEffect(() => {
-    if (pose === 'idle') return;
-    const timer = setTimeout(() => setPose('idle'), 950);
+    if (reaction.pose === 'idle') return;
+    const timer = setTimeout(
+      () => setReaction((current) => ({ ...current, pose: 'idle' })),
+      950,
+    );
     return () => clearTimeout(timer);
-  }, [pose]);
+  }, [reaction]);
 
   return (
     <Page
@@ -42,7 +48,12 @@ export default function Home() {
       title="Home is wherever you are."
       description="Meet your little companion. Taking care of each other is just the beginning."
     >
-      <RoomScene name={pet.name} pose={pose} message={message} />
+      <RoomScene
+        name={pet.name}
+        pose={reaction.pose}
+        reactionId={reaction.nonce}
+        message={message}
+      />
 
       <View style={styles.stats}>
         <Stat label="Fullness" value={pet.hunger} />
@@ -59,7 +70,7 @@ export default function Home() {
           onPress={() => {
             setPet(feed);
             setMessage('A happy little snack break.');
-            setPose('eat');
+            setReaction((current) => ({ pose: 'eat', nonce: current.nonce + 1 }));
           }}
         >
           <Text style={styles.actionTitle}>Feed</Text>
@@ -71,7 +82,7 @@ export default function Home() {
           onPress={() => {
             setPet(play);
             setMessage('That was fun!');
-            setPose('play');
+            setReaction((current) => ({ pose: 'play', nonce: current.nonce + 1 }));
           }}
         >
           <Text style={styles.actionTitle}>Play</Text>
@@ -83,7 +94,7 @@ export default function Home() {
           onPress={() => {
             setPet(clean);
             setMessage('Fresh and ready for adventure.');
-            setPose('clean');
+            setReaction((current) => ({ pose: 'clean', nonce: current.nonce + 1 }));
           }}
         >
           <Text style={styles.actionTitle}>Clean</Text>

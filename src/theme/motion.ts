@@ -20,3 +20,20 @@ export type CompanionPose = keyof typeof companionMotion;
 export function motionFor(pose: CompanionPose, reduceMotion: boolean) {
   return reduceMotion ? { lift: 0, duration: 0 } : companionMotion[pose];
 }
+
+export type CompanionExpression =
+  | 'neutral'
+  | 'asleep'
+  | 'joyful'
+  | 'surprised'
+  | 'sad';
+
+export function expressionFor(pose: CompanionPose): CompanionExpression {
+  if (pose === 'sleep') return 'asleep';
+  if (pose === 'sad') return 'sad';
+  if (pose === 'startled') return 'surprised';
+  if (pose === 'play' || pose === 'happy' || pose === 'evolution') {
+    return 'joyful';
+  }
+  return 'neutral';
+}

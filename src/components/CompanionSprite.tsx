@@ -7,16 +7,18 @@ import {
   View,
 } from 'react-native';
 import { colors } from '../theme';
-import { type CompanionPose, motionFor } from '../theme/motion';
+import { type CompanionPose, expressionFor, motionFor } from '../theme/motion';
 
 type Props = Readonly<{
   name: string;
   pose: CompanionPose;
+  reactionId: number;
 }>;
 
-export function CompanionSprite({ name, pose }: Props) {
-  const [reduceMotion, setReduceMotion] = useState(false);
+export function CompanionSprite({ name, pose, reactionId }: Props) {
+  const [reduceMotion, setReduceMotion] = useState(true);
   const lift = useRef(new Animated.Value(0)).current;
+  const expression = expressionFor(pose);
 
   useEffect(() => {
     let mounted = true;
@@ -57,7 +59,7 @@ export function CompanionSprite({ name, pose }: Props) {
     );
     animation.start();
     return () => animation.stop();
-  }, [lift, pose, reduceMotion]);
+  }, [lift, pose, reactionId, reduceMotion]);
 
   return (
     <Animated.View
@@ -70,10 +72,28 @@ export function CompanionSprite({ name, pose }: Props) {
       <View style={[styles.ear, styles.rightEar]} />
       <View style={styles.body}>
         <View style={styles.eyes}>
-          <View style={styles.eye} />
-          <View style={styles.eye} />
+          <View
+            style={[
+              styles.eye,
+              expression === 'asleep' && styles.sleepingEye,
+              expression === 'sad' && styles.sadEye,
+            ]}
+          />
+          <View
+            style={[
+              styles.eye,
+              expression === 'asleep' && styles.sleepingEye,
+              expression === 'sad' && styles.sadEye,
+            ]}
+          />
         </View>
-        <View style={styles.mouth} />
+        <View
+          style={[
+            styles.mouth,
+            expression === 'joyful' && styles.joyfulMouth,
+            expression === 'surprised' && styles.surprisedMouth,
+          ]}
+        />
         <View style={[styles.cheek, styles.leftCheek]} />
         <View style={[styles.cheek, styles.rightCheek]} />
       </View>
@@ -119,6 +139,16 @@ const styles = StyleSheet.create({
     height: 19,
     backgroundColor: colors.petFace,
     borderRadius: 7,
+  },
+  sleepingEye: { height: 3, marginTop: 12, marginBottom: 4 },
+  sadEye: { height: 11, marginTop: 8 },
+  joyfulMouth: { width: 23, height: 11, borderBottomWidth: 3 },
+  surprisedMouth: {
+    width: 11,
+    height: 13,
+    borderWidth: 2,
+    borderRadius: 8,
+    backgroundColor: colors.petFace,
   },
   mouth: {
     width: 15,

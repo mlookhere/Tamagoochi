@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { companionMotion, motionFor } from './motion.ts';
+import { companionMotion, expressionFor, motionFor } from './motion.ts';
 
 test('every authored companion pose has an animated and static presentation', () => {
   const poses = [
@@ -27,4 +27,13 @@ test('every authored companion pose has an animated and static presentation', ()
     assert.ok(normal.lift <= 16 && normal.duration <= 2400);
     assert.deepEqual(reduced, { lift: 0, duration: 0 });
   }
+});
+
+test('expressions convey authored emotions without movement', () => {
+  assert.equal(expressionFor('sleep'), 'asleep');
+  assert.equal(expressionFor('sad'), 'sad');
+  assert.equal(expressionFor('startled'), 'surprised');
+  assert.equal(expressionFor('play'), 'joyful');
+  assert.equal(expressionFor('happy'), 'joyful');
+  assert.equal(expressionFor('idle'), 'neutral');
 });
