@@ -11,9 +11,8 @@ on:
 
 permissions: {}
 
-# Two jobs below require GitHub Advanced Security, which is unavailable for a
-# private repository on this plan -- the same limitation that makes branch
-# protection and environments return 403. Left ungated they failed on every pull
+# Two optional jobs may require repository security features that are not
+# available on every plan. Keep the independent required security checks active. Left ungated they failed on every pull
 # request, which trains reviewers to ignore CI. They are gated on
 # ENABLE_ADVANCED_SECURITY so they skip (neutral, non-blocking) rather than fail,
 # and run unchanged once the variable is set to "true".
@@ -53,7 +52,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Validate the Claude workflow control plane
+      - name: Validate the Chat FreePT CI control plane
         run: python3 workflow/self_test.py --ci
       - name: Reject dangerous workflow patterns
         run: |

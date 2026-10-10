@@ -12,11 +12,11 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-CONFIG_PATH = ROOT / ".claude-workflow.json"
+CONFIG_PATH = ROOT / ".chatfreept/project.json"
 ARTIFACT_DIR = ROOT / "artifacts" / "ci"
 
 # workflow/ is not an importable package, so the path is extended rather than the resolver
-# duplicated here: claude_flow and self_test shell out to bash for the same reasons and must
+# duplicated here: the control CLI and self_test shell out to bash for the same reasons and must
 # agree with this file about which bash that is.
 sys.path.insert(0, str(ROOT / "workflow"))
 
@@ -27,10 +27,10 @@ from bash_tools import bash_command  # noqa: E402
 
 def ci_home() -> Path:
     """Root of the global CI runtime that scripts/bootstrap provisions."""
-    override = os.environ.get("CLAUDE_CI_HOME")
+    override = os.environ.get("CHATFREEPT_CI_HOME")
     if override:
         return Path(override)
-    return Path.home() / ".local" / "share" / "claude-code-ci" / "v2"
+    return Path.home() / ".local" / "share" / "chatfreept-ci" / "v2"
 
 
 def load_config() -> dict[str, Any]:
