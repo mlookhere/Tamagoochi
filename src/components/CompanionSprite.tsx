@@ -104,7 +104,9 @@ export function CompanionSprite({
       accessibilityLabel={`${name}, your companion, ${pose}`}
       style={[
         styles.sprite,
-        { transform: [{ translateY: lift }, { rotate: turn }, { scale: zoom }] },
+        {
+          transform: [{ translateY: lift }, { rotate: turn }, { scale: zoom }],
+        },
       ]}
     >
       <Image
