@@ -1,18 +1,12 @@
 import { Redirect } from 'expo-router';
 import { useState } from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import type { CompanionStage } from '../assets/companions';
 import { CompanionSprite } from '../components/CompanionSprite';
-import { useSystemReduceMotion } from '../hooks/useSystemReduceMotion';
-import { reduceMotionDescription } from '../theme/accessibility';
 import { Page } from '../components/Page';
+import { useSystemReduceMotion } from '../hooks/useSystemReduceMotion';
 import { colors } from '../theme';
+import { reduceMotionDescription } from '../theme/accessibility';
 import type { CompanionPose } from '../theme/motion';
 import {
   MOTION_REVIEW_POSES,

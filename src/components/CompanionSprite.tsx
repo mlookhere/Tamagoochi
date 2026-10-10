@@ -1,10 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-  Animated,
-  Easing,
-  Image,
-  StyleSheet,
-} from 'react-native';
+import { Animated, Easing, Image, StyleSheet } from 'react-native';
 import { getCompanionArtwork } from '../assets/companions';
 import type { CompanionStage } from '../assets/companions';
 import { useSystemReduceMotion } from '../hooks/useSystemReduceMotion';
