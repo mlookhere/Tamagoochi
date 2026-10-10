@@ -82,6 +82,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 18,
     paddingVertical: 12,
+    minHeight: 48,
+    justifyContent: 'center',
     backgroundColor: colors.moss,
   },
   buttonText: {

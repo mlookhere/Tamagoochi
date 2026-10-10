@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { companionMotion } from './motion.ts';
 import {
@@ -18,4 +19,14 @@ test('motion review covers all authored poses for every stage', () => {
   assert.ok(cases.includes('seedling-eat'));
   assert.ok(cases.includes('bud-startled'));
   assert.ok(cases.includes('bloom-evolution'));
+});
+
+test('motion review is excluded from player navigation and redirects in production', () => {
+  const tabs = readFileSync('src/app/_layout.tsx', 'utf8');
+  const route = readFileSync('src/app/motion-review.tsx', 'utf8');
+  assert.match(tabs, /name="motion-review" options=\{\{ href: null \}\}/);
+  assert.match(route, /if \(!__DEV__\)/);
+  assert.match(route, /return <Redirect href="\/" \/>/);
+  assert.match(route, /<CompanionSprite/);
+  assert.match(route, /AccessibilityInfo\.addEventListener/);
 });
