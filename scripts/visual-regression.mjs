@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile } from 'node:fs/promises';
 import { join, normalize, resolve } from 'node:path';
 import { inflateSync } from 'node:zlib';
 
@@ -41,7 +41,8 @@ function findBrowser() {
 }
 
 async function webFile(urlPath) {
-  const clean = normalize(decodeURIComponent(urlPath)).replace(/^\\/+/, '');
+  const pathname = normalize(decodeURIComponent(urlPath));
+  const clean = pathname.startsWith('/') ? pathname.slice(1) : pathname;
   if (clean.startsWith('..')) return null;
   const candidates = [clean, `${clean}.html`, join(clean, 'index.html')];
   if (!clean || clean === '.') candidates.unshift('index.html');
@@ -232,7 +233,7 @@ async function main() {
     baseline = JSON.parse(await readFile(baselinePath, 'utf8'));
   } catch {
     console.log('VISUAL_BASELINE_BEGIN');
-    console.log(JSON.stringify({ version: 1, signatures }, null, 2));
+    console.log(JSON.stringify({ version: 1, signatures }));
     console.log('VISUAL_BASELINE_END');
     throw new Error('Reviewed visual baseline missing. Commit the captured baseline before enabling this gate.');
   }
