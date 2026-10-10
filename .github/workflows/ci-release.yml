@@ -53,7 +53,7 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: ci/requirements-ci.txt
-      - uses: actions/setup-node@1e60f620b9541d7e3b9ff1f1c57d576f7a2b3cde # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
           cache: npm

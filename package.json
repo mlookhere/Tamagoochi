@@ -1,0 +1,47 @@
+{
+  "name": "tamagoochi",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "build:ci": "expo export --platform all --output-dir dist",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"scripts/*.mjs\" package.json app.json tsconfig.json eslint.config.js .prettierrc.json",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"scripts/*.mjs\" package.json app.json tsconfig.json eslint.config.js .prettierrc.json",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/run-tests.mjs",
+    "test:coverage": "node scripts/run-tests.mjs --coverage"
+  },
+  "dependencies": {
+    "expo": "~57.0.9",
+    "expo-constants": "~57.0.8",
+    "expo-linking": "~57.0.4",
+    "expo-router": "~57.0.9",
+    "expo-splash-screen": "~57.0.5",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.2",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-web": "~0.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@types/react": "~19.2.2",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.1",
+    "prettier": "^3.9.6",
+    "typescript": "~6.0.3"
+  },
+  "overrides": {
+    "braces": "npm:@dieub/braces-depth-guard@3.0.3-pn.0",
+    "image-size": "2.0.4",
+    "node-forge": "github:Krysthyan/forge#ceba34402e329f0365134f23fe19898756527d65"
+  }
+}

@@ -1,5 +1,5 @@
 name: Release
-description: Release control Issue promoting dev to master
+description: Release control Issue promoting dev to main
 labels: ["type:release", "state:ready"]
 body:
   - type: textarea
