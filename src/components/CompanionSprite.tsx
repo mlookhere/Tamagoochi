@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -17,7 +17,7 @@ type Props = Readonly<{
 
 export function CompanionSprite({ name, pose, reactionId }: Props) {
   const [reduceMotion, setReduceMotion] = useState(true);
-  const lift = useRef(new Animated.Value(0)).current;
+  const [lift] = useState(() => new Animated.Value(0));
   const expression = expressionFor(pose);
 
   useEffect(() => {
