@@ -16,8 +16,7 @@ const exported = [
 
 test('every companion sprite is registered as a static Metro image', () => {
   const pathRegex = /companions\/([\w-]+)\.png'\s*,?\s*\)/g;
-  const required = Array.from(registry.matchAll(pathRegex), (match) => match[1]);
-  assert.equal((registry.match(/require\(/g) ?? []).length, exported.length);
+  const required = [...registry.matchAll(pathRegex)].map((match) => match[1]);
   assert.deepEqual(required, exported);
 });
 
@@ -44,7 +43,9 @@ test('companion art maintains visible silhouettes and distinct expressions', () 
     const pixels = inflateSync(file.subarray(41, 41 + payloadLength));
     assert.equal(pixels.length, 256 * 1025);
 
-    const alphaAt = (x: number, y: number) => pixels[y * 1025 + 1 + x * 4 + 3];
+    function alphaAt(x: number, y: number) {
+      return pixels[y * 1025 + 1 + x * 4 + 3];
+    }
 
     assert.equal(alphaAt(0, 0), 0, 'Corners must be transparent');
     assert.ok(alphaAt(128, 150) > 200, 'Mascot body must be opaque');

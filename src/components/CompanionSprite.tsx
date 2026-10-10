@@ -6,7 +6,8 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import { getCompanionArtwork, type CompanionStage } from '../assets/companions';
+import { getCompanionArtwork } from '../assets/companions';
+import type { CompanionStage } from '../assets/companions';
 import { type CompanionPose, expressionFor, motionFor } from '../theme/motion';
 
 type Props = Readonly<{
@@ -103,13 +104,7 @@ export function CompanionSprite({
       accessibilityLabel={`${name}, your companion, ${pose}`}
       style={[
         styles.sprite,
-        {
-          transform: [
-            { translateY: lift },
-            { rotate: turn },
-            { scale: zoom },
-          ],
-        },
+        { transform: [{ translateY: lift }, { rotate: turn }, { scale: zoom }] },
       ]}
     >
       <Image
