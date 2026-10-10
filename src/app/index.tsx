@@ -7,6 +7,7 @@ import { colors } from '../theme';
 import type { CompanionPose } from '../theme/motion';
 
 type StatProps = Readonly<{ label: string; value: number }>;
+type Reaction = { pose: CompanionPose; nonce: number };
 
 function Stat({ label, value }: StatProps) {
   return (
@@ -28,7 +29,7 @@ export default function Home() {
     'A new little friend is waiting for you.',
   );
 
-  const [reaction, setReaction] = useState<{ pose: CompanionPose; nonce: number }>({
+  const [reaction, setReaction] = useState<Reaction>({
     pose: 'idle',
     nonce: 0,
   });
@@ -70,7 +71,10 @@ export default function Home() {
           onPress={() => {
             setPet(feed);
             setMessage('A happy little snack break.');
-            setReaction((current) => ({ pose: 'eat', nonce: current.nonce + 1 }));
+            setReaction((current) => ({
+              pose: 'eat',
+              nonce: current.nonce + 1,
+            }));
           }}
         >
           <Text style={styles.actionTitle}>Feed</Text>
@@ -82,7 +86,10 @@ export default function Home() {
           onPress={() => {
             setPet(play);
             setMessage('That was fun!');
-            setReaction((current) => ({ pose: 'play', nonce: current.nonce + 1 }));
+            setReaction((current) => ({
+              pose: 'play',
+              nonce: current.nonce + 1,
+            }));
           }}
         >
           <Text style={styles.actionTitle}>Play</Text>
@@ -94,7 +101,10 @@ export default function Home() {
           onPress={() => {
             setPet(clean);
             setMessage('Fresh and ready for adventure.');
-            setReaction((current) => ({ pose: 'clean', nonce: current.nonce + 1 }));
+            setReaction((current) => ({
+              pose: 'clean',
+              nonce: current.nonce + 1,
+            }));
           }}
         >
           <Text style={styles.actionTitle}>Clean</Text>

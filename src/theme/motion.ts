@@ -21,19 +21,22 @@ export function motionFor(pose: CompanionPose, reduceMotion: boolean) {
   return reduceMotion ? { lift: 0, duration: 0 } : companionMotion[pose];
 }
 
-export type CompanionExpression =
-  | 'neutral'
-  | 'asleep'
-  | 'joyful'
-  | 'surprised'
-  | 'sad';
+export const companionExpressions = {
+  idle: 'neutral',
+  walk: 'neutral',
+  eat: 'neutral',
+  sleep: 'asleep',
+  clean: 'neutral',
+  play: 'joyful',
+  happy: 'joyful',
+  sad: 'sad',
+  curious: 'neutral',
+  startled: 'surprised',
+  pickup: 'neutral',
+  return: 'neutral',
+  evolution: 'joyful',
+} as const satisfies Record<CompanionPose, string>;
 
-export function expressionFor(pose: CompanionPose): CompanionExpression {
-  if (pose === 'sleep') return 'asleep';
-  if (pose === 'sad') return 'sad';
-  if (pose === 'startled') return 'surprised';
-  if (pose === 'play' || pose === 'happy' || pose === 'evolution') {
-    return 'joyful';
-  }
-  return 'neutral';
+export function expressionFor(pose: CompanionPose) {
+  return companionExpressions[pose];
 }
