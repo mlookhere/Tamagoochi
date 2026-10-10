@@ -1,11 +1,14 @@
 import { Page } from '../components/Page';
+import { ScenePreview } from '../components/ScenePreview';
 
 export default function Adventure() {
   return (
     <Page
-      eyebrow="Coming in the next gameplay slices"
+      eyebrow="Outside, together"
       title="The world is waiting."
-      description="Your daily walks will become small discoveries and adventures together."
-    />
+      description="Your little companion will discover stories wherever life takes you."
+    >
+      <ScenePreview kind="adventure" />
+    </Page>
   );
 }
