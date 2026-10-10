@@ -42,7 +42,7 @@ function ReviewButton({ label, selected, onPress }: ReviewButtonProps) {
   );
 }
 
-export default function MotionReview() {
+function MotionReviewContent() {
   const [stage, setStage] = useState<CompanionStage>('seedling');
   const [pose, setPose] = useState<CompanionPose>('idle');
   const [reactionId, setReactionId] = useState(0);
@@ -67,8 +67,6 @@ export default function MotionReview() {
       subscription.remove();
     };
   }, []);
-
-  if (!__DEV__) return <Redirect href="/" />;
 
   const choosePose = (value: CompanionPose) => {
     setPose(value);
@@ -145,6 +143,13 @@ export default function MotionReview() {
       </Text>
     </Page>
   );
+}
+
+export default function MotionReview() {
+  if (!__DEV__) {
+    return <Redirect href="/" />;
+  }
+  return <MotionReviewContent />;
 }
 
 const styles = StyleSheet.create({

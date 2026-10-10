@@ -48,6 +48,7 @@ function AppTabs() {
           ),
         }}
       />
+      <Tabs.Screen name="motion-review" options={{ href: null }} />
       <Tabs.Screen
         name="friends"
         options={{
