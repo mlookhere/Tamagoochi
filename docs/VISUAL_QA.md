@@ -53,3 +53,7 @@ In `/motion-review`, confirm idle/walk/sleep/sad/curious repeat smoothly, while 
 ## Shared system Reduce Motion observer
 
 `src/hooks/useSystemReduceMotion.ts` is the single React Native accessibility subscription used by both `CompanionSprite` and the development-only inspection screen. A missing or rejected OS query is treated as reduced motion for animations, and a live change event takes precedence over a pending initial query. Native reviewers must confirm the status indicator and sprite agree when the OS preference changes; static unit tests verify only the policy for true, false and unknown preference values.
+
+## Home reaction reset timing
+
+The Home screen no longer uses one hard-coded timeout for every reaction. Each non-looping gesture stays visible until both authored motion halves have completed plus an 80 ms settle time; when system Reduce Motion is active or unresolved, the corresponding static expression is held for 400 ms before returning to idle. Each successive user interaction increments a nonce, so an earlier timer cannot reset a newer reaction. Deterministic tests cover all one-shot and looping poses, but device confirmation still needs to verify real rendered motion and rapid repeated taps.

@@ -3,8 +3,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RoomScene } from '../components/RoomScene';
 import { Page } from '../components/Page';
 import { clean, createCompanion, feed, play } from '../domain/pet/state';
+import { useSystemReduceMotion } from '../hooks/useSystemReduceMotion';
 import { colors } from '../theme';
-import type { CompanionPose } from '../theme/motion';
+import { motionDisabled } from '../theme/accessibility';
+import { type CompanionPose, reactionResetDelay } from '../theme/motion';
 
 type StatProps = Readonly<{ label: string; value: number }>;
 type Reaction = { pose: CompanionPose; nonce: number };
@@ -24,6 +26,7 @@ function Stat({ label, value }: StatProps) {
 }
 
 export default function Home() {
+  const reducedMotion = motionDisabled(useSystemReduceMotion());
   const [pet, setPet] = useState(() => createCompanion());
   const [message, setMessage] = useState(
     'A new little friend is waiting for you.',
@@ -35,13 +38,16 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (reaction.pose === 'idle') return;
-    const timer = setTimeout(
-      () => setReaction((current) => ({ ...current, pose: 'idle' })),
-      950,
-    );
+    const delay = reactionResetDelay(reaction.pose, reducedMotion);
+    if (!delay) return;
+    const nonce = reaction.nonce;
+    const timer = setTimeout(() => {
+      setReaction((current) =>
+        current.nonce === nonce ? { ...current, pose: 'idle' } : current,
+      );
+    }, delay);
     return () => clearTimeout(timer);
-  }, [reaction]);
+  }, [reaction, reducedMotion]);
 
   return (
     <Page

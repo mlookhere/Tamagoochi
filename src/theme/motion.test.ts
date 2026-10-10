@@ -7,6 +7,7 @@ import {
   expressionFor,
   motionFor,
   playbackFor,
+  reactionResetDelay,
 } from './motion.ts';
 
 test('every authored companion pose has an animated and static presentation', () => {
@@ -73,4 +74,21 @@ test('sustained motions loop and interactions finish after one gesture', () => {
   for (const pose of reactions) {
     assert.equal(playbackFor(pose), 'once');
   }
+});
+
+test('one-shot Home reactions are never reset before their motion completes', () => {
+  for (const pose of Object.keys(companionMotion) as CompanionPose[]) {
+    const delay = reactionResetDelay(pose, false);
+    if (playbackFor(pose) === 'loop') {
+      assert.equal(delay, 0);
+      continue;
+    }
+    assert.equal(delay, companionMotion[pose].duration * 2 + 80);
+    assert.ok(delay > motionFor(pose, false).duration * 2);
+    assert.equal(reactionResetDelay(pose, true), 400);
+  }
+  assert.equal(reactionResetDelay('evolution', false), 1380);
+  assert.equal(reactionResetDelay('eat', false), 600);
+  assert.equal(reactionResetDelay('play', false), 840);
+  assert.equal(reactionResetDelay('clean', false), 880);
 });
