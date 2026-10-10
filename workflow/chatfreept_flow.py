@@ -57,22 +57,24 @@ def checks_summary(pr: dict[str, Any]) -> str:
     return "passing"
 
 
+def format_issue_row(issue: dict[str, Any], prs: list[dict[str, Any]]) -> str | None:
+    labels = {label["name"] for label in issue.get("labels") or []}
+    if not labels.intersection({"state:active", "state:blocked", "state:review"}):
+        return None
+    if issue["title"] == "[CONTROL] Current repository state":
+        return None
+    number = int(issue["number"])
+    linked = [p for p in prs if p.get("headRefName", "").startswith(f"work/{number}-")]
+    pr = linked[0] if linked else None
+    branch = pr["headRefName"] if pr else f"work/{number}-…"
+    state = next((v.split(":", 1)[1] for v in sorted(labels) if v.startswith("state:")), "active")
+    risks = ", ".join(sorted(x.split(":", 1)[1] for x in labels if x.startswith("risk:"))) or "—"
+    detail = f"[#{pr['number']}]({pr['url']}) / {checks_summary(pr)}" if pr else "—"
+    return f"| [#{number}]({issue['url']}) {issue['title']} | `{branch}` | {state} | {risks} | {detail} |"
+
+
 def issue_table(issues: list[dict[str, Any]], prs: list[dict[str, Any]]) -> str:
-    rows = []
-    for issue in issues:
-        labels = {label["name"] for label in issue.get("labels") or []}
-        if not labels.intersection({"state:active", "state:blocked", "state:review"}):
-            continue
-        if issue["title"] == "[CONTROL] Current repository state":
-            continue
-        number = int(issue["number"])
-        linked = [p for p in prs if p.get("headRefName", "").startswith(f"work/{number}-")]
-        pr = linked[0] if linked else None
-        branch = pr["headRefName"] if pr else f"work/{number}-…"
-        state = next((v.split(":", 1)[1] for v in sorted(labels) if v.startswith("state:")), "active")
-        risks = ", ".join(sorted(x.split(":", 1)[1] for x in labels if x.startswith("risk:"))) or "—"
-        detail = f"[#{pr['number']}]({pr['url']}) / {checks_summary(pr)}" if pr else "—"
-        rows.append(f"| [#{number}]({issue['url']}) {issue['title']} | `{branch}` | {state} | {risks} | {detail} |")
+    rows = [row for issue in issues if (row := format_issue_row(issue, prs)) is not None]
     return "\n".join(rows) if rows else "| — | — | no active task Issues | — | — |"
 
 

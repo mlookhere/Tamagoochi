@@ -81,6 +81,9 @@ def verify_stages(config: dict[str, Any], failures: list[str]) -> None:
         for group in groups:
             if group != "quality" and not commands.get(group):
                 fail(f"Stage {name} refers to absent command group {group}", failures)
+
+
+def verify_quality(config: dict[str, Any], failures: list[str]) -> None:
     quality = config.get("quality", {})
     # Keep the original security, size and complexity limits or make them stricter.
     limits = {"max_changed_file_lines": 1500, "max_function_lines": 120,
@@ -178,6 +181,7 @@ def main() -> int:
         return 1
     verify_repository(config, failures)
     verify_stages(config, failures)
+    verify_quality(config, failures)
     verify_sources(failures)
     verify_workflows(failures)
     verify_policy(failures)
