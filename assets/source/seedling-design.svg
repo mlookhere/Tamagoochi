@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Original Tamagoochi seedling creature vector source">
+  <defs>
+    <linearGradient id="fur" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff9e9"/>
+      <stop offset=".65" stop-color="#fff2d5"/>
+      <stop offset="1" stop-color="#e9d4b2"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#98d9a1"/>
+      <stop offset="1" stop-color="#5fa978"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="128" cy="238" rx="75" ry="11" fill="#4f6a58" opacity=".15"/>
+  <g stroke="#ab8a6b" stroke-width="3" fill="url(#fur)">
+    <ellipse cx="91" cy="208" rx="22" ry="15"/>
+    <ellipse cx="164" cy="208" rx="22" ry="15"/>
+    <ellipse cx="65" cy="169" rx="21" ry="29" transform="rotate(-28 65 169)"/>
+    <ellipse cx="190" cy="169" rx="21" ry="29" transform="rotate(28 190 169)"/>
+    <ellipse cx="82" cy="80" rx="26" ry="59" transform="rotate(-18 82 80)"/>
+    <ellipse cx="174" cy="79" rx="24" ry="57" transform="rotate(20 174 79)"/>
+  </g>
+  <ellipse cx="78" cy="79" rx="12" ry="41" transform="rotate(-16 78 79)" fill="#ecafab" opacity=".45"/>
+  <ellipse cx="179" cy="77" rx="11" ry="37" transform="rotate(18 179 77)" fill="#ecafab" opacity=".4"/>
+  <ellipse cx="128" cy="151" rx="79" ry="77" fill="url(#fur)" stroke="#ab8a6b" stroke-width="4"/>
+  <ellipse cx="128" cy="173" rx="52" ry="43" fill="#fff9e9" opacity=".36"/>
+  <path d="M129 88V47" stroke="#548a64" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="116" cy="44" rx="24" ry="12" transform="rotate(-37 116 44)" fill="url(#leaf)"/>
+  <ellipse cx="142" cy="44" rx="24" ry="12" transform="rotate(32 142 44)" fill="url(#leaf)"/>
+  <circle cx="129" cy="84" r="11" fill="#e9c981"/>
+  <ellipse cx="101" cy="138" rx="9" ry="14" fill="#334b41"/>
+  <ellipse cx="155" cy="138" rx="9" ry="14" fill="#334b41"/>
+  <ellipse cx="99" cy="133" rx="3" ry="4" fill="#fff9e9"/>
+  <ellipse cx="153" cy="133" rx="3" ry="4" fill="#fff9e9"/>
+  <ellipse cx="127" cy="149" rx="4" ry="3" fill="#d3a177"/>
+  <path d="M119 162Q128 171 137 162" fill="none" stroke="#334b41" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="82" cy="154" rx="13" ry="7" fill="#ecafab" opacity=".45"/>
+  <ellipse cx="173" cy="154" rx="13" ry="7" fill="#ecafab" opacity=".45"/>
+  <g fill="#5fa978" opacity=".8">
+    <circle cx="112" cy="190" r="4"/>
+    <circle cx="128" cy="192" r="4"/>
+    <circle cx="144" cy="190" r="4"/>
+  </g>
+</svg>
