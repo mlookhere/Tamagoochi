@@ -15,6 +15,7 @@ if (coverage) {
 args.push(
   'src/domain/pet/state.test.ts',
   'src/config/public.test.ts',
+  'src/theme/motion.test.ts',
   'scripts/vendor-security.test.mjs',
 );
 const result = spawnSync(process.execPath, args, { stdio: 'inherit' });

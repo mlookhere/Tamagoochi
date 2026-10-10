@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { APP_ASSETS } from '../assets';
+import { CompanionSprite } from '../components/CompanionSprite';
 import { Page } from '../components/Page';
 import { clean, createCompanion, feed, play } from '../domain/pet/state';
+import { colors } from '../theme';
+import type { CompanionPose } from '../theme/motion';
 
 type StatProps = Readonly<{ label: string; value: number }>;
 
@@ -26,6 +29,14 @@ export default function Home() {
     'A new little friend is waiting for you.',
   );
 
+  const [pose, setPose] = useState<CompanionPose>('idle');
+
+  useEffect(() => {
+    if (pose === 'idle') return;
+    const timer = setTimeout(() => setPose('idle'), 950);
+    return () => clearTimeout(timer);
+  }, [pose]);
+
   return (
     <Page
       eyebrow="Your tiny world"
@@ -40,17 +51,7 @@ export default function Home() {
         />
         <View style={styles.sun} />
         <View style={styles.floor} />
-        <View style={styles.pet}>
-          <View style={styles.earLeft} />
-          <View style={styles.earRight} />
-          <View style={styles.body}>
-            <View style={styles.face}>
-              <View style={styles.eye} />
-              <View style={styles.eye} />
-            </View>
-            <View style={styles.mouth} />
-          </View>
-        </View>
+        <CompanionSprite name={pet.name} pose={pose} />
         <Text style={styles.name}>{pet.name}</Text>
         <Text style={styles.mood}>{message}</Text>
       </View>
@@ -70,6 +71,7 @@ export default function Home() {
           onPress={() => {
             setPet(feed);
             setMessage('A happy little snack break.');
+            setPose('eat');
           }}
         >
           <Text style={styles.actionTitle}>Feed</Text>
@@ -81,6 +83,7 @@ export default function Home() {
           onPress={() => {
             setPet(play);
             setMessage('That was fun!');
+            setPose('play');
           }}
         >
           <Text style={styles.actionTitle}>Play</Text>
@@ -92,6 +95,7 @@ export default function Home() {
           onPress={() => {
             setPet(clean);
             setMessage('Fresh and ready for adventure.');
+            setPose('clean');
           }}
         >
           <Text style={styles.actionTitle}>Clean</Text>
@@ -109,7 +113,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderRadius: 25,
     paddingBottom: 15,
-    backgroundColor: '#DCEBCD',
+    backgroundColor: colors.meadow,
   },
   seedAsset: {
     position: 'absolute',
@@ -124,7 +128,7 @@ const styles = StyleSheet.create({
     right: 32,
     width: 54,
     height: 54,
-    backgroundColor: '#FCEB9A',
+    backgroundColor: colors.sun,
     borderRadius: 27,
   },
   floor: {
@@ -132,82 +136,29 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: 82,
     width: '100%',
-    backgroundColor: '#C4DBB2',
+    backgroundColor: colors.meadowFloor,
   },
-  pet: {
-    height: 128,
-    width: 138,
-    position: 'relative',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  earLeft: {
-    position: 'absolute',
-    top: 3,
-    left: 20,
-    width: 43,
-    height: 64,
-    backgroundColor: '#FAE8BC',
-    borderRadius: 23,
-    transform: [{ rotate: '-23deg' }],
-  },
-  earRight: {
-    position: 'absolute',
-    top: 3,
-    right: 20,
-    width: 43,
-    height: 64,
-    backgroundColor: '#FAE8BC',
-    borderRadius: 23,
-    transform: [{ rotate: '23deg' }],
-  },
-  body: {
-    width: 135,
-    height: 110,
-    borderRadius: 58,
-    backgroundColor: '#FFF0C9',
-    borderWidth: 3,
-    borderColor: '#CFAF80',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  face: {
-    width: 65,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 0,
-  },
-  eye: { width: 13, height: 19, backgroundColor: '#354537', borderRadius: 7 },
-  mouth: {
-    width: 15,
-    height: 7,
-    borderBottomWidth: 2,
-    borderColor: '#354537',
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
-    marginTop: 8,
-  },
-  name: { marginTop: 9, fontSize: 21, fontWeight: '800', color: '#2D4A38' },
-  mood: { marginTop: 3, color: '#567159', fontSize: 12, fontWeight: '600' },
+  name: { marginTop: 9, fontSize: 21, fontWeight: '800', color: colors.ink },
+  mood: { marginTop: 3, color: colors.muted, fontSize: 12, fontWeight: '600' },
   stats: { paddingTop: 22, gap: 14 },
   stat: { gap: 6 },
   statLabels: { flexDirection: 'row', justifyContent: 'space-between' },
-  statLabel: { fontSize: 13, fontWeight: '700', color: '#415849' },
-  statValue: { fontSize: 12, color: '#708778' },
+  statLabel: { fontSize: 13, fontWeight: '700', color: colors.ink },
+  statValue: { fontSize: 12, color: colors.muted },
   track: {
     height: 8,
     borderRadius: 8,
-    backgroundColor: '#E5E9DC',
+    backgroundColor: colors.track,
     overflow: 'hidden',
   },
-  fill: { height: '100%', borderRadius: 8, backgroundColor: '#8DBB81' },
+  fill: { height: '100%', borderRadius: 8, backgroundColor: colors.fern },
   actions: { flexDirection: 'row', gap: 10, marginTop: 28, marginBottom: 25 },
   action: {
     flex: 1,
     borderRadius: 15,
-    backgroundColor: '#345E46',
+    backgroundColor: colors.moss,
     paddingVertical: 15,
     alignItems: 'center',
   },
-  actionTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  actionTitle: { color: colors.white, fontSize: 14, fontWeight: '800' },
 });

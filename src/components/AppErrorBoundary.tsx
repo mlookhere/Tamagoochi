@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from 'react';
 import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { colors } from '../theme';
 
 type Props = Readonly<{ children: ReactNode }>;
 type State = Readonly<{ error: Error | null }>;
@@ -48,30 +49,30 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#F6F7ED',
+    backgroundColor: colors.canvas,
   },
   card: {
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#FBFCF4',
+    backgroundColor: colors.paper,
   },
   eyebrow: {
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1.8,
-    color: '#718875',
+    color: colors.muted,
   },
   title: {
     marginTop: 12,
     fontSize: 28,
     fontWeight: '800',
-    color: '#253F32',
+    color: colors.ink,
   },
   body: {
     marginTop: 10,
     fontSize: 16,
     lineHeight: 24,
-    color: '#627368',
+    color: colors.muted,
   },
   button: {
     alignSelf: 'flex-start',
@@ -79,11 +80,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 18,
     paddingVertical: 12,
-    backgroundColor: '#345E46',
+    backgroundColor: colors.moss,
   },
   buttonText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.white,
   },
 });

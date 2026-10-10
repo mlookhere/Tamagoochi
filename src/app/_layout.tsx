@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { AppErrorBoundary } from '../components/AppErrorBoundary';
 import { getPublicConfig } from '../config/public';
+import { colors } from '../theme';
 
 function AppTabs() {
   getPublicConfig();
@@ -9,11 +10,11 @@ function AppTabs() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#365C47',
-        tabBarInactiveTintColor: '#85928A',
+        tabBarActiveTintColor: colors.moss,
+        tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
-          backgroundColor: '#FBFCF4',
-          borderTopColor: '#DEE7D9',
+          backgroundColor: colors.paper,
+          borderTopColor: colors.border,
           height: 76,
           paddingTop: 8,
           paddingBottom: 10,
