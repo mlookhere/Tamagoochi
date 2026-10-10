@@ -1,11 +1,14 @@
 import { Page } from '../components/Page';
+import { ScenePreview } from '../components/ScenePreview';
 
 export default function Memories() {
   return (
     <Page
-      eyebrow="Coming in the next gameplay slices"
+      eyebrow="Our little history"
       title="A life in little moments."
-      description="Every first, every place, and every keepsake will have a story to tell."
-    />
+      description="A home for every place, first, and keepsake you share."
+    >
+      <ScenePreview kind="memories" />
+    </Page>
   );
 }

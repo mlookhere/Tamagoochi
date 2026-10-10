@@ -1,10 +1,22 @@
-import { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { APP_ASSETS } from '../assets';
+import { useEffect, useState } from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
+import { RoomScene } from '../components/RoomScene';
 import { Page } from '../components/Page';
 import { clean, createCompanion, feed, play } from '../domain/pet/state';
+import { useSystemReduceMotion } from '../hooks/useSystemReduceMotion';
+import { colors } from '../theme';
+import { motionDisabled } from '../theme/accessibility';
+import { stackCareActions } from '../theme/layout';
+import { type CompanionPose, reactionResetDelay } from '../theme/motion';
 
 type StatProps = Readonly<{ label: string; value: number }>;
+type Reaction = { pose: CompanionPose; nonce: number };
 
 function Stat({ label, value }: StatProps) {
   return (
@@ -21,10 +33,30 @@ function Stat({ label, value }: StatProps) {
 }
 
 export default function Home() {
+  const { fontScale } = useWindowDimensions();
+  const stackedActions = stackCareActions(fontScale);
+  const reducedMotion = motionDisabled(useSystemReduceMotion());
   const [pet, setPet] = useState(() => createCompanion());
   const [message, setMessage] = useState(
     'A new little friend is waiting for you.',
   );
+
+  const [reaction, setReaction] = useState<Reaction>({
+    pose: 'idle',
+    nonce: 0,
+  });
+
+  useEffect(() => {
+    const delay = reactionResetDelay(reaction.pose, reducedMotion);
+    if (!delay) return;
+    const nonce = reaction.nonce;
+    const timer = setTimeout(() => {
+      setReaction((current) =>
+        current.nonce === nonce ? { ...current, pose: 'idle' } : current,
+      );
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [reaction, reducedMotion]);
 
   return (
     <Page
@@ -32,28 +64,12 @@ export default function Home() {
       title="Home is wherever you are."
       description="Meet your little companion. Taking care of each other is just the beginning."
     >
-      <View style={styles.habitat}>
-        <Image
-          accessibilityLabel="Companion seed"
-          source={APP_ASSETS.companionSeed}
-          style={styles.seedAsset}
-        />
-        <View style={styles.sun} />
-        <View style={styles.floor} />
-        <View style={styles.pet}>
-          <View style={styles.earLeft} />
-          <View style={styles.earRight} />
-          <View style={styles.body}>
-            <View style={styles.face}>
-              <View style={styles.eye} />
-              <View style={styles.eye} />
-            </View>
-            <View style={styles.mouth} />
-          </View>
-        </View>
-        <Text style={styles.name}>{pet.name}</Text>
-        <Text style={styles.mood}>{message}</Text>
-      </View>
+      <RoomScene
+        name={pet.name}
+        pose={reaction.pose}
+        reactionId={reaction.nonce}
+        message={message}
+      />
 
       <View style={styles.stats}>
         <Stat label="Fullness" value={pet.hunger} />
@@ -62,14 +78,18 @@ export default function Home() {
         <Stat label="Cleanliness" value={pet.cleanliness} />
       </View>
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, stackedActions && styles.actionsStacked]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Feed companion"
-          style={styles.action}
+          style={[styles.action, stackedActions && styles.actionStacked]}
           onPress={() => {
             setPet(feed);
             setMessage('A happy little snack break.');
+            setReaction((current) => ({
+              pose: 'eat',
+              nonce: current.nonce + 1,
+            }));
           }}
         >
           <Text style={styles.actionTitle}>Feed</Text>
@@ -77,10 +97,14 @@ export default function Home() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Play with companion"
-          style={styles.action}
+          style={[styles.action, stackedActions && styles.actionStacked]}
           onPress={() => {
             setPet(play);
             setMessage('That was fun!');
+            setReaction((current) => ({
+              pose: 'play',
+              nonce: current.nonce + 1,
+            }));
           }}
         >
           <Text style={styles.actionTitle}>Play</Text>
@@ -88,10 +112,14 @@ export default function Home() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Clean companion"
-          style={styles.action}
+          style={[styles.action, stackedActions && styles.actionStacked]}
           onPress={() => {
             setPet(clean);
             setMessage('Fresh and ready for adventure.');
+            setReaction((current) => ({
+              pose: 'clean',
+              nonce: current.nonce + 1,
+            }));
           }}
         >
           <Text style={styles.actionTitle}>Clean</Text>
@@ -102,112 +130,32 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  habitat: {
-    height: 275,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    overflow: 'hidden',
-    borderRadius: 25,
-    paddingBottom: 15,
-    backgroundColor: '#DCEBCD',
-  },
-  seedAsset: {
-    position: 'absolute',
-    top: 20,
-    left: 24,
-    width: 38,
-    height: 38,
-  },
-  sun: {
-    position: 'absolute',
-    top: 24,
-    right: 32,
-    width: 54,
-    height: 54,
-    backgroundColor: '#FCEB9A',
-    borderRadius: 27,
-  },
-  floor: {
-    position: 'absolute',
-    bottom: 0,
-    height: 82,
-    width: '100%',
-    backgroundColor: '#C4DBB2',
-  },
-  pet: {
-    height: 128,
-    width: 138,
-    position: 'relative',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  earLeft: {
-    position: 'absolute',
-    top: 3,
-    left: 20,
-    width: 43,
-    height: 64,
-    backgroundColor: '#FAE8BC',
-    borderRadius: 23,
-    transform: [{ rotate: '-23deg' }],
-  },
-  earRight: {
-    position: 'absolute',
-    top: 3,
-    right: 20,
-    width: 43,
-    height: 64,
-    backgroundColor: '#FAE8BC',
-    borderRadius: 23,
-    transform: [{ rotate: '23deg' }],
-  },
-  body: {
-    width: 135,
-    height: 110,
-    borderRadius: 58,
-    backgroundColor: '#FFF0C9',
-    borderWidth: 3,
-    borderColor: '#CFAF80',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  face: {
-    width: 65,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 0,
-  },
-  eye: { width: 13, height: 19, backgroundColor: '#354537', borderRadius: 7 },
-  mouth: {
-    width: 15,
-    height: 7,
-    borderBottomWidth: 2,
-    borderColor: '#354537',
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
-    marginTop: 8,
-  },
-  name: { marginTop: 9, fontSize: 21, fontWeight: '800', color: '#2D4A38' },
-  mood: { marginTop: 3, color: '#567159', fontSize: 12, fontWeight: '600' },
   stats: { paddingTop: 22, gap: 14 },
   stat: { gap: 6 },
   statLabels: { flexDirection: 'row', justifyContent: 'space-between' },
-  statLabel: { fontSize: 13, fontWeight: '700', color: '#415849' },
-  statValue: { fontSize: 12, color: '#708778' },
+  statLabel: { fontSize: 13, fontWeight: '700', color: colors.ink },
+  statValue: { fontSize: 12, color: colors.muted },
   track: {
     height: 8,
     borderRadius: 8,
-    backgroundColor: '#E5E9DC',
+    backgroundColor: colors.track,
     overflow: 'hidden',
   },
-  fill: { height: '100%', borderRadius: 8, backgroundColor: '#8DBB81' },
+  fill: { height: '100%', borderRadius: 8, backgroundColor: colors.fern },
   actions: { flexDirection: 'row', gap: 10, marginTop: 28, marginBottom: 25 },
+  actionsStacked: { flexDirection: 'column' },
   action: {
     flex: 1,
     borderRadius: 15,
-    backgroundColor: '#345E46',
+    backgroundColor: colors.moss,
     paddingVertical: 15,
     alignItems: 'center',
   },
-  actionTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  actionStacked: {
+    flex: 0,
+    width: '100%',
+    minHeight: 48,
+    justifyContent: 'center',
+  },
+  actionTitle: { color: colors.white, fontSize: 14, fontWeight: '800' },
 });
