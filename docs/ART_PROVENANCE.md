@@ -29,3 +29,7 @@ Three original transparent 320×240 RGBA PNG studies are stored in `assets/onboa
 ## Companion pose accent provenance
 
 `src/components/CompanionPoseAccent.tsx` uses simple original React Native oval, leaf, seed and petal shapes in the existing Tamagoochi palette to differentiate action states. The mapping is typed in `src/theme/pose-art.ts`; no external icon sets, emoji images, or third-party artwork are used. These lightweight decorative marks are not a substitute for final authored action sprites.
+
+## Authored full-character action studies
+
+Nine distinct transparent 256×256 RGBA character PNGs are now bundled for feeding, cleaning and playing across seedling, bud and bloom growth stages. Each frame retains the matching original character stage and adds a hand-authored illustration of the action (berry/feeding paw, bath bubbles/cleaning paw, or colorful play ball/raised paw). `src/assets/actions.ts` is the typed Metro registry, and `CompanionSprite` uses these frames for their three dedicated poses. Other motion poses still rely on their expression sprites and static botanical accents. All nine image exports are project-original compositions; they remain first-pass action studies pending native artwork approval.

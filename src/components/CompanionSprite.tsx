@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet } from 'react-native';
 import { getCompanionArtwork } from '../assets/companions';
+import { actionArtwork, isIllustratedAction } from '../assets/actions';
 import type { CompanionStage } from '../assets/companions';
 import { useSystemReduceMotion } from '../hooks/useSystemReduceMotion';
 import { motionDisabled } from '../theme/accessibility';
@@ -29,6 +30,9 @@ export function CompanionSprite({
   const [lift] = useState(() => new Animated.Value(0));
   const [phase] = useState(() => new Animated.Value(0));
   const expression = expressionFor(pose);
+  const artwork = isIllustratedAction(pose)
+    ? actionArtwork(stage, pose)
+    : getCompanionArtwork(expression, stage);
   const motion = motionFor(pose, reduceMotion);
 
   useEffect(() => {
@@ -98,7 +102,7 @@ export function CompanionSprite({
     >
       <Image
         accessible={false}
-        source={getCompanionArtwork(expression, stage)}
+        source={artwork}
         resizeMode="contain"
         style={styles.artwork}
       />

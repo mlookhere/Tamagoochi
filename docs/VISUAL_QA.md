@@ -69,3 +69,7 @@ The development-only `/motion-review` screen includes three original onboarding 
 ## Pose-art accents
 
 The companion uses original decorative cues to distinguish all non-idle poses, including when Reduce Motion is active. On native devices, inspect all 39 stage/pose combinations and confirm small botanical shapes stay inside the 175-point sprite area, do not obscure the eyes or labels, and remain legible on both small and large screens. Touch controls and screen readers must ignore the decorative accents. The pose name remains the accessible description.
+
+## Native action-frame review
+
+On the developer-only `/motion-review` route, inspect eat, clean and play for **all three** stages. Each now loads its own complete 256×256 transparent character/prop PNG, not only an expression sprite with decorative marks. Confirm the berry, bath bubbles and play ball are distinct, do not obstruct the creature's facial expression, and remain visible with system Reduce Motion on. Review remaining ten poses separately: not all of them have dedicated full-body image frames yet.
