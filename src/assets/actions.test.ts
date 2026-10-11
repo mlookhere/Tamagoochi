@@ -4,13 +4,13 @@ import test from 'node:test';
 import { isIllustratedAction } from '../theme/action-pose.ts';
 
 const stages = ['seedling', 'bud', 'bloom'];
-const actions = ['eat', 'clean', 'play'];
+const actions = ['eat', 'clean', 'play'] as const;
 
 test('only authored actions use dedicated full-character frames', () => {
   for (const action of actions) {
     assert.equal(isIllustratedAction(action), true);
   }
-  for (const pose of ['idle', 'sleep', 'walk', 'evolution', 'happy']) {
+  for (const pose of ['idle', 'sleep', 'walk', 'evolution', 'happy'] as const) {
     assert.equal(isIllustratedAction(pose), false);
   }
 });
