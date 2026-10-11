@@ -10,8 +10,7 @@ export const ACTION_ART = {
     eat: require('../../assets/companions/action-seedling-eat.png') as number,
     clean:
       require('../../assets/companions/action-seedling-clean.png') as number,
-    play:
-      require('../../assets/companions/action-seedling-play.png') as number,
+    play: require('../../assets/companions/action-seedling-play.png') as number,
   },
   bud: {
     eat: require('../../assets/companions/action-bud-eat.png') as number,
