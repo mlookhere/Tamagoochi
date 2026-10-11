@@ -25,3 +25,7 @@ Eight original item and environment artworks (`assets/world/*.png`, 128×128 RGB
 ## Onboarding artwork provenance
 
 Three original transparent 320×240 RGBA PNG studies are stored in `assets/onboarding/`: welcome (a happy sprout companion), care (a watering-can/flower moment), and explore (a companion following a garden trail). They were generated from original geometric shapes and the existing woodland palette; no third-party characters, photographs, or copyrighted game compositions were used. `src/assets/onboarding.ts` registers the exact native PNG files through static Metro imports. `src/theme/onboarding.ts` stores the accessible descriptive copy and `src/components/OnboardingStoryboard.tsx` displays them only in the developer motion-review route. These are native illustration concepts, **not** a completed first-run onboarding flow or platform-approved release imagery. Review on real iOS/Android devices and obtain final artwork approval before shipping.
+
+## Companion pose accent provenance
+
+`src/components/CompanionPoseAccent.tsx` uses simple original React Native oval, leaf, seed and petal shapes in the existing Tamagoochi palette to differentiate action states. The mapping is typed in `src/theme/pose-art.ts`; no external icon sets, emoji images, or third-party artwork are used. These lightweight decorative marks are not a substitute for final authored action sprites.

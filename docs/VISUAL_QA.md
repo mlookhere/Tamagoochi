@@ -65,3 +65,7 @@ The four-tab navigation retains its existing baseline 76-point bar at default fo
 ## Native onboarding-art storyboard review
 
 The development-only `/motion-review` screen includes three original onboarding illustrations beneath the 39-case motion laboratory. Review welcome, care and explore panels at both compact and large native viewports, default and enlarged font sizes, and with screen readers enabled. The images have explicit accessibility descriptions; storyboard copy must remain readable and the 4:3 images must not crop. Automated PNG tests verify correct RGBA dimensions, transparency, visible center and unique exports, but cannot replace a real platform screenshot. No first-run onboarding sequence is implemented in this issue.
+
+## Pose-art accents
+
+The companion uses original decorative cues to distinguish all non-idle poses, including when Reduce Motion is active. On native devices, inspect all 39 stage/pose combinations and confirm small botanical shapes stay inside the 175-point sprite area, do not obscure the eyes or labels, and remain legible on both small and large screens. Touch controls and screen readers must ignore the decorative accents. The pose name remains the accessible description.

@@ -16,6 +16,7 @@ args.push(
   'src/domain/pet/state.test.ts',
   'src/config/public.test.ts',
   'src/theme/motion.test.ts',
+  'src/theme/pose-art.test.ts',
   'src/theme/motion-review.test.ts',
   'src/theme/accessibility.test.ts',
   'src/theme/layout.test.ts',

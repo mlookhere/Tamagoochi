@@ -76,3 +76,7 @@ The home room uses a minimum height rather than a fixed height, so large-font ch
 ## First-moment illustrations
 
 Three original 320×240 RGBA artwork concepts — meeting the seedling, caring for its garden, and exploring a small world — are bundled in `assets/onboarding/`. Their typed native registry and platform-independent metadata are in `src/assets/onboarding.ts` and `src/theme/onboarding.ts`. `OnboardingStoryboard` gives artists an accessible native preview on the developer-only review screen; the first-run user journey, persistence and onboarding interactions belong to later gameplay slices.
+
+## Action-specific botanical accents
+
+A reusable native view-based art layer now gives every non-idle companion pose a small original visual cue: berries for eating, bubbles for cleaning, petals for play/evolution, a crescent-colored motif for sleep, and similarly distinct trail, ray, leaf, sparkle or rain motifs for other states. The overlays are static, noninteractive and excluded from the accessibility tree; the companion's labeled pose conveys the same information. The marks remain present when the OS requests Reduce Motion, so state cues do not depend on movement. `src/theme/pose-art.ts` defines the complete 13-pose mapping, and `CompanionPoseAccent` renders it without additional dependencies. This is an interim pose-art layer; complete original full-body action frames and native visual sign-off remain outstanding.

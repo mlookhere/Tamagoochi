@@ -4,6 +4,7 @@ import { getCompanionArtwork } from '../assets/companions';
 import type { CompanionStage } from '../assets/companions';
 import { useSystemReduceMotion } from '../hooks/useSystemReduceMotion';
 import { motionDisabled } from '../theme/accessibility';
+import { CompanionPoseAccent } from './CompanionPoseAccent';
 import {
   type CompanionPose,
   expressionFor,
@@ -101,6 +102,7 @@ export function CompanionSprite({
         resizeMode="contain"
         style={styles.artwork}
       />
+      <CompanionPoseAccent pose={pose} />
     </Animated.View>
   );
 }
