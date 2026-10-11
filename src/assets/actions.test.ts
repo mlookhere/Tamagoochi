@@ -7,13 +7,15 @@ const stages = ['seedling', 'bud', 'bloom'];
 const actions = ['eat', 'clean', 'play'];
 
 test('only authored actions use dedicated full-character frames', () => {
-  for (const action of actions) assert.equal(isIllustratedAction(action), true);
+  for (const action of actions) {
+    assert.equal(isIllustratedAction(action), true);
+  }
   for (const pose of ['idle', 'sleep', 'walk', 'evolution', 'happy']) {
     assert.equal(isIllustratedAction(pose), false);
   }
 });
 
-test('nine original action PNGs are distinct, transparent and statically bundled', () => {
+test('nine action PNGs are distinct, transparent and native-bundled', () => {
   const registry = readFileSync('src/assets/actions.ts', 'utf8');
   const sprite = readFileSync('src/components/CompanionSprite.tsx', 'utf8');
   assert.match(sprite, /isIllustratedAction\(pose\)/);
@@ -22,7 +24,9 @@ test('nine original action PNGs are distinct, transparent and statically bundled
   for (const stage of stages) {
     for (const action of actions) {
       const filename = `action-${stage}-${action}.png`;
-      assert.ok(registry.includes(`require('../../assets/companions/${filename}')`));
+      assert.ok(
+        registry.includes(`require('../../assets/companions/${filename}')`),
+      );
       const png = readFileSync(`assets/companions/${filename}`);
       assert.deepEqual(
         Array.from(png.subarray(0, 8)),
