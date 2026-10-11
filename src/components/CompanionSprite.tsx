@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet } from 'react-native';
 import { getCompanionArtwork } from '../assets/companions';
-import { actionArtwork, isIllustratedAction } from '../assets/actions';
+import { actionArtwork } from '../assets/actions';
 import type { CompanionStage } from '../assets/companions';
 import { useSystemReduceMotion } from '../hooks/useSystemReduceMotion';
 import { motionDisabled } from '../theme/accessibility';
+import { isIllustratedAction } from '../theme/action-pose';
 import { CompanionPoseAccent } from './CompanionPoseAccent';
 import {
   type CompanionPose,

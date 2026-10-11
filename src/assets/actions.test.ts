@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { isIllustratedAction } from './actions.ts';
+import { isIllustratedAction } from '../theme/action-pose.ts';
 
 const stages = ['seedling', 'bud', 'bloom'];
 const actions = ['eat', 'clean', 'play'];

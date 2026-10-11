@@ -1,7 +1,8 @@
+import type { IllustratedAction } from '../theme/action-pose';
 import type { CompanionStage } from './companions';
-import type { CompanionPose } from '../theme/motion';
 
-export type IllustratedAction = 'eat' | 'clean' | 'play';
+type ActionImages = Record<IllustratedAction, number>;
+type ActionArtworkRegistry = Record<CompanionStage, ActionImages>;
 
 // Exact native Metro imports, with new transparent 256px action artwork.
 export const ACTION_ART = {
@@ -22,16 +23,7 @@ export const ACTION_ART = {
     clean: require('../../assets/companions/action-bloom-clean.png') as number,
     play: require('../../assets/companions/action-bloom-play.png') as number,
   },
-} as const satisfies Record<
-  CompanionStage,
-  Record<IllustratedAction, number>
->;
-
-export function isIllustratedAction(
-  pose: CompanionPose,
-): pose is IllustratedAction {
-  return pose === 'eat' || pose === 'clean' || pose === 'play';
-}
+} as const satisfies ActionArtworkRegistry;
 
 export function actionArtwork(
   stage: CompanionStage,
