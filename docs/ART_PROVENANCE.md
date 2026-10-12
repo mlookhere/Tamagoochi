@@ -33,3 +33,7 @@ Three original transparent 320×240 RGBA PNG studies are stored in `assets/onboa
 ## Authored full-character action studies
 
 Nine distinct transparent 256×256 RGBA character PNGs are now bundled for feeding, cleaning and playing across seedling, bud and bloom growth stages. Each frame retains the matching original character stage and adds a hand-authored illustration of the action (berry/feeding paw, bath bubbles/cleaning paw, or colorful play ball/raised paw). `src/assets/actions.ts` is the typed Metro registry, and `CompanionSprite` uses these frames for their three dedicated poses. Other motion poses still rely on their expression sprites and static botanical accents. All nine image exports are project-original compositions; they remain first-pass action studies pending native artwork approval.
+
+## Extended stage-specific pose studies
+
+Twelve additional original 256×256 RGBA character variants now cover walking, sleep, pickup and evolution at each of seedling, bud and bloom stages. They adapt the project's own original neutral, asleep and joyful artwork, with original stepping feet, cupped lift hands, pillow and crescent, and a blooming-petal transformation aura. Combined with eat, clean and play, seven of thirteen authored poses now have stage-specific full-character and prop compositions. No third-party character assets are used; these are first-pass illustrations pending native testing and creative signoff. Static Metro imports are in `src/assets/actions.ts`, and the pure action selection contract stays outside the native-only asset registry.

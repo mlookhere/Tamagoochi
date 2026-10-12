@@ -107,7 +107,7 @@ export function CompanionSprite({
         resizeMode="contain"
         style={styles.artwork}
       />
-      <CompanionPoseAccent pose={pose} />
+      {isIllustratedAction(pose) ? null : <CompanionPoseAccent pose={pose} />}
     </Animated.View>
   );
 }

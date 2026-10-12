@@ -73,3 +73,7 @@ The companion uses original decorative cues to distinguish all non-idle poses, i
 ## Native action-frame review
 
 On the developer-only `/motion-review` route, inspect eat, clean and play for **all three** stages. Each now loads its own complete 256×256 transparent character/prop PNG, not only an expression sprite with decorative marks. Confirm the berry, bath bubbles and play ball are distinct, do not obstruct the creature's facial expression, and remain visible with system Reduce Motion on. Review remaining ten poses separately: not all of them have dedicated full-body image frames yet.
+
+## Expanded stage-specific pose inspection
+
+Inspect walk, eat, sleep, clean, play, pickup and evolution at all three stages in `/motion-review` (21 original PNG studies). Check walking feet/trail accents, hand positioning during pickup, unobstructed sleeping features/pillow, and petal effects during evolution. Verify no doubled decorative overlays: image-integrated pose art takes precedence over generic pose accent marks. Test 256px source image scaling and transparent edges on both platforms, with Reduce Motion on and off. Idle, happy, sad, curious, startled and return still use the original expression sprite and decorative accents; do not claim full action-frame coverage or completed native QA.
