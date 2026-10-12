@@ -1,27 +1,21 @@
 import type { CompanionPose } from './motion';
 
-export type IllustratedAction =
-  | 'walk'
-  | 'eat'
-  | 'sleep'
-  | 'clean'
-  | 'play'
-  | 'pickup'
-  | 'evolution';
+export const illustratedActions = [
+  'walk',
+  'eat',
+  'sleep',
+  'clean',
+  'play',
+  'pickup',
+  'evolution',
+] as const satisfies readonly CompanionPose[];
+
+export type IllustratedAction = (typeof illustratedActions)[number];
+
+const actionSet: ReadonlySet<CompanionPose> = new Set(illustratedActions);
 
 export function isIllustratedAction(
   pose: CompanionPose,
 ): pose is IllustratedAction {
-  switch (pose) {
-    case 'walk':
-    case 'eat':
-    case 'sleep':
-    case 'clean':
-    case 'play':
-    case 'pickup':
-    case 'evolution':
-      return true;
-    default:
-      return false;
-  }
+  return actionSet.has(pose);
 }
