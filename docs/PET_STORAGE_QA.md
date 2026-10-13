@@ -2,23 +2,26 @@
 
 ## Storage contract
 
-Item 3 is local-first. `src/storage/companion.ts` validates JSON schema v2,
-migrates supported v1 data and returns a safe new companion when stored content
+Item 3 is local-first. `src/storage/companion.ts` validates JSON schema v3,
+migrates supported v1 and v2 data and returns a safe new companion when stored content
 is corrupt or an unrecognized version. `src/storage/repository.ts` keeps that
 serialization independent of device I/O.
 
 The native adapter (`src/storage/device.native.ts`) stores one JSON file in
-the app-scoped Expo FileSystem **documents** directory. The web implementation
+the app-scoped Expo FileSystem **documents** directory. The physical filename
+`companion-v2.json` and browser key `tamagoochi.companion.v2` are
+intentionally retained when migrating the JSON schema to v3 so existing saves
+are found rather than abandoned. The web implementation
 (`src/storage/device.ts`) uses browser localStorage for web-preview parity.
 `expo-file-system@~57.0.7` was already present in the lockfile transitively;
 it is now an explicit dependency. This does not request access to other apps'
 files, photos, or external storage.
 
 `src/hooks/useCompanion.ts` loads the saved pet before enabling care controls,
-queues writes in action order, saves after care, and applies the deterministic
+queues writes in action order, saves after care and item placement, and applies the deterministic
 elapsed-time simulation on foreground resume. A read exception blocks gameplay
 and offers Retry loading to avoid overwriting an inaccessible existing save.
-A failed write shows a warning; no success is claimed until the write resolves.
+A failed write shows a warning and an explicit Retry saving action; no success is claimed until the write resolves.
 A malformed save is recovered to a fresh, non-punitive companion with a notice.
 This storage layer does not implement cloud sync or multi-device conflict resolution.
 
@@ -39,7 +42,12 @@ device, and attach dated device/OS/build-SHA evidence to Issue #10:
 5. Load representative v1 data and malformed v2 data. Verify migration retains
    the four old need values; corrupt data shows the recovery notice and playable
    safe defaults. Check no sensitive records leave device storage.
-6. Confirm the app boots and the save file stays intact under iOS/Android
+6. Move the starter room cushion from left to center to right to left.
+   Force-close and reopen after moving it. Verify its position survives restart
+   and older v2 saves migrate with a default left cushion without losing pet
+   stats, age, sleep or elapsed time. This is only an Item 3 placement hook;
+   inventory, furniture collection and crafting are Item 4.
+7. Confirm the app boots and the save file stays intact under iOS/Android
    process termination and repeated rapid taps. Review accessibility text,
    hit targets and offline behavior with a screen reader enabled.
 
