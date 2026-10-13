@@ -6,30 +6,73 @@ import {
   RECIPES,
   craftItem,
   createInventory,
+  giveItem,
   itemCount,
   type Inventory,
   type ItemId,
   type RecipeId,
 } from '../domain/items/inventory';
+import {
+  ECHO_SYMBOLS,
+  chooseEcho,
+  echoPattern,
+  type EchoSymbol,
+} from '../features/minigames/echo';
 
 type WorkshopState = Readonly<{
   inventory: Inventory;
   notice: string;
+  echoRound: number;
+  echoProgress: number;
 }>;
+
+type WorkshopAction =
+  | Readonly<{ type: 'craft'; recipeId: RecipeId }>
+  | Readonly<{ type: 'echo'; symbol: EchoSymbol }>;
 
 function newWorkshop(): WorkshopState {
   return {
     inventory: createInventory(),
     notice: 'Collect materials, then make something for your companion.',
+    echoRound: 0,
+    echoProgress: 0,
   };
 }
 
 function reduceWorkshop(
   state: WorkshopState,
-  recipeId: RecipeId,
+  action: WorkshopAction,
 ): WorkshopState {
-  const result = craftItem(state.inventory, recipeId);
-  const name = RECIPES[recipeId].name;
+  if (action.type === 'echo') {
+    const outcome = chooseEcho(
+      state.echoRound,
+      state.echoProgress,
+      action.symbol,
+    );
+    if (outcome.result === 'complete') {
+      const reward = giveItem(state.inventory, 'flowerPetal');
+      return {
+        ...state,
+        inventory: reward.inventory,
+        echoRound: state.echoRound + 1,
+        echoProgress: 0,
+        notice: reward.ok
+          ? 'Forest Echo complete! Found one flower petal.'
+          : 'Forest Echo complete! Your flower petal basket is full.',
+      };
+    }
+    return {
+      ...state,
+      echoProgress: outcome.progress,
+      notice:
+        outcome.result === 'miss'
+          ? 'Try the pattern again. No penalty.'
+          : 'Good match! Keep going.',
+    };
+  }
+
+  const result = craftItem(state.inventory, action.recipeId);
+  const name = RECIPES[action.recipeId].name;
   if (!result.ok) {
     return {
       ...state,
@@ -46,7 +89,7 @@ function reduceWorkshop(
 }
 
 export default function Workshop() {
-  const [state, craft] = useReducer(reduceWorkshop, undefined, newWorkshop);
+  const [state, dispatch] = useReducer(reduceWorkshop, undefined, newWorkshop);
 
   return (
     <Page
@@ -93,7 +136,7 @@ export default function Workshop() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Make ${recipe.name}`}
-              onPress={() => craft(recipeId)}
+              onPress={() => dispatch({ type: 'craft', recipeId })}
               style={styles.makeButton}
             >
               <Text style={styles.makeText}>Make</Text>
@@ -101,6 +144,30 @@ export default function Workshop() {
           </View>
         );
       })}
+      <Text style={styles.heading}>Forest Echo</Text>
+      <Text style={styles.ingredients}>
+        Mini game 1 of 3. Repeat the three nature symbols in order. There is
+        no timer or penalty.
+      </Text>
+      <Text style={styles.echoPattern}>
+        {echoPattern(state.echoRound).join(' → ')}
+      </Text>
+      <Text style={styles.ingredients}>
+        Step {state.echoProgress + 1} of 3
+      </Text>
+      <View style={styles.echoChoices}>
+        {ECHO_SYMBOLS.map((symbol) => (
+          <Pressable
+            key={symbol}
+            accessibilityRole="button"
+            accessibilityLabel={`Choose ${symbol} in Forest Echo`}
+            style={styles.echoButton}
+            onPress={() => dispatch({ type: 'echo', symbol })}
+          >
+            <Text style={styles.makeText}>{symbol}</Text>
+          </Pressable>
+        ))}
+      </View>
     </Page>
   );
 }
@@ -155,4 +222,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#345E46',
   },
   makeText: { color: '#FFFFFF', fontWeight: '800' },
+  echoPattern: {
+    marginVertical: 12,
+    fontSize: 17,
+    fontWeight: '800',
+    textAlign: 'center',
+    color: '#345E46',
+  },
+  echoChoices: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+    marginBottom: 28,
+  },
+  echoButton: {
+    flex: 1,
+    minHeight: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#345E46',
+  },
 });
