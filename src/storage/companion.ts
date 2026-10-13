@@ -29,15 +29,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isNeed(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100;
+  return (
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    value >= 0 &&
+    value <= 100
+  );
 }
 
 function isCompanion(value: unknown): value is Companion {
   if (!isRecord(value)) return false;
-  if (typeof value.name !== 'string' || !value.name.trim() || value.name.length > 40) {
+  const name = value.name;
+  if (typeof name !== 'string' || !name.trim() || name.length > 40) {
     return false;
   }
-  if (typeof value.sleeping !== 'boolean' || !stats.every((key) => isNeed(value[key]))) {
+  if (typeof value.sleeping !== 'boolean') return false;
+  if (!stats.every((key) => isNeed(value[key]))) {
     return false;
   }
   return (
@@ -71,7 +78,9 @@ function migrateV1(value: unknown, now: number): Companion | null {
 }
 
 export function serializeCompanion(pet: Companion): string {
-  if (!isCompanion(pet)) throw new Error('Cannot persist invalid companion state');
+  if (!isCompanion(pet)) {
+    throw new Error('Cannot persist invalid companion state');
+  }
   return JSON.stringify({ version: SAVE_VERSION, pet });
 }
 
