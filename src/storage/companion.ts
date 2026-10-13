@@ -18,7 +18,12 @@ const stats = [
   'gentleness',
 ] as const;
 
-type RestoreSource = 'new' | 'restored' | 'migrated' | 'recovered' | 'unsupported';
+type RestoreSource =
+  | 'new'
+  | 'restored'
+  | 'migrated'
+  | 'recovered'
+  | 'unsupported';
 export type RestoredCompanion = Readonly<{
   pet: Companion;
   source: RestoreSource;
