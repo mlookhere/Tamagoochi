@@ -156,5 +156,6 @@ test('oversized saves are preserved rather than overwritten or parsed', () => {
     pet: { futureData: 'x'.repeat(17_000) },
   });
   assert.equal(restoreCompanion(oversizedFuture, 1000).source, 'unsupported');
-  assert.equal(restoreCompanion('x'.repeat(17_000), 1000).source, 'unsupported');
+  const oversizedUnknown = restoreCompanion('x'.repeat(17_000), 1000);
+  assert.equal(oversizedUnknown.source, 'unsupported');
 });
