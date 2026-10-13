@@ -6,6 +6,9 @@ export const illustratedActions = [
   'sleep',
   'clean',
   'play',
+  'happy',
+  'sad',
+  'curious',
   'pickup',
   'evolution',
 ] as const satisfies readonly CompanionPose[];

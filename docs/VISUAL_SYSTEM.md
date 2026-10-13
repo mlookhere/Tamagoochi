@@ -84,3 +84,7 @@ A reusable native view-based art layer now gives every non-idle companion pose a
 ## Stage-specific illustrated action frames
 
 Seven distinct motions (walk, eat, sleep, clean, play, pickup, evolution) now use original 256×256 transparent character-plus-action art for each of the three growth stages. Animated lift/tilt/pulse timing remains sourced from `src/theme/motion.ts`. A pure typed action-pose classifier chooses native `ACTION_ART` with static Metro imports; fallback poses render their original expression frames and botanical accents. Generic accents are deliberately suppressed when an illustrated frame already includes pose cues. These are 21 first-pass art studies, subject to real-device review and final creative approval rather than a claim that all 13 poses have bespoke frames.
+
+## Emotion and investigation action studies
+
+Stage-specific 256px RGBA artwork for happy, sad and curious augments the previous walking, eating, sleeping, cleaning, playing, pickup and evolution pose frames. These use original stage silhouettes combined with distinct first-party illustrative gestures/props. `illustratedActions` drives the typed native selection; `CompanionSprite` still falls back to expression artwork and static botanicals for poses without authored full-frame studies. Existing 39-case native inspector remains the intended evaluation surface, not an automatic native screenshot attestation.

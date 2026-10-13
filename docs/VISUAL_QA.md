@@ -77,3 +77,7 @@ On the developer-only `/motion-review` route, inspect eat, clean and play for **
 ## Expanded stage-specific pose inspection
 
 Inspect walk, eat, sleep, clean, play, pickup and evolution at all three stages in `/motion-review` (21 original PNG studies). Check walking feet/trail accents, hand positioning during pickup, unobstructed sleeping features/pillow, and petal effects during evolution. Verify no doubled decorative overlays: image-integrated pose art takes precedence over generic pose accent marks. Test 256px source image scaling and transparent edges on both platforms, with Reduce Motion on and off. Idle, happy, sad, curious, startled and return still use the original expression sprite and decorative accents; do not claim full action-frame coverage or completed native QA.
+
+## New emotional action-frame review
+
+On each device, view happy, sad and curious at seedling, bud and bloom in `/motion-review`. Confirm celebratory raised paws do not cover eyes, the sad leaf canopy and tears read against all room backgrounds, and the magnifier and reaching paw are legible without introducing accidental UI controls. Verify each still communicates the pose when Reduce Motion is enabled. Native review remains outstanding; CI PNG contracts and web screenshots do not validate on-device artwork.
