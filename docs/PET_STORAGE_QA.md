@@ -18,8 +18,11 @@ are found rather than abandoned. The web implementation
 it is now an explicit dependency. This does not request access to other apps'
 files, photos, or external storage.
 
-`src/hooks/useCompanion.ts` loads the saved pet before enabling care controls,
-queues writes in action order, saves after care and item placement, and applies the deterministic
+`src/hooks/useCompanion.ts` loads the saved pet before enabling care controls.
+A shared storage session (`src/storage/queue.ts`) serializes reads and writes
+across Home unmount/remount, so an old in-flight write completes before a new
+Home instance can restore the saved state. Writes after failures remain retryable.
+The companion hook saves after care and item placement and applies deterministic
 elapsed-time simulation on foreground resume. A read exception blocks gameplay
 and offers Retry loading to avoid overwriting an inaccessible existing save.
 A failed write shows a warning and an explicit Retry saving action; no success is claimed until the write resolves.
@@ -52,7 +55,12 @@ device, and attach dated device/OS/build-SHA evidence to Issue #10:
    and older v2 saves migrate with a default left cushion without losing pet
    stats, age, sleep or elapsed time. This is only an Item 3 placement hook;
    inventory, furniture collection and crafting are Item 4.
-7. Confirm the app boots and the save file stays intact under iOS/Android
+7. Navigate away from Home immediately after repeated care taps, then return.
+   Verify the most recent change survives; do not allow a pending write from
+   the previous Home instance to overwrite or lag behind the fresh read.
+   Repeat with a failed write followed by Retry saving to confirm that errors
+   do not block later successful saves.
+8. Confirm the app boots and the save file stays intact under iOS/Android
    process termination and repeated rapid taps. Review accessibility text,
    hit targets and offline behavior with a screen reader enabled.
 
