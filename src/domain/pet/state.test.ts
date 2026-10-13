@@ -7,6 +7,7 @@ import {
   companionAgeDays,
   createCompanion,
   feed,
+  moveRoomItem,
   play,
   sleep,
   wake,
@@ -182,4 +183,18 @@ test('direct companion comfort is bounded and preserves sleep', () => {
   assert.equal(comfort(nearMax).bond, 100);
   assert.equal(comfort(nearMax).mood, 100);
   assert.equal(comfort(nearMax).gentleness, 100);
+});
+
+test('room cushion cycles through three deterministic persistent slots', () => {
+  const start = createCompanion('Pip', 0);
+  assert.equal(start.roomItemSlot, 'left');
+  const center = moveRoomItem(start);
+  const right = moveRoomItem(center);
+  const left = moveRoomItem(right);
+  assert.equal(center.roomItemSlot, 'center');
+  assert.equal(right.roomItemSlot, 'right');
+  assert.equal(left.roomItemSlot, 'left');
+  assert.equal(start.roomItemSlot, 'left');
+  assert.equal(right.sleeping, false);
+  assert.equal(right.bond, start.bond);
 });
