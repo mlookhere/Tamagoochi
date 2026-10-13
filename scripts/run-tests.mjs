@@ -15,6 +15,7 @@ if (coverage) {
 args.push(
   'src/domain/pet/state.test.ts',
   'src/storage/companion.test.ts',
+  'src/storage/repository.test.ts',
   'src/config/public.test.ts',
   'scripts/vendor-security.test.mjs',
 );
