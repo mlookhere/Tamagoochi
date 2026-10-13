@@ -16,10 +16,14 @@ test('starter inventory has an original item in each supported category', () => 
   const categories = new Set(
     Object.values(ITEM_CATALOG).map((item) => item.category),
   );
-  assert.deepEqual(
-    [...categories].sort(),
-    ['cosmetic', 'food', 'furniture', 'keepsake', 'material', 'toy'],
-  );
+  assert.deepEqual([...categories].sort(), [
+    'cosmetic',
+    'food',
+    'furniture',
+    'keepsake',
+    'material',
+    'toy',
+  ]);
   for (const [key, amount] of Object.entries(createInventory())) {
     const id = key as ItemId;
     assert.ok(itemCount(createInventory(), id) > 0);
