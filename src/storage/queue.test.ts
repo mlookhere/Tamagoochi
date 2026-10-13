@@ -78,3 +78,56 @@ test('failed reads reject their callers and do not poison the session', async ()
   await session.save(createCompanion('Pip', 0));
   assert.equal((await session.load(0)).source, 'restored');
 });
+
+test('failed save survives Home remount in memory until a successful retry', async () => {
+  const original = createCompanion('Pip', 0);
+  let stored = JSON.stringify({ version: 3, pet: original });
+  let failWrite = true;
+  const storage = {
+    async read() {
+      return stored;
+    },
+    async write(data: string) {
+      if (failWrite) throw new Error('Disk full');
+      stored = data;
+    },
+  };
+  const session = createCompanionSession(storage);
+  assert.equal((await session.load(0)).unsaved, false);
+  const changed = { ...original, bond: 88, roomItemSlot: 'right' as const };
+  await assert.rejects(session.save(changed), /Disk full/);
+
+  const remounted = await session.load(0);
+  assert.equal(remounted.source, 'restored');
+  assert.equal(remounted.unsaved, true);
+  assert.equal(remounted.pet.bond, 88);
+  assert.equal(remounted.pet.roomItemSlot, 'right');
+  assert.equal(JSON.parse(stored).pet.bond, original.bond);
+
+  failWrite = false;
+  await session.save(remounted.pet);
+  const saved = await session.load(0);
+  assert.equal(saved.unsaved, false);
+  assert.equal(saved.pet.bond, 88);
+  assert.equal(JSON.parse(stored).pet.roomItemSlot, 'right');
+});
+
+test('unsupported disk save blocks a stale failed-write snapshot', async () => {
+  let stored = JSON.stringify({ version: 3, pet: createCompanion('Pip', 0) });
+  const storage = {
+    async read() {
+      return stored;
+    },
+    async write(_data: string): Promise<void> {
+      throw new Error('Disk full');
+    },
+  };
+  const session = createCompanionSession(storage);
+  await session.load(0);
+  await assert.rejects(session.save(createCompanion('Unsaved', 0)), /Disk full/);
+  stored = JSON.stringify({ version: 4, pet: { futureData: true } });
+  const remounted = await session.load(0);
+  assert.equal(remounted.source, 'unsupported');
+  assert.equal(remounted.unsaved, false);
+  assert.equal(JSON.parse(stored).version, 4);
+});

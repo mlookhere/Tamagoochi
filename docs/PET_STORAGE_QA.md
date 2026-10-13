@@ -21,7 +21,11 @@ files, photos, or external storage.
 `src/hooks/useCompanion.ts` loads the saved pet before enabling care controls.
 A shared storage session (`src/storage/queue.ts`) serializes reads and writes
 across Home unmount/remount, so an old in-flight write completes before a new
-Home instance can restore the saved state. Writes after failures remain retryable.
+Home instance can restore the saved state. Writes after failures remain retryable. After a failed write, the session
+holds the latest companion state in memory across Home navigation and restores
+the unsaved warning until a write succeeds; it does **not** guarantee recovery
+after the OS terminates the app. An unsupported newer save on disk always
+takes precedence over an in-memory snapshot.
 The companion hook saves after care and item placement and applies deterministic
 elapsed-time simulation on foreground resume. A read exception blocks gameplay
 and offers Retry loading to avoid overwriting an inaccessible existing save.
@@ -58,8 +62,11 @@ device, and attach dated device/OS/build-SHA evidence to Issue #10:
 7. Navigate away from Home immediately after repeated care taps, then return.
    Verify the most recent change survives; do not allow a pending write from
    the previous Home instance to overwrite or lag behind the fresh read.
-   Repeat with a failed write followed by Retry saving to confirm that errors
-   do not block later successful saves.
+   Repeat with a failed write: leave Home before retrying, then return to
+   confirm the latest unsaved changes and warning remain visible. Retry saving,
+   then force-close and reopen to confirm the retry persisted. If the app is
+   terminated *before* a failed write can be retried, unsaved in-memory changes
+   cannot be guaranteed to survive; do not report them as durable.
 8. Confirm the app boots and the save file stays intact under iOS/Android
    process termination and repeated rapid taps. Review accessibility text,
    hit targets and offline behavior with a screen reader enabled.

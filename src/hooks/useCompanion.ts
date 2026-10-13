@@ -52,7 +52,7 @@ export function useCompanion() {
     const now = Date.now();
     companionSession
       .load(now)
-      .then(({ pet: loaded, source }) => {
+      .then(({ pet: loaded, source, unsaved }) => {
         if (cancelled) return;
         if (source === 'unsupported') {
           // Preserve the newer save on disk; do not enable or persist gameplay.
@@ -64,7 +64,10 @@ export function useCompanion() {
         setPet(loaded);
         setStatus('ready');
         ready.current = true;
-        if (source === 'recovered') {
+        setSaveError(unsaved);
+        if (unsaved) {
+          setNotice('Your latest care is still waiting to save on this device.');
+        } else if (source === 'recovered') {
           setNotice(
             'Your save could not be read. Your companion has a fresh start.',
           );
