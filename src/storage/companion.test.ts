@@ -57,7 +57,10 @@ test('legacy version 1 preserves original needs with new safe defaults', () => {
   assert.equal(result.pet.mood, 80);
   assert.equal(result.pet.name, 'Old Pip');
   assert.equal(result.pet.bornAt, 10_000);
-  assert.equal(restoreCompanion(serializeCompanion(result.pet), 10_000).source, 'restored');
+  assert.equal(
+    restoreCompanion(serializeCompanion(result.pet), 10_000).source,
+    'restored',
+  );
 });
 
 test('invalid current and legacy fields never enter simulation', () => {
@@ -82,7 +85,13 @@ test('invalid current and legacy fields never enter simulation', () => {
 
   const brokenV1 = JSON.stringify({
     version: 1,
-    pet: { name: 'Pip', hunger: -1, happiness: 50, energy: 50, cleanliness: 50 },
+    pet: {
+      name: 'Pip',
+      hunger: -1,
+      happiness: 50,
+      energy: 50,
+      cleanliness: 50,
+    },
   });
   assert.equal(restoreCompanion(brokenV1, 1000).source, 'recovered');
 });
