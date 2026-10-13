@@ -79,7 +79,7 @@ test('failed reads reject their callers and do not poison the session', async ()
   assert.equal((await session.load(0)).source, 'restored');
 });
 
-test('failed save survives Home remount in memory until a successful retry', async () => {
+test('failed saves survive Home remount until retry', async () => {
   const original = createCompanion('Pip', 0);
   let stored = JSON.stringify({ version: 3, pet: original });
   let failWrite = true;
@@ -112,7 +112,7 @@ test('failed save survives Home remount in memory until a successful retry', asy
   assert.equal(JSON.parse(stored).pet.roomItemSlot, 'right');
 });
 
-test('unsupported disk save blocks a stale failed-write snapshot', async () => {
+test('future saves outrank failed writes', async () => {
   let stored = JSON.stringify({ version: 3, pet: createCompanion('Pip', 0) });
   const storage = {
     async read() {
@@ -124,7 +124,8 @@ test('unsupported disk save blocks a stale failed-write snapshot', async () => {
   };
   const session = createCompanionSession(storage);
   await session.load(0);
-  await assert.rejects(session.save(createCompanion('Unsaved', 0)), /Disk full/);
+  const dirty = createCompanion('Unsaved', 0);
+  await assert.rejects(session.save(dirty), /Disk full/);
   stored = JSON.stringify({ version: 4, pet: { futureData: true } });
   const remounted = await session.load(0);
   assert.equal(remounted.source, 'unsupported');

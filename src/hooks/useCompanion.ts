@@ -66,7 +66,9 @@ export function useCompanion() {
         ready.current = true;
         setSaveError(unsaved);
         if (unsaved) {
-          setNotice('Your latest care is still waiting to save on this device.');
+          setNotice(
+            'Your latest care is still waiting to save on this device.',
+          );
         } else if (source === 'recovered') {
           setNotice(
             'Your save could not be read. Your companion has a fresh start.',

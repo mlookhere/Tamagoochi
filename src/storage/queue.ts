@@ -1,7 +1,4 @@
-import {
-  advanceCompanion,
-  type Companion,
-} from '../domain/pet/state.ts';
+import { advanceCompanion, type Companion } from '../domain/pet/state.ts';
 import { loadCompanion, saveCompanion } from './repository.ts';
 import type { CompanionStorage } from './device';
 
