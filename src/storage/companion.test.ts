@@ -1,0 +1,94 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { createCompanion } from '../domain/pet/state.ts';
+import {
+  SAVE_VERSION,
+  restoreCompanion,
+  serializeCompanion,
+} from './companion.ts';
+
+const HOUR_MS = 60 * 60 * 1000;
+
+test('versioned save round-trips and resumes simulated elapsed hours', () => {
+  const pet = createCompanion('Pip', 0);
+  const raw = serializeCompanion(pet);
+  assert.equal(JSON.parse(raw).version, SAVE_VERSION);
+  const restored = restoreCompanion(raw, 3 * HOUR_MS);
+  assert.equal(restored.source, 'restored');
+  assert.equal(restored.pet.name, 'Pip');
+  assert.equal(restored.pet.hunger, 76);
+  assert.equal(restored.pet.lastSimulatedAt, 3 * HOUR_MS);
+  assert.deepEqual(restored.pet, restoreCompanion(raw, 3 * HOUR_MS).pet);
+});
+
+test('missing and corrupt saves return safe starter state', () => {
+  const missing = restoreCompanion(null, 1200);
+  assert.equal(missing.source, 'new');
+  assert.equal(missing.pet.bornAt, 1200);
+  for (const value of [
+    '',
+    'not json',
+    '[]',
+    '{}',
+    '{"version":3,"pet":{}}',
+    '{"version":2,"pet":{"name":"Pip"}}',
+    'x'.repeat(17_000),
+  ]) {
+    const restored = restoreCompanion(value, 4000);
+    assert.equal(restored.source, 'recovered');
+    assert.equal(restored.pet.lastSimulatedAt, 4000);
+  }
+});
+
+test('legacy version 1 preserves original needs with new safe defaults', () => {
+  const raw = JSON.stringify({
+    version: 1,
+    pet: {
+      name: 'Old Pip',
+      hunger: 35,
+      happiness: 50,
+      energy: 45,
+      cleanliness: 60,
+    },
+  });
+  const result = restoreCompanion(raw, 10_000);
+  assert.equal(result.source, 'migrated');
+  assert.equal(result.pet.hunger, 35);
+  assert.equal(result.pet.mood, 80);
+  assert.equal(result.pet.name, 'Old Pip');
+  assert.equal(result.pet.bornAt, 10_000);
+  assert.equal(restoreCompanion(serializeCompanion(result.pet), 10_000).source, 'restored');
+});
+
+test('invalid current and legacy fields never enter simulation', () => {
+  const pet = createCompanion('Pip', 0);
+  const invalid = [
+    { ...pet, hunger: 101 },
+    { ...pet, mood: Number.NaN },
+    { ...pet, sleeping: 'sometimes' },
+    { ...pet, lastSimulatedAt: -1 },
+    { ...pet, lastSimulatedAt: 100, bornAt: 101 },
+    { ...pet, bornAt: 1.5 },
+    { ...pet, name: '' },
+    { ...pet, name: 'n'.repeat(41) },
+  ];
+  for (const candidate of invalid) {
+    const result = restoreCompanion(
+      JSON.stringify({ version: 2, pet: candidate }),
+      1000,
+    );
+    assert.equal(result.source, 'recovered');
+  }
+
+  const brokenV1 = JSON.stringify({
+    version: 1,
+    pet: { name: 'Pip', hunger: -1, happiness: 50, energy: 50, cleanliness: 50 },
+  });
+  assert.equal(restoreCompanion(brokenV1, 1000).source, 'recovered');
+});
+
+test('serializer rejects malformed state before writing', () => {
+  const pet = createCompanion('Pip', 0);
+  assert.throws(() => serializeCompanion({ ...pet, hunger: -5 }));
+  assert.throws(() => serializeCompanion({ ...pet, lastSimulatedAt: -10 }));
+});
