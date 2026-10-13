@@ -146,15 +146,13 @@ export default function Workshop() {
       })}
       <Text style={styles.heading}>Forest Echo</Text>
       <Text style={styles.ingredients}>
-        Mini game 1 of 3. Repeat the three nature symbols in order. There is
-        no timer or penalty.
+        Mini game 1 of 3. Repeat the three nature symbols in order. There is no
+        timer or penalty.
       </Text>
       <Text style={styles.echoPattern}>
         {echoPattern(state.echoRound).join(' → ')}
       </Text>
-      <Text style={styles.ingredients}>
-        Step {state.echoProgress + 1} of 3
-      </Text>
+      <Text style={styles.ingredients}>Step {state.echoProgress + 1} of 3</Text>
       <View style={styles.echoChoices}>
         {ECHO_SYMBOLS.map((symbol) => (
           <Pressable
