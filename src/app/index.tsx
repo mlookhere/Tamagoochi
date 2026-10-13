@@ -29,7 +29,7 @@ function Stat({ label, value }: StatProps) {
 }
 
 export default function Home() {
-  const { pet, status, notice, saveError, care, retry, retrySave } =
+  const { pet, status, notice, saveError, care, retry, retrySave, observedAt } =
     useCompanion();
 
   return (
@@ -103,7 +103,7 @@ export default function Home() {
       </View>
 
       <Text style={styles.age}>
-        Together for {companionAgeDays(pet, Date.now())} days
+        Together for {companionAgeDays(pet, observedAt)} days
       </Text>
       <View style={styles.stats}>
         <Stat label="Fullness" value={pet.hunger} />
