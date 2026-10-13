@@ -1,11 +1,14 @@
 import { Page } from '../components/Page';
+import { ScenePreview } from '../components/ScenePreview';
 
 export default function Friends() {
   return (
     <Page
-      eyebrow="Coming in the next gameplay slices"
+      eyebrow="A world of friends"
       title="Better together."
-      description="Your companion will remember the other little friends it meets."
-    />
+      description="The friends your companion meets will become part of its story."
+    >
+      <ScenePreview kind="friends" />
+    </Page>
   );
 }

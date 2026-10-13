@@ -15,6 +15,19 @@ if (coverage) {
 args.push(
   'src/domain/pet/state.test.ts',
   'src/config/public.test.ts',
+  'src/theme/motion.test.ts',
+  'src/theme/pose-art.test.ts',
+  'src/theme/motion-review.test.ts',
+  'src/theme/accessibility.test.ts',
+  'src/theme/layout.test.ts',
+  'src/theme/palette.test.ts',
+  'src/theme/scenes.test.ts',
+  'src/theme/status.test.ts',
+  'src/theme/iconography.test.ts',
+  'src/assets/companions.test.ts',
+  'src/assets/actions.test.ts',
+  'src/assets/world.test.ts',
+  'src/assets/onboarding.test.ts',
   'scripts/vendor-security.test.mjs',
 );
 const result = spawnSync(process.execPath, args, { stdio: 'inherit' });
