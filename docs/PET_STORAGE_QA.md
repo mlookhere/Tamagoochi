@@ -4,8 +4,8 @@
 
 Item 3 is local-first. `src/storage/companion.ts` validates JSON schema v3,
 migrates supported v1 and v2 data and returns a safe new companion for
-corrupt content. Newer unknown schema versions are **not overwritten**: care
-and autosaves stay disabled, and Home asks the player to update the app. `src/storage/repository.ts` keeps that
+corrupt content. Newer unknown schema versions and oversized saves are **not overwritten**:
+care and autosaves stay disabled, and Home asks the player to update the app. `src/storage/repository.ts` keeps that
 serialization independent of device I/O.
 
 The native adapter (`src/storage/device.native.ts`) stores one JSON file in
@@ -43,7 +43,7 @@ device, and attach dated device/OS/build-SHA evidence to Issue #10:
 4. Simulate denied/unavailable storage or a full device. Verify read failures
    disable actions and offer retry, while write failures show the unsaved warning.
 5. Load representative v1, v2, malformed v3, and **future-version v4** data.
-   Verify migration retains original pet values, corrupt data shows recoverable
+   Verify migration retains original pet values, small corrupt data shows recoverable
    safe defaults, and v4 instead disables interactions and requests an app
    update **without changing the file contents**. Check no sensitive records
    leave device storage.
