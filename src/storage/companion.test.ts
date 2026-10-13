@@ -30,7 +30,7 @@ test('missing and corrupt saves return safe starter state', () => {
     'not json',
     '[]',
     '{}',
-    '{"version":3,"pet":{}}',
+    '{"version":4,"pet":{}}',
     '{"version":2,"pet":{"name":"Pip"}}',
     'x'.repeat(17_000),
   ]) {
@@ -67,6 +67,7 @@ test('invalid current and legacy fields never enter simulation', () => {
   const pet = createCompanion('Pip', 0);
   const invalid = [
     { ...pet, hunger: 101 },
+    { ...pet, roomItemSlot: 'ceiling' },
     { ...pet, mood: Number.NaN },
     { ...pet, sleeping: 'sometimes' },
     { ...pet, lastSimulatedAt: -1 },
@@ -77,7 +78,7 @@ test('invalid current and legacy fields never enter simulation', () => {
   ];
   for (const candidate of invalid) {
     const result = restoreCompanion(
-      JSON.stringify({ version: 2, pet: candidate }),
+      JSON.stringify({ version: SAVE_VERSION, pet: candidate }),
       1000,
     );
     assert.equal(result.source, 'recovered');
@@ -100,4 +101,37 @@ test('serializer rejects malformed state before writing', () => {
   const pet = createCompanion('Pip', 0);
   assert.throws(() => serializeCompanion({ ...pet, hunger: -5 }));
   assert.throws(() => serializeCompanion({ ...pet, lastSimulatedAt: -10 }));
+});
+
+test('version 2 saves retain needs, timestamps and sleep when migrated to room v3', () => {
+  const old = createCompanion('Old Pip', 1000);
+  const { roomItemSlot: _roomItemSlot, ...previousPet } = {
+    ...old,
+    hunger: 45,
+    sleeping: true,
+  };
+  const restored = restoreCompanion(
+    JSON.stringify({ version: 2, pet: previousPet }),
+    1000 + 3 * HOUR_MS,
+  );
+  assert.equal(restored.source, 'migrated');
+  assert.equal(restored.pet.name, old.name);
+  assert.equal(restored.pet.sleeping, true);
+  assert.equal(restored.pet.bornAt, old.bornAt);
+  assert.equal(restored.pet.roomItemSlot, 'left');
+  assert.equal(restored.pet.hunger, 39);
+  assert.equal(restored.pet.lastSimulatedAt, 1000 + 3 * HOUR_MS);
+  assert.equal(
+    restoreCompanion(serializeCompanion(restored.pet), 1000 + 3 * HOUR_MS)
+      .source,
+    'restored',
+  );
+});
+
+test('version 3 preserves moved item position after reload', () => {
+  const pet = { ...createCompanion('Pip', 0), roomItemSlot: 'right' as const };
+  const raw = serializeCompanion(pet);
+  const result = restoreCompanion(raw, 0);
+  assert.equal(result.source, 'restored');
+  assert.equal(result.pet.roomItemSlot, 'right');
 });
