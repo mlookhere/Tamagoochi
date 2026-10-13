@@ -67,4 +67,6 @@ test('native motion review exposes ordered case navigation', () => {
   assert.match(route, /nextMotionReviewCase\(stage, pose\)/);
   assert.match(route, /Next test case/);
   assert.match(route, /motionReviewPosition\(stage, pose\)/);
+  assert.match(route, /accessibilityLabel=\{`Next test case, \$\{caseProgress\}`\}/);
+  assert.match(route, /choice: \{\s*minHeight: 48,/);
 });
