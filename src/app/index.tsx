@@ -142,7 +142,9 @@ export default function Home() {
             )
           }
         >
-          <Text style={styles.actionTitle}>{pet.sleeping ? 'Wake' : 'Rest'}</Text>
+          <Text style={styles.actionTitle}>
+            {pet.sleeping ? 'Wake' : 'Rest'}
+          </Text>
         </Pressable>
       </View>
     </Page>
