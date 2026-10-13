@@ -72,11 +72,11 @@ The companion uses original decorative cues to distinguish all non-idle poses, i
 
 ## Native action-frame review
 
-On the developer-only `/motion-review` route, inspect eat, clean and play for **all three** stages. Each now loads its own complete 256×256 transparent character/prop PNG, not only an expression sprite with decorative marks. Confirm the berry, bath bubbles and play ball are distinct, do not obstruct the creature's facial expression, and remain visible with system Reduce Motion on. Review remaining ten poses separately: not all of them have dedicated full-body image frames yet.
+On the developer-only `/motion-review` route, inspect eat, clean and play for **all three** stages. Each now loads its own complete 256×256 transparent character/prop PNG, not only an expression sprite with decorative marks. Confirm the berry, bath bubbles and play ball are distinct, do not obstruct the creature's facial expression, and remain visible with system Reduce Motion on. Review every other pose separately: all non-idle poses now have dedicated stage-specific full-body images; idle uses the neutral stage sprite.
 
 ## Expanded stage-specific pose inspection
 
-Inspect walk, eat, sleep, clean, play, pickup and evolution at all three stages in `/motion-review` (21 original PNG studies). Check walking feet/trail accents, hand positioning during pickup, unobstructed sleeping features/pillow, and petal effects during evolution. Verify no doubled decorative overlays: image-integrated pose art takes precedence over generic pose accent marks. Test 256px source image scaling and transparent edges on both platforms, with Reduce Motion on and off. Idle, happy, sad, curious, startled and return still use the original expression sprite and decorative accents; do not claim full action-frame coverage or completed native QA.
+Inspect walk, eat, sleep, clean, play, pickup and evolution at all three stages in `/motion-review` (21 original PNG studies). Check walking feet/trail accents, hand positioning during pickup, unobstructed sleeping features/pillow, and petal effects during evolution. Verify no doubled decorative overlays: image-integrated pose art takes precedence over generic pose accent marks. Test 256px source image scaling and transparent edges on both platforms, with Reduce Motion on and off. Happy, sad, curious, startled and return also have dedicated stage-specific action images, bringing coverage to 36 non-idle PNG studies. Idle uses the neutral stage sprite. Complete asset coverage does not establish completed native QA.
 
 ## New emotional action-frame review
 
@@ -85,3 +85,22 @@ On each device, view happy, sad and curious at seedling, bud and bloom in `/moti
 ## Completing native pose-art review
 
 The development-only `/motion-review` route now routes every non-idle pose to a dedicated 256×256 complete character action study for seedling/bud/bloom (36 total); idle uses each stage's neutral sprite. For startled and return, confirm raised paws, a warning-like spark, the lantern, pennant and footprints are visually distinctive but not mistaken for interactive elements. Verify all 39 stage/pose combinations on physical iOS and Android devices with Reduce Motion both enabled and disabled. Capture and approve screenshots with large text and screen readers; the asset contracts cannot substitute for those native observations.
+
+## Native review evidence record
+
+Attach review results to Issue #9. Every cell below remains unverified until actual device screenshots or recordings are retained and linked. Browser captures and exported bundles cannot fill these cells.
+
+| Platform | Viewport | Text size | Motion off/on and live toggle | Screen reader | Evidence / result |
+| --- | --- | --- | --- | --- | --- |
+| iOS | Compact | Default | Unverified | VoiceOver: unverified | Pending |
+| iOS | Compact | Enlarged | Unverified | VoiceOver: unverified | Pending |
+| iOS | Large | Default | Unverified | VoiceOver: unverified | Pending |
+| iOS | Large | Enlarged | Unverified | VoiceOver: unverified | Pending |
+| Android | Compact | Default | Unverified | TalkBack: unverified | Pending |
+| Android | Compact | Enlarged | Unverified | TalkBack: unverified | Pending |
+| Android | Large | Default | Unverified | TalkBack: unverified | Pending |
+| Android | Large | Enlarged | Unverified | TalkBack: unverified | Pending |
+
+For each row record reviewer/date, device model, OS, exact app commit, viewport, pixel ratio and measured font scale. Link captures of the four player-facing screens, error recovery, onboarding-art preview and all 39 stage/pose combinations. Record one-shot completion/replay, rapid Home taps, clipping, transparent edges, reading order and touch-target observations. Include a recording of live OS Reduce Motion toggling and the resulting sprite/status behavior.
+
+Record creative approval separately with reviewer, date, exact commit and unresolved defects. Keep Issue #9 open and PR #20 draft until device evidence and creative approval are complete, defects are resolved, and all five required checks pass on the final head. After a head change, identify affected captures and repeat their review before carrying approval forward.
