@@ -44,7 +44,9 @@ export default function Home() {
           <Text accessibilityRole="alert" style={styles.storageText}>
             {status === 'loading'
               ? 'Loading your companion...'
-              : 'Could not open your saved companion. Retry to protect your progress.'}
+              : status === 'unsupported'
+                ? 'This save needs a newer app version. Update the app to protect your progress.'
+                : 'Could not open your saved companion. Retry to protect your progress.'}
           </Text>
           {status === 'error' ? (
             <Pressable
