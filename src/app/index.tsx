@@ -6,6 +6,7 @@ import {
   comfort,
   companionAgeDays,
   feed,
+  moveRoomItem,
   play,
   sleep,
   wake,
@@ -80,6 +81,11 @@ export default function Home() {
         />
         <View style={styles.sun} />
         <View style={styles.floor} />
+        <View
+          accessible
+          accessibilityLabel={`Cushion placed ${pet.roomItemSlot}`}
+          style={[styles.cushion, cushionPositions[pet.roomItemSlot]]}
+        />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Comfort companion"
@@ -165,6 +171,16 @@ export default function Home() {
             {pet.sleeping ? 'Wake' : 'Rest'}
           </Text>
         </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Move cushion in room"
+          disabled={status !== 'ready'}
+          accessibilityState={{ disabled: status !== 'ready' }}
+          style={styles.action}
+          onPress={() => care(moveRoomItem, 'Cushion moved in your room.')}
+        >
+          <Text style={styles.actionTitle}>Move cushion</Text>
+        </Pressable>
       </View>
     </Page>
   );
@@ -203,6 +219,19 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#C4DBB2',
   },
+  cushion: {
+    position: 'absolute',
+    bottom: 13,
+    width: 48,
+    height: 17,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#B98E74',
+    backgroundColor: '#EAC0A1',
+  },
+  cushionLeft: { left: '15%' },
+  cushionCenter: { left: '44%' },
+  cushionRight: { right: '15%' },
   pet: {
     height: 128,
     width: 138,
@@ -298,3 +327,9 @@ const styles = StyleSheet.create({
   },
   actionTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
 });
+
+const cushionPositions = {
+  left: styles.cushionLeft,
+  center: styles.cushionCenter,
+  right: styles.cushionRight,
+};
