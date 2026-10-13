@@ -4,7 +4,7 @@ import {
   type Companion,
 } from '../domain/pet/state.ts';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 const MAX_SAVE_LENGTH = 16_384;
 const stats = [
   'hunger',
@@ -44,6 +44,9 @@ function isCompanion(value: unknown): value is Companion {
     return false;
   }
   if (typeof value.sleeping !== 'boolean') return false;
+  if (!['left', 'center', 'right'].includes(String(value.roomItemSlot))) {
+    return false;
+  }
   if (!stats.every((key) => isNeed(value[key]))) {
     return false;
   }
@@ -55,6 +58,12 @@ function isCompanion(value: unknown): value is Companion {
     Number.isSafeInteger(value.lastSimulatedAt) &&
     value.lastSimulatedAt >= value.bornAt
   );
+}
+
+function migrateV2(value: unknown): Companion | null {
+  if (!isRecord(value)) return null;
+  const migrated = { ...value, roomItemSlot: 'left' };
+  return isCompanion(migrated) ? migrated : null;
 }
 
 function migrateV1(value: unknown, now: number): Companion | null {
@@ -100,9 +109,14 @@ export function restoreCompanion(
     if (stored.version === SAVE_VERSION && isCompanion(stored.pet)) {
       return { pet: advanceCompanion(stored.pet, now), source: 'restored' };
     }
-    if (stored.version === 1) {
-      const migrated = migrateV1(stored.pet, now);
-      if (migrated) return { pet: migrated, source: 'migrated' };
+    if (stored.version === 1 || stored.version === 2) {
+      const migrated =
+        stored.version === 1
+          ? migrateV1(stored.pet, now)
+          : migrateV2(stored.pet);
+      if (migrated) {
+        return { pet: advanceCompanion(migrated, now), source: 'migrated' };
+      }
     }
   } catch {
     return fallback();
