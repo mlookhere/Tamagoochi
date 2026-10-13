@@ -69,7 +69,8 @@ function MotionReviewContent() {
     setReactionId((current) => current + 1);
   };
   const motionState = reduceMotionDescription(reducedMotion);
-  const caseProgress = `${motionReviewPosition(stage, pose)} of ${MOTION_REVIEW_CASES.length}`;
+  const position = motionReviewPosition(stage, pose);
+  const caseProgress = `${position} of ${MOTION_REVIEW_CASES.length}`;
 
   return (
     <Page
@@ -100,9 +101,7 @@ function MotionReviewContent() {
         onPress={advanceCase}
         style={styles.nextCase}
       >
-        <Text style={styles.nextCaseText}>
-          Next test case · {caseProgress}
-        </Text>
+        <Text style={styles.nextCaseText}>Next test case · {caseProgress}</Text>
       </Pressable>
       <Text style={styles.groupLabel}>Character stage</Text>
       <View style={styles.options}>
