@@ -30,7 +30,6 @@ test('missing and corrupt saves return safe starter state', () => {
     'not json',
     '[]',
     '{}',
-    '{"version":4,"pet":{}}',
     '{"version":2,"pet":{"name":"Pip"}}',
     'x'.repeat(17_000),
   ]) {
@@ -68,6 +67,7 @@ test('invalid current and legacy fields never enter simulation', () => {
   const invalid = [
     { ...pet, hunger: 101 },
     { ...pet, roomItemSlot: 'ceiling' },
+    { ...pet, roomItemSlot: ['left'] },
     { ...pet, mood: Number.NaN },
     { ...pet, sleeping: 'sometimes' },
     { ...pet, lastSimulatedAt: -1 },
@@ -135,4 +135,18 @@ test('version 3 preserves moved item position after reload', () => {
   const result = restoreCompanion(raw, 0);
   assert.equal(result.source, 'restored');
   assert.equal(result.pet.roomItemSlot, 'right');
+});
+
+test('newer-version saves remain unsupported instead of being reset', () => {
+  const future = JSON.stringify({
+    version: SAVE_VERSION + 1,
+    pet: { future: 'data that this app cannot interpret' },
+  });
+  const result = restoreCompanion(future, 1000);
+  assert.equal(result.source, 'unsupported');
+  assert.equal(result.pet.bornAt, 1000);
+  assert.equal(
+    restoreCompanion(JSON.stringify({ version: 100, pet: {} }), 1000).source,
+    'unsupported',
+  );
 });
