@@ -19,11 +19,7 @@ const stats = [
 ] as const;
 
 type RestoreSource =
-  | 'new'
-  | 'restored'
-  | 'migrated'
-  | 'recovered'
-  | 'unsupported';
+  'new' | 'restored' | 'migrated' | 'recovered' | 'unsupported';
 export type RestoredCompanion = Readonly<{
   pet: Companion;
   source: RestoreSource;
