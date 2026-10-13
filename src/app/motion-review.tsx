@@ -69,6 +69,7 @@ function MotionReviewContent() {
     setReactionId((current) => current + 1);
   };
   const motionState = reduceMotionDescription(reducedMotion);
+  const caseProgress = `${motionReviewPosition(stage, pose)} of ${MOTION_REVIEW_CASES.length}`;
 
   return (
     <Page
@@ -94,14 +95,13 @@ function MotionReviewContent() {
       </View>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Next test case"
+        accessibilityLabel={`Next test case, ${caseProgress}`}
         accessibilityHint="Advance to the next companion stage and pose"
         onPress={advanceCase}
         style={styles.nextCase}
       >
         <Text style={styles.nextCaseText}>
-          Next test case · {motionReviewPosition(stage, pose)} of{' '}
-          {MOTION_REVIEW_CASES.length}
+          Next test case · {caseProgress}
         </Text>
       </Pressable>
       <Text style={styles.groupLabel}>Character stage</Text>
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   choice: {
-    minHeight: 46,
+    minHeight: 48,
     minWidth: 94,
     paddingHorizontal: 13,
     paddingVertical: 10,
