@@ -27,7 +27,11 @@ export function chooseEcho(
   chosen: EchoSymbol,
 ): EchoOutcome {
   const pattern = echoPattern(round);
-  if (!Number.isSafeInteger(progress) || progress < 0 || progress >= pattern.length) {
+  if (
+    !Number.isSafeInteger(progress) ||
+    progress < 0 ||
+    progress >= pattern.length
+  ) {
     throw new Error('Invalid progress');
   }
   if (!ECHO_SYMBOLS.includes(chosen)) throw new Error('Invalid symbol');
