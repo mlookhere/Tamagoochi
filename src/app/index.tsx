@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { APP_ASSETS } from '../assets';
 import { Page } from '../components/Page';
-import { clean, createCompanion, feed, play } from '../domain/pet/state';
+import { clean, companionAgeDays, feed, play, sleep, wake } from '../domain/pet/state';
+import { useCompanion } from '../hooks/useCompanion';
 
 type StatProps = Readonly<{ label: string; value: number }>;
 
@@ -21,10 +21,7 @@ function Stat({ label, value }: StatProps) {
 }
 
 export default function Home() {
-  const [pet, setPet] = useState(() => createCompanion());
-  const [message, setMessage] = useState(
-    'A new little friend is waiting for you.',
-  );
+  const { pet, status, notice, saveError, care, retry } = useCompanion();
 
   return (
     <Page
@@ -32,6 +29,30 @@ export default function Home() {
       title="Home is wherever you are."
       description="Meet your little companion. Taking care of each other is just the beginning."
     >
+      {status !== 'ready' ? (
+        <View style={styles.storageStatus}>
+          <Text accessibilityRole="alert" style={styles.storageText}>
+            {status === 'loading'
+              ? 'Loading your companion...'
+              : 'Could not open your saved companion. Retry to protect your progress.'}
+          </Text>
+          {status === 'error' ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Retry loading companion"
+              onPress={retry}
+              style={styles.retry}
+            >
+              <Text style={styles.actionTitle}>Retry loading</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+      {saveError ? (
+        <Text accessibilityRole="alert" style={styles.storageText}>
+          Your latest change has not been saved on this device.
+        </Text>
+      ) : null}
       <View style={styles.habitat}>
         <Image
           accessibilityLabel="Companion seed"
@@ -52,14 +73,20 @@ export default function Home() {
           </View>
         </View>
         <Text style={styles.name}>{pet.name}</Text>
-        <Text style={styles.mood}>{message}</Text>
+        <Text style={styles.mood}>{notice}</Text>
       </View>
 
+      <Text style={styles.age}>
+        Together for {companionAgeDays(pet, Date.now())} days
+      </Text>
       <View style={styles.stats}>
         <Stat label="Fullness" value={pet.hunger} />
         <Stat label="Joy" value={pet.happiness} />
         <Stat label="Energy" value={pet.energy} />
         <Stat label="Cleanliness" value={pet.cleanliness} />
+        <Stat label="Mood" value={pet.mood} />
+        <Stat label="Bond" value={pet.bond} />
+        <Stat label="Health" value={pet.health} />
       </View>
 
       <View style={styles.actions}>
@@ -67,10 +94,9 @@ export default function Home() {
           accessibilityRole="button"
           accessibilityLabel="Feed companion"
           style={styles.action}
-          onPress={() => {
-            setPet(feed);
-            setMessage('A happy little snack break.');
-          }}
+          disabled={status !== 'ready'}
+          accessibilityState={{ disabled: status !== 'ready' }}
+          onPress={() => care(feed, 'A happy little snack break.')}
         >
           <Text style={styles.actionTitle}>Feed</Text>
         </Pressable>
@@ -78,10 +104,9 @@ export default function Home() {
           accessibilityRole="button"
           accessibilityLabel="Play with companion"
           style={styles.action}
-          onPress={() => {
-            setPet(play);
-            setMessage('That was fun!');
-          }}
+          disabled={status !== 'ready'}
+          accessibilityState={{ disabled: status !== 'ready' }}
+          onPress={() => care(play, 'That was fun!')}
         >
           <Text style={styles.actionTitle}>Play</Text>
         </Pressable>
@@ -89,12 +114,28 @@ export default function Home() {
           accessibilityRole="button"
           accessibilityLabel="Clean companion"
           style={styles.action}
-          onPress={() => {
-            setPet(clean);
-            setMessage('Fresh and ready for adventure.');
-          }}
+          disabled={status !== 'ready'}
+          accessibilityState={{ disabled: status !== 'ready' }}
+          onPress={() => care(clean, 'Fresh and ready for adventure.')}
         >
           <Text style={styles.actionTitle}>Clean</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={pet.sleeping ? 'Wake companion' : 'Let companion rest'}
+          style={styles.action}
+          disabled={status !== 'ready'}
+          accessibilityState={{ disabled: status !== 'ready' }}
+          onPress={() =>
+            care(
+              pet.sleeping ? wake : sleep,
+              pet.sleeping ? 'Ready for a new day.' : 'Time for a little rest.',
+            )
+          }
+        >
+          <Text style={styles.actionTitle}>
+            {pet.sleeping ? 'Wake' : 'Rest'}
+          </Text>
         </Pressable>
       </View>
     </Page>
@@ -189,6 +230,16 @@ const styles = StyleSheet.create({
   },
   name: { marginTop: 9, fontSize: 21, fontWeight: '800', color: '#2D4A38' },
   mood: { marginTop: 3, color: '#567159', fontSize: 12, fontWeight: '600' },
+  age: { paddingTop: 12, fontSize: 12, color: '#567159' },
+  storageStatus: { gap: 10, paddingBottom: 14 },
+  storageText: { color: '#415849', fontSize: 14, fontWeight: '600' },
+  retry: {
+    minHeight: 48,
+    padding: 14,
+    borderRadius: 15,
+    alignItems: 'center',
+    backgroundColor: '#345E46',
+  },
   stats: { paddingTop: 22, gap: 14 },
   stat: { gap: 6 },
   statLabels: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -201,9 +252,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   fill: { height: '100%', borderRadius: 8, backgroundColor: '#8DBB81' },
-  actions: { flexDirection: 'row', gap: 10, marginTop: 28, marginBottom: 25 },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 28,
+    marginBottom: 25,
+  },
   action: {
     flex: 1,
+    minWidth: '45%',
+    minHeight: 48,
     borderRadius: 15,
     backgroundColor: '#345E46',
     paddingVertical: 15,
