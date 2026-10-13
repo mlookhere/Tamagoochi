@@ -1,10 +1,5 @@
 export type ItemCategory =
-  | 'food'
-  | 'keepsake'
-  | 'material'
-  | 'toy'
-  | 'furniture'
-  | 'cosmetic';
+  'food' | 'keepsake' | 'material' | 'toy' | 'furniture' | 'cosmetic';
 
 export const ITEM_CATALOG = {
   wildBerry: { name: 'Wild berry', category: 'food', limit: 99 },
