@@ -1,3 +1,5 @@
+export type RoomItemSlot = 'left' | 'center' | 'right';
+
 export type Companion = Readonly<{
   name: string;
   hunger: number;
@@ -10,6 +12,7 @@ export type Companion = Readonly<{
   curiosity: number;
   gentleness: number;
   sleeping: boolean;
+  roomItemSlot: RoomItemSlot;
   bornAt: number;
   lastSimulatedAt: number;
 }>;
@@ -32,6 +35,7 @@ export function createCompanion(name = 'Mochi', now = Date.now()): Companion {
     curiosity: 50,
     gentleness: 50,
     sleeping: false,
+    roomItemSlot: 'left',
     bornAt: createdAt,
     lastSimulatedAt: createdAt,
   };
@@ -78,6 +82,16 @@ export function comfort(pet: Companion): Companion {
     bond: clamp(pet.bond + 4),
     gentleness: clamp(pet.gentleness + 1),
   };
+}
+
+// The starter cushion is a placement hook; inventory remains Item 4's concern.
+export function moveRoomItem(pet: Companion): Companion {
+  const next: Record<RoomItemSlot, RoomItemSlot> = {
+    left: 'center',
+    center: 'right',
+    right: 'left',
+  };
+  return { ...pet, roomItemSlot: next[pet.roomItemSlot] };
 }
 
 export function sleep(pet: Companion): Companion {
