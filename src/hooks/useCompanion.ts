@@ -13,7 +13,9 @@ export type CompanionLoadState = 'loading' | 'ready' | 'error';
 export function useCompanion() {
   const [pet, setPet] = useState(() => createCompanion());
   const [status, setStatus] = useState<CompanionLoadState>('loading');
-  const [notice, setNotice] = useState('A new little friend is waiting for you.');
+  const [notice, setNotice] = useState(
+    'A new little friend is waiting for you.',
+  );
   const [saveError, setSaveError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const current = useRef(pet);
@@ -51,7 +53,9 @@ export function useCompanion() {
         setStatus('ready');
         ready.current = true;
         if (source === 'recovered') {
-          setNotice('Your save could not be read. Your companion has a fresh start.');
+          setNotice(
+            'Your save could not be read. Your companion has a fresh start.',
+          );
         } else if (source === 'migrated') {
           setNotice('Welcome back! Your companion has been updated.');
         }
