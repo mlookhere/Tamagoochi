@@ -103,14 +103,20 @@ export function restoreCompanion(
     pet: createCompanion(undefined, now),
     source: raw === null ? 'new' : 'recovered',
   });
-  if (raw === null || raw.length > MAX_SAVE_LENGTH) return fallback();
+  const protectedSave = (): RestoredCompanion => ({
+    pet: createCompanion(undefined, now),
+    source: 'unsupported',
+  });
+  if (raw === null) return fallback();
+  // Do not destroy an oversized save that may belong to a newer app version.
+  if (raw.length > MAX_SAVE_LENGTH) return protectedSave();
 
   try {
     const stored: unknown = JSON.parse(raw);
     if (!isRecord(stored)) return fallback();
     // Never overwrite a save created by a newer app version.
     if (typeof stored.version === 'number' && stored.version > SAVE_VERSION) {
-      return { pet: createCompanion(undefined, now), source: 'unsupported' };
+      return protectedSave();
     }
     if (stored.version === SAVE_VERSION && isCompanion(stored.pet)) {
       return { pet: advanceCompanion(stored.pet, now), source: 'restored' };
