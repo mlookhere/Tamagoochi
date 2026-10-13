@@ -71,6 +71,15 @@ export function clean(pet: Companion): Companion {
   };
 }
 
+export function comfort(pet: Companion): Companion {
+  return {
+    ...pet,
+    mood: clamp(pet.mood + 3),
+    bond: clamp(pet.bond + 4),
+    gentleness: clamp(pet.gentleness + 1),
+  };
+}
+
 export function sleep(pet: Companion): Companion {
   return { ...pet, sleeping: true };
 }
