@@ -31,7 +31,6 @@ test('missing and corrupt saves return safe starter state', () => {
     '[]',
     '{}',
     '{"version":2,"pet":{"name":"Pip"}}',
-    'x'.repeat(17_000),
   ]) {
     const restored = restoreCompanion(value, 4000);
     assert.equal(restored.source, 'recovered');
@@ -149,4 +148,13 @@ test('newer-version saves remain unsupported instead of being reset', () => {
     restoreCompanion(JSON.stringify({ version: 100, pet: {} }), 1000).source,
     'unsupported',
   );
+});
+
+test('oversized saves are preserved rather than overwritten or parsed', () => {
+  const oversizedFuture = JSON.stringify({
+    version: SAVE_VERSION + 1,
+    pet: { futureData: 'x'.repeat(17_000) },
+  });
+  assert.equal(restoreCompanion(oversizedFuture, 1000).source, 'unsupported');
+  assert.equal(restoreCompanion('x'.repeat(17_000), 1000).source, 'unsupported');
 });
