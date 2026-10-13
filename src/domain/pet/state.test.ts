@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   advanceCompanion,
   clean,
+  comfort,
   companionAgeDays,
   createCompanion,
   feed,
@@ -162,4 +163,23 @@ test('age is derived from elapsed wall time without mutating the pet', () => {
   assert.equal(companionAgeDays(pet, 1000 + 47 * HOUR_MS), 1);
   assert.equal(companionAgeDays(pet, 1000 + 48 * HOUR_MS), 2);
   assert.equal(pet.bornAt, 1000);
+});
+
+test('direct companion comfort is bounded and preserves sleep', () => {
+  const pet = { ...createCompanion('Pip', 0), sleeping: true };
+  const touched = comfort(pet);
+  assert.equal(pet.bond, 20);
+  assert.equal(touched.bond, 24);
+  assert.equal(touched.mood, 83);
+  assert.equal(touched.gentleness, 51);
+  assert.equal(touched.sleeping, true);
+  const nearMax = {
+    ...pet,
+    bond: 99,
+    mood: 99,
+    gentleness: 99,
+  };
+  assert.equal(comfort(nearMax).bond, 100);
+  assert.equal(comfort(nearMax).mood, 100);
+  assert.equal(comfort(nearMax).gentleness, 100);
 });
