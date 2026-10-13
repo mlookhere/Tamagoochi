@@ -8,7 +8,7 @@ import {
 import { companionStorage } from '../storage/device';
 import { loadCompanion, saveCompanion } from '../storage/repository';
 
-export type CompanionLoadState = 'loading' | 'ready' | 'error';
+export type CompanionLoadState = 'loading' | 'ready' | 'error' | 'unsupported';
 
 export function useCompanion() {
   const [pet, setPet] = useState(() => createCompanion());
@@ -50,6 +50,11 @@ export function useCompanion() {
     loadCompanion(companionStorage, now)
       .then(({ pet: loaded, source }) => {
         if (cancelled) return;
+        if (source === 'unsupported') {
+          // Preserve the newer save on disk; do not enable or persist gameplay.
+          setStatus('unsupported');
+          return;
+        }
         setObservedAt(now);
         current.current = loaded;
         setPet(loaded);
