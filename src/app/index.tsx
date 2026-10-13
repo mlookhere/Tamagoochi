@@ -45,7 +45,7 @@ export default function Home() {
             {status === 'loading'
               ? 'Loading your companion...'
               : status === 'unsupported'
-                ? 'This save needs a newer app version. Update the app to protect your progress.'
+                ? 'This save cannot be opened safely by this app version. Update the app to protect your progress.'
                 : 'Could not open your saved companion. Retry to protect your progress.'}
           </Text>
           {status === 'error' ? (
