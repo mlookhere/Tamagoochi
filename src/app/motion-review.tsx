@@ -16,9 +16,12 @@ import { colors } from '../theme';
 import { reduceMotionDescription } from '../theme/accessibility';
 import type { CompanionPose } from '../theme/motion';
 import {
+  MOTION_REVIEW_CASES,
   MOTION_REVIEW_POSES,
   MOTION_REVIEW_STAGES,
   motionCaseId,
+  motionReviewPosition,
+  nextMotionReviewCase,
 } from '../theme/motion-review';
 
 type ReviewButtonProps = Readonly<{
@@ -59,6 +62,12 @@ function MotionReviewContent() {
     setStage(value);
     setReactionId((current) => current + 1);
   };
+  const advanceCase = () => {
+    const next = nextMotionReviewCase(stage, pose);
+    setStage(next.stage);
+    setPose(next.pose);
+    setReactionId((current) => current + 1);
+  };
   const motionState = reduceMotionDescription(reducedMotion);
 
   return (
@@ -83,6 +92,18 @@ function MotionReviewContent() {
           {fontScale.toFixed(2)}
         </Text>
       </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Next test case"
+        accessibilityHint="Advance to the next companion stage and pose"
+        onPress={advanceCase}
+        style={styles.nextCase}
+      >
+        <Text style={styles.nextCaseText}>
+          Next test case · {motionReviewPosition(stage, pose)} of{' '}
+          {MOTION_REVIEW_CASES.length}
+        </Text>
+      </Pressable>
       <Text style={styles.groupLabel}>Character stage</Text>
       <View style={styles.options}>
         {MOTION_REVIEW_STAGES.map((option) => (
@@ -173,6 +194,16 @@ const styles = StyleSheet.create({
   selected: { backgroundColor: colors.moss, borderColor: colors.moss },
   choiceText: { color: colors.ink, fontSize: 14, fontWeight: '700' },
   selectedText: { color: colors.white },
+  nextCase: {
+    marginTop: 14,
+    minHeight: 48,
+    padding: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.moss,
+  },
+  nextCaseText: { color: colors.white, fontSize: 15, fontWeight: '800' },
   replay: {
     marginTop: 24,
     minHeight: 48,
