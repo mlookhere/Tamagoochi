@@ -105,11 +105,12 @@ test('serializer rejects malformed state before writing', () => {
 
 test('version 2 saves retain needs, timestamps and sleep when migrated to room v3', () => {
   const old = createCompanion('Old Pip', 1000);
-  const { roomItemSlot: _roomItemSlot, ...previousPet } = {
+  const { roomItemSlot, ...previousPet } = {
     ...old,
     hunger: 45,
     sleeping: true,
   };
+  assert.equal(roomItemSlot, 'left');
   const restored = restoreCompanion(
     JSON.stringify({ version: 2, pet: previousPet }),
     1000 + 3 * HOUR_MS,
