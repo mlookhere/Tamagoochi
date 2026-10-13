@@ -19,8 +19,12 @@ export const ACTION_ART = {
     sad: require('../../assets/companions/action-seedling-sad.png') as number,
     curious:
       require('../../assets/companions/action-seedling-curious.png') as number,
+    startled:
+      require('../../assets/companions/action-seedling-startled.png') as number,
     pickup:
       require('../../assets/companions/action-seedling-pickup.png') as number,
+    return:
+      require('../../assets/companions/action-seedling-return.png') as number,
     evolution:
       require('../../assets/companions/action-seedling-evolution.png') as number,
   },
@@ -34,7 +38,10 @@ export const ACTION_ART = {
     sad: require('../../assets/companions/action-bud-sad.png') as number,
     curious:
       require('../../assets/companions/action-bud-curious.png') as number,
+    startled:
+      require('../../assets/companions/action-bud-startled.png') as number,
     pickup: require('../../assets/companions/action-bud-pickup.png') as number,
+    return: require('../../assets/companions/action-bud-return.png') as number,
     evolution:
       require('../../assets/companions/action-bud-evolution.png') as number,
   },
@@ -48,8 +55,12 @@ export const ACTION_ART = {
     sad: require('../../assets/companions/action-bloom-sad.png') as number,
     curious:
       require('../../assets/companions/action-bloom-curious.png') as number,
+    startled:
+      require('../../assets/companions/action-bloom-startled.png') as number,
     pickup:
       require('../../assets/companions/action-bloom-pickup.png') as number,
+    return:
+      require('../../assets/companions/action-bloom-return.png') as number,
     evolution:
       require('../../assets/companions/action-bloom-evolution.png') as number,
   },

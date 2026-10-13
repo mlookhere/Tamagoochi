@@ -81,3 +81,7 @@ Inspect walk, eat, sleep, clean, play, pickup and evolution at all three stages 
 ## New emotional action-frame review
 
 On each device, view happy, sad and curious at seedling, bud and bloom in `/motion-review`. Confirm celebratory raised paws do not cover eyes, the sad leaf canopy and tears read against all room backgrounds, and the magnifier and reaching paw are legible without introducing accidental UI controls. Verify each still communicates the pose when Reduce Motion is enabled. Native review remains outstanding; CI PNG contracts and web screenshots do not validate on-device artwork.
+
+## Completing native pose-art review
+
+The development-only `/motion-review` route now routes every non-idle pose to a dedicated 256×256 complete character action study for seedling/bud/bloom (36 total); idle uses each stage's neutral sprite. For startled and return, confirm raised paws, a warning-like spark, the lantern, pennant and footprints are visually distinctive but not mistaken for interactive elements. Verify all 39 stage/pose combinations on physical iOS and Android devices with Reduce Motion both enabled and disabled. Capture and approve screenshots with large text and screen readers; the asset contracts cannot substitute for those native observations.

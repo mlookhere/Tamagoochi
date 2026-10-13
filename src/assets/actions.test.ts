@@ -14,7 +14,9 @@ const actions = [
   'happy',
   'sad',
   'curious',
+  'startled',
   'pickup',
+  'return',
   'evolution',
 ] as const;
 
@@ -22,12 +24,12 @@ test('only authored full-character frames use the action registry', () => {
   for (const action of actions) {
     assert.equal(isIllustratedAction(action), true);
   }
-  for (const pose of ['idle', 'startled', 'return'] as const) {
+  for (const pose of ['idle'] as const) {
     assert.equal(isIllustratedAction(pose), false);
   }
 });
 
-test('all 30 action frames are distinct, transparent and native-bundled', () => {
+test('all 36 action frames are distinct, transparent and native-bundled', () => {
   const registry = readFileSync('src/assets/actions.ts', 'utf8');
   const sprite = readFileSync('src/components/CompanionSprite.tsx', 'utf8');
   assert.match(sprite, /isIllustratedAction\(pose\)/);
