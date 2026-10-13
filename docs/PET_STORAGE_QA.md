@@ -3,8 +3,9 @@
 ## Storage contract
 
 Item 3 is local-first. `src/storage/companion.ts` validates JSON schema v3,
-migrates supported v1 and v2 data and returns a safe new companion when stored content
-is corrupt or an unrecognized version. `src/storage/repository.ts` keeps that
+migrates supported v1 and v2 data and returns a safe new companion for
+corrupt content. Newer unknown schema versions are **not overwritten**: care
+and autosaves stay disabled, and Home asks the player to update the app. `src/storage/repository.ts` keeps that
 serialization independent of device I/O.
 
 The native adapter (`src/storage/device.native.ts`) stores one JSON file in
@@ -23,6 +24,8 @@ elapsed-time simulation on foreground resume. A read exception blocks gameplay
 and offers Retry loading to avoid overwriting an inaccessible existing save.
 A failed write shows a warning and an explicit Retry saving action; no success is claimed until the write resolves.
 A malformed save is recovered to a fresh, non-punitive companion with a notice.
+A future-version save is blocked from writes, not treated as corrupt. Unsupported
+room positions are also rejected rather than coerced into valid positions.
 This storage layer does not implement cloud sync or multi-device conflict resolution.
 
 ## Native acceptance matrix (not automatically satisfied)
@@ -39,9 +42,11 @@ device, and attach dated device/OS/build-SHA evidence to Issue #10:
    decay, and care actions remain available.
 4. Simulate denied/unavailable storage or a full device. Verify read failures
    disable actions and offer retry, while write failures show the unsaved warning.
-5. Load representative v1 data and malformed v2 data. Verify migration retains
-   the four old need values; corrupt data shows the recovery notice and playable
-   safe defaults. Check no sensitive records leave device storage.
+5. Load representative v1, v2, malformed v3, and **future-version v4** data.
+   Verify migration retains original pet values, corrupt data shows recoverable
+   safe defaults, and v4 instead disables interactions and requests an app
+   update **without changing the file contents**. Check no sensitive records
+   leave device storage.
 6. Move the starter room cushion from left to center to right to left.
    Force-close and reopen after moving it. Verify its position survives restart
    and older v2 saves migrate with a default left cushion without losing pet
