@@ -45,8 +45,7 @@ test('ordered motion review advances through all 39 cases and wraps exactly once
   assert.equal(caseIds.length, 39);
   assert.equal(new Set(caseIds).size, caseIds.length);
 
-  let current: { stage: (typeof MOTION_REVIEW_STAGES)[number]; pose: (typeof MOTION_REVIEW_POSES)[number] } =
-    MOTION_REVIEW_CASES[0];
+  let current = MOTION_REVIEW_CASES[0];
   for (let index = 0; index < caseIds.length; index++) {
     assert.equal(motionCaseId(current.stage, current.pose), caseIds[index]);
     assert.equal(motionReviewPosition(current.stage, current.pose), index + 1);
