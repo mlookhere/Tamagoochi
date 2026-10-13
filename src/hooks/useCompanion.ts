@@ -94,10 +94,14 @@ export function useCompanion() {
     [persist],
   );
 
+  const retrySave = useCallback(() => {
+    if (ready.current) persist(current.current);
+  }, [persist]);
+
   const retry = useCallback(() => {
     setStatus('loading');
     setRetryCount((count) => count + 1);
   }, []);
 
-  return { pet, status, notice, saveError, care, retry };
+  return { pet, status, notice, saveError, care, retry, retrySave };
 }
