@@ -83,6 +83,7 @@ function reduceWorkshop(
     };
   }
   return {
+    ...state,
     inventory: result.inventory,
     notice: `Made a ${name.toLowerCase()}!`,
   };
