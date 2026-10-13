@@ -2,7 +2,7 @@ import {
   advanceCompanion,
   createCompanion,
   type Companion,
-} from '../domain/pet/state';
+} from '../domain/pet/state.ts';
 
 export const SAVE_VERSION = 2;
 const MAX_SAVE_LENGTH = 16_384;
