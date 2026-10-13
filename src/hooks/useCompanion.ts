@@ -5,8 +5,7 @@ import {
   createCompanion,
   type Companion,
 } from '../domain/pet/state';
-import { companionStorage } from '../storage/device';
-import { loadCompanion, saveCompanion } from '../storage/repository';
+import { companionSession } from '../storage/session';
 
 export type CompanionLoadState = 'loading' | 'ready' | 'error' | 'unsupported';
 
@@ -22,17 +21,21 @@ export function useCompanion() {
   const current = useRef(pet);
   const ready = useRef(false);
   const mounted = useRef(false);
-  const queue = useRef<Promise<void>>(Promise.resolve());
+  const saveRevision = useRef(0);
 
   const persist = useCallback((next: Companion) => {
-    queue.current = queue.current
-      .catch(() => {})
-      .then(() => saveCompanion(companionStorage, next))
+    const revision = ++saveRevision.current;
+    companionSession
+      .save(next)
       .then(() => {
-        if (mounted.current) setSaveError(false);
+        if (mounted.current && revision === saveRevision.current) {
+          setSaveError(false);
+        }
       })
       .catch(() => {
-        if (mounted.current) setSaveError(true);
+        if (mounted.current && revision === saveRevision.current) {
+          setSaveError(true);
+        }
       });
   }, []);
 
@@ -47,7 +50,8 @@ export function useCompanion() {
     let cancelled = false;
     ready.current = false;
     const now = Date.now();
-    loadCompanion(companionStorage, now)
+    companionSession
+      .load(now)
       .then(({ pet: loaded, source }) => {
         if (cancelled) return;
         if (source === 'unsupported') {
