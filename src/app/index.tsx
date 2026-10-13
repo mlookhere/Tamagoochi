@@ -1,7 +1,14 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { APP_ASSETS } from '../assets';
 import { Page } from '../components/Page';
-import { clean, companionAgeDays, feed, play, sleep, wake } from '../domain/pet/state';
+import {
+  clean,
+  companionAgeDays,
+  feed,
+  play,
+  sleep,
+  wake,
+} from '../domain/pet/state';
 import { useCompanion } from '../hooks/useCompanion';
 
 type StatProps = Readonly<{ label: string; value: number }>;
@@ -122,7 +129,9 @@ export default function Home() {
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={pet.sleeping ? 'Wake companion' : 'Let companion rest'}
+          accessibilityLabel={
+            pet.sleeping ? 'Wake companion' : 'Let companion rest'
+          }
           style={styles.action}
           disabled={status !== 'ready'}
           accessibilityState={{ disabled: status !== 'ready' }}
@@ -133,9 +142,7 @@ export default function Home() {
             )
           }
         >
-          <Text style={styles.actionTitle}>
-            {pet.sleeping ? 'Wake' : 'Rest'}
-          </Text>
+          <Text style={styles.actionTitle}>{pet.sleeping ? 'Wake' : 'Rest'}</Text>
         </Pressable>
       </View>
     </Page>
