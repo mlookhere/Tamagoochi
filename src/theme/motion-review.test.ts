@@ -52,14 +52,14 @@ test('ordered motion review advances through all 39 cases and wraps exactly once
     current = nextMotionReviewCase(current.stage, current.pose);
   }
   assert.deepEqual(current, MOTION_REVIEW_CASES[0]);
-  assert.deepEqual(
-    nextMotionReviewCase('seedling', 'evolution'),
-    { stage: 'bud', pose: 'idle' },
-  );
-  assert.deepEqual(
-    nextMotionReviewCase('bloom', 'evolution'),
-    { stage: 'seedling', pose: 'idle' },
-  );
+  assert.deepEqual(nextMotionReviewCase('seedling', 'evolution'), {
+    stage: 'bud',
+    pose: 'idle',
+  });
+  assert.deepEqual(nextMotionReviewCase('bloom', 'evolution'), {
+    stage: 'seedling',
+    pose: 'idle',
+  });
 });
 
 test('native motion review exposes ordered case navigation', () => {
