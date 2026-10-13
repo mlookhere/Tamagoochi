@@ -26,3 +26,19 @@ export const MOTION_REVIEW_POSES = [
 export function motionCaseId(stage: CompanionStage, pose: CompanionPose) {
   return `${stage}-${pose}`;
 }
+
+export const MOTION_REVIEW_CASES = MOTION_REVIEW_STAGES.flatMap((stage) =>
+  MOTION_REVIEW_POSES.map((pose) => ({ stage, pose })),
+);
+
+export function motionReviewPosition(stage: CompanionStage, pose: CompanionPose) {
+  return MOTION_REVIEW_CASES.findIndex(
+    (candidate) => candidate.stage === stage && candidate.pose === pose,
+  ) + 1;
+}
+
+export function nextMotionReviewCase(stage: CompanionStage, pose: CompanionPose) {
+  return MOTION_REVIEW_CASES[
+    motionReviewPosition(stage, pose) % MOTION_REVIEW_CASES.length
+  ];
+}
