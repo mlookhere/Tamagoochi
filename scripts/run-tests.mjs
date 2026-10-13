@@ -14,6 +14,7 @@ if (coverage) {
 }
 args.push(
   'src/domain/pet/state.test.ts',
+  'src/domain/items/inventory.test.ts',
   'src/config/public.test.ts',
   'scripts/vendor-security.test.mjs',
 );
