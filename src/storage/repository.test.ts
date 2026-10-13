@@ -45,3 +45,22 @@ test('corrupt device payload returns recoverable state', async () => {
   assert.equal(recovered.source, 'recovered');
   assert.equal(recovered.pet.lastSimulatedAt, 9_000);
 });
+
+test('future-version saved data is not rewritten during a load', async () => {
+  const original = JSON.stringify({ version: 4, pet: { newField: true } });
+  let current = original;
+  let writes = 0;
+  const port = {
+    async read() {
+      return current;
+    },
+    async write(data: string) {
+      writes += 1;
+      current = data;
+    },
+  };
+  const result = await loadCompanion(port, 9_000);
+  assert.equal(result.source, 'unsupported');
+  assert.equal(writes, 0);
+  assert.equal(current, original);
+});
