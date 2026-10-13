@@ -18,7 +18,7 @@ const stats = [
   'gentleness',
 ] as const;
 
-type RestoreSource = 'new' | 'restored' | 'migrated' | 'recovered';
+type RestoreSource = 'new' | 'restored' | 'migrated' | 'recovered' | 'unsupported';
 export type RestoredCompanion = Readonly<{
   pet: Companion;
   source: RestoreSource;
@@ -44,7 +44,8 @@ function isCompanion(value: unknown): value is Companion {
     return false;
   }
   if (typeof value.sleeping !== 'boolean') return false;
-  if (!['left', 'center', 'right'].includes(String(value.roomItemSlot))) {
+  const slot = value.roomItemSlot;
+  if (slot !== 'left' && slot !== 'center' && slot !== 'right') {
     return false;
   }
   if (!stats.every((key) => isNeed(value[key]))) {
@@ -106,6 +107,10 @@ export function restoreCompanion(
   try {
     const stored: unknown = JSON.parse(raw);
     if (!isRecord(stored)) return fallback();
+    // Never overwrite a save created by a newer app version.
+    if (typeof stored.version === 'number' && stored.version > SAVE_VERSION) {
+      return { pet: createCompanion(undefined, now), source: 'unsupported' };
+    }
     if (stored.version === SAVE_VERSION && isCompanion(stored.pet)) {
       return { pet: advanceCompanion(stored.pet, now), source: 'restored' };
     }
