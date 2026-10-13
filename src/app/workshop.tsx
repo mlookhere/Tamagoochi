@@ -67,9 +67,7 @@ export default function Workshop() {
           <View key={item} style={styles.inventoryRow}>
             <View>
               <Text style={styles.itemName}>{ITEM_CATALOG[item].name}</Text>
-              <Text style={styles.category}>
-                {ITEM_CATALOG[item].category}
-              </Text>
+              <Text style={styles.category}>{ITEM_CATALOG[item].category}</Text>
             </View>
             <Text style={styles.quantity}>
               {itemCount(state.inventory, item)}
