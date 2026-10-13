@@ -5,7 +5,10 @@ import { companionMotion } from './motion.ts';
 import {
   MOTION_REVIEW_POSES,
   MOTION_REVIEW_STAGES,
+  MOTION_REVIEW_CASES,
   motionCaseId,
+  motionReviewPosition,
+  nextMotionReviewCase,
 } from './motion-review.ts';
 
 test('motion review covers all authored poses for every stage', () => {
@@ -33,4 +36,36 @@ test('motion review is excluded from player navigation and redirects in producti
   assert.match(observer, /AccessibilityInfo\.addEventListener/);
   assert.match(observer, /isReduceMotionEnabled\(\)/);
   assert.match(observer, /\.catch\(/);
+});
+
+test('ordered motion review advances through all 39 cases and wraps exactly once', () => {
+  const caseIds = MOTION_REVIEW_CASES.map(({ stage, pose }) =>
+    motionCaseId(stage, pose),
+  );
+  assert.equal(caseIds.length, 39);
+  assert.equal(new Set(caseIds).size, caseIds.length);
+
+  let current: { stage: (typeof MOTION_REVIEW_STAGES)[number]; pose: (typeof MOTION_REVIEW_POSES)[number] } =
+    MOTION_REVIEW_CASES[0];
+  for (let index = 0; index < caseIds.length; index++) {
+    assert.equal(motionCaseId(current.stage, current.pose), caseIds[index]);
+    assert.equal(motionReviewPosition(current.stage, current.pose), index + 1);
+    current = nextMotionReviewCase(current.stage, current.pose);
+  }
+  assert.deepEqual(current, MOTION_REVIEW_CASES[0]);
+  assert.deepEqual(
+    nextMotionReviewCase('seedling', 'evolution'),
+    { stage: 'bud', pose: 'idle' },
+  );
+  assert.deepEqual(
+    nextMotionReviewCase('bloom', 'evolution'),
+    { stage: 'seedling', pose: 'idle' },
+  );
+});
+
+test('native motion review exposes ordered case navigation', () => {
+  const route = readFileSync('src/app/motion-review.tsx', 'utf8');
+  assert.match(route, /nextMotionReviewCase\(stage, pose\)/);
+  assert.match(route, /Next test case/);
+  assert.match(route, /motionReviewPosition\(stage, pose\)/);
 });
