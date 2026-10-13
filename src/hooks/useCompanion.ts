@@ -17,6 +17,7 @@ export function useCompanion() {
     'A new little friend is waiting for you.',
   );
   const [saveError, setSaveError] = useState(false);
+  const [observedAt, setObservedAt] = useState(() => Date.now());
   const [retryCount, setRetryCount] = useState(0);
   const current = useRef(pet);
   const ready = useRef(false);
@@ -45,9 +46,11 @@ export function useCompanion() {
   useEffect(() => {
     let cancelled = false;
     ready.current = false;
-    loadCompanion(companionStorage, Date.now())
+    const now = Date.now();
+    loadCompanion(companionStorage, now)
       .then(({ pet: loaded, source }) => {
         if (cancelled) return;
+        setObservedAt(now);
         current.current = loaded;
         setPet(loaded);
         setStatus('ready');
@@ -73,7 +76,9 @@ export function useCompanion() {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
       if (state !== 'active' || !ready.current) return;
-      const next = advanceCompanion(current.current, Date.now());
+      const now = Date.now();
+      setObservedAt(now);
+      const next = advanceCompanion(current.current, now);
       if (next === current.current) return;
       current.current = next;
       setPet(next);
@@ -103,5 +108,5 @@ export function useCompanion() {
     setRetryCount((count) => count + 1);
   }, []);
 
-  return { pet, status, notice, saveError, care, retry, retrySave };
+  return { pet, status, notice, saveError, care, retry, retrySave, observedAt };
 }
