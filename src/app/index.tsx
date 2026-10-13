@@ -3,6 +3,7 @@ import { APP_ASSETS } from '../assets';
 import { Page } from '../components/Page';
 import {
   clean,
+  comfort,
   companionAgeDays,
   feed,
   play,
@@ -28,7 +29,8 @@ function Stat({ label, value }: StatProps) {
 }
 
 export default function Home() {
-  const { pet, status, notice, saveError, care, retry } = useCompanion();
+  const { pet, status, notice, saveError, care, retry, retrySave } =
+    useCompanion();
 
   return (
     <Page
@@ -56,9 +58,19 @@ export default function Home() {
         </View>
       ) : null}
       {saveError ? (
-        <Text accessibilityRole="alert" style={styles.storageText}>
-          Your latest change has not been saved on this device.
-        </Text>
+        <View style={styles.storageStatus}>
+          <Text accessibilityRole="alert" style={styles.storageText}>
+            Your latest change has not been saved on this device.
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Retry saving companion"
+            onPress={retrySave}
+            style={styles.retry}
+          >
+            <Text style={styles.actionTitle}>Retry saving</Text>
+          </Pressable>
+        </View>
       ) : null}
       <View style={styles.habitat}>
         <Image
@@ -68,7 +80,14 @@ export default function Home() {
         />
         <View style={styles.sun} />
         <View style={styles.floor} />
-        <View style={styles.pet}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Comfort companion"
+          disabled={status !== 'ready'}
+          accessibilityState={{ disabled: status !== 'ready' }}
+          onPress={() => care(comfort, 'Your companion feels loved.')}
+          style={styles.pet}
+        >
           <View style={styles.earLeft} />
           <View style={styles.earRight} />
           <View style={styles.body}>
@@ -78,7 +97,7 @@ export default function Home() {
             </View>
             <View style={styles.mouth} />
           </View>
-        </View>
+        </Pressable>
         <Text style={styles.name}>{pet.name}</Text>
         <Text style={styles.mood}>{notice}</Text>
       </View>
