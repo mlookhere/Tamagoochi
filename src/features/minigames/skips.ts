@@ -47,3 +47,20 @@ export function chooseSkip(
   }
   return { distance: landed, hops: hops + 1, result: 'progress' };
 }
+
+export type SkipChoice = Readonly<{
+  hop: Hop;
+  result: SkipOutcome['result'];
+}>;
+
+// Preview the same no-penalty outcome used by the actual reducer.
+export function skipChoices(
+  round: number,
+  distance: number,
+  hops: number,
+): readonly SkipChoice[] {
+  return HOPS.map((hop) => ({
+    hop,
+    result: chooseSkip(round, distance, hops, hop).result,
+  }));
+}

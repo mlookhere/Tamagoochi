@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ECHO_SYMBOLS, echoPattern } from '../minigames/echo';
 import { pairBoard } from '../minigames/pairs';
-import { HOPS, skipTarget } from '../minigames/skips';
+import { skipChoices, skipTarget } from '../minigames/skips';
 import type { WorkshopAction, WorkshopState } from './workshopState';
 
 type Props = Readonly<{
@@ -44,24 +44,43 @@ function StoneSkipGame({ state, dispatch }: Props) {
       <Text style={styles.heading}>Stone Skip</Text>
       <Text style={styles.ingredients}>
         Mini game 2 of 3. Cross the river in exactly three hops. Choose 1, 2, or
-        3 spaces per hop. An impossible route restarts without penalty.
+        3 spaces per hop. Each choice previews whether it continues, finishes,
+        or restarts for free.
       </Text>
       <Text style={styles.echoPattern}>
         {state.skipDistance} / {skipTarget(state.skipRound)} spaces
       </Text>
       <Text style={styles.ingredients}>Hop {state.skipHops + 1} of 3</Text>
       <View style={styles.echoChoices}>
-        {HOPS.map((hop) => (
-          <Pressable
-            key={hop}
-            accessibilityRole="button"
-            accessibilityLabel={`Hop ${hop} spaces in Stone Skip`}
-            style={styles.echoButton}
-            onPress={() => dispatch({ type: 'skip', hop })}
-          >
-            <Text style={styles.makeText}>{hop} spaces</Text>
-          </Pressable>
-        ))}
+        {skipChoices(
+          state.skipRound,
+          state.skipDistance,
+          state.skipHops,
+        ).map(({ hop, result }) => {
+          const hint =
+            result === 'complete'
+              ? 'Finish crossing'
+              : result === 'miss'
+                ? 'Free restart'
+                : 'Continue crossing';
+          return (
+            <Pressable
+              key={hop}
+              accessibilityRole="button"
+              accessibilityLabel={`Hop ${hop} spaces in Stone Skip`}
+              accessibilityHint={hint}
+              style={[
+                styles.echoButton,
+                result === 'miss' && styles.restartChoice,
+                result === 'complete' && styles.finishChoice,
+              ]}
+              onPress={() => dispatch({ type: 'skip', hop })}
+            >
+              <Text style={styles.makeText}>{hop} spaces</Text>
+              <Text style={styles.choiceHint}>{hint}</Text>
+            </Pressable>
+          );
+        })}
       </View>
     </>
   );
@@ -155,6 +174,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#345E46',
+  },
+  restartChoice: { backgroundColor: '#745C44' },
+  finishChoice: { backgroundColor: '#286E49' },
+  choiceHint: {
+    fontSize: 10,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    textAlign: 'center',
   },
   pairGrid: {
     flexDirection: 'row',
