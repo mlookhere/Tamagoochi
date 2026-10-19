@@ -281,7 +281,7 @@ export default function Workshop() {
         {state.notice}
       </Text>
       <View style={styles.companionPanel}>
-        <Text style={styles.itemName}>Mochi's corner</Text>
+        <Text style={styles.itemName}>Mochi&apos;s corner</Text>
         <Text style={styles.companionProgress}>
           Bond {state.bond.bond}/100 · Curiosity{' '}
           {state.bond.personality.curiosity}
