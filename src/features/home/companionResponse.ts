@@ -1,4 +1,4 @@
-import type { Room, RoomItem } from './room.ts';
+import { ROOM_SLOTS, type Room, type RoomItem, type RoomSlot } from './room.ts';
 
 export const MINI_GAMES = ['echo', 'skip', 'pairs'] as const;
 export type MiniGame = (typeof MINI_GAMES)[number];
@@ -80,4 +80,26 @@ export function roomMood(room: Room): string {
   if (wary) return 'Mochi gives the shiny stone a little space.';
   if (preferences.length) return 'Mochi is curious about the new decor.';
   return 'Mochi is ready to discover what you make next.';
+}
+
+export type CompanionPlacement = Readonly<{
+  slot: RoomSlot;
+  mood: 'delighted' | 'curious' | 'shy' | 'resting';
+}>;
+
+// Favorites attract the pet; an otherwise solitary wary object makes it retreat.
+export function companionPlacement(room: Room): CompanionPlacement {
+  const slots = Object.keys(ROOM_SLOTS) as RoomSlot[];
+  for (const preference of ['favorite', 'neutral', 'wary'] as const) {
+    const slot = slots.find((candidate) => {
+      const item = room[candidate];
+      return item !== undefined && ROOM_PREFERENCES[item] === preference;
+    });
+    if (!slot) continue;
+    if (preference === 'wary') {
+      return { slot: slot === 'window' ? 'garden' : 'window', mood: 'shy' };
+    }
+    return { slot, mood: preference === 'favorite' ? 'delighted' : 'curious' };
+  }
+  return { slot: 'nook', mood: 'resting' };
 }

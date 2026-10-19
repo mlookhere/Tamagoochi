@@ -4,6 +4,7 @@ import { ROOM_ITEMS } from './room.ts';
 import {
   MINI_GAMES,
   ROOM_PREFERENCES,
+  companionPlacement,
   completeMiniGame,
   createWorkshopBond,
   placedItemReaction,
@@ -69,4 +70,41 @@ test('room mood reacts to favorites, cautious objects, and their mixture', () =>
   assert.match(roomMood({ garden: 'starKeepsake' }), /space/);
   assert.match(roomMood({ nook: 'flowerCrown' }), /curious/);
   assert.match(roomMood({ window: 'leafToy', garden: 'starKeepsake' }), /cozy/);
+});
+
+test('visual companion rests in the empty room and approaches favorites', () => {
+  assert.deepEqual(companionPlacement({}), { slot: 'nook', mood: 'resting' });
+  assert.deepEqual(companionPlacement({ garden: 'leafToy' }), {
+    slot: 'garden',
+    mood: 'delighted',
+  });
+  assert.deepEqual(companionPlacement({ nook: 'flowerCrown' }), {
+    slot: 'nook',
+    mood: 'curious',
+  });
+});
+
+test('wary decorations send Mochi away unless a favorite is available', () => {
+  assert.deepEqual(companionPlacement({ window: 'starKeepsake' }), {
+    slot: 'garden',
+    mood: 'shy',
+  });
+  assert.deepEqual(companionPlacement({ garden: 'starKeepsake' }), {
+    slot: 'window',
+    mood: 'shy',
+  });
+  assert.deepEqual(
+    companionPlacement({ window: 'starKeepsake', nook: 'mossCushion' }),
+    { slot: 'nook', mood: 'delighted' },
+  );
+});
+
+test('companion placement is deterministic and never mutates the room', () => {
+  const room = { window: 'leafToy', garden: 'mossCushion' } as const;
+  const before = { ...room };
+  assert.deepEqual(companionPlacement(room), {
+    slot: 'window',
+    mood: 'delighted',
+  });
+  assert.deepEqual(room, before);
 });

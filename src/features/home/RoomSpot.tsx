@@ -1,43 +1,18 @@
 import { useEffect, useState } from 'react';
-import {
-  AccessibilityInfo,
-  Animated,
-  Pressable,
-  StyleSheet,
-  Text,
-} from 'react-native';
+import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 
 type Props = Readonly<{
   label: string;
   itemName: string | null;
   onPress: () => void;
+  reduceMotion: boolean;
 }>;
 
-export function RoomSpot({ label, itemName, onPress }: Props) {
+export function RoomSpot({ label, itemName, onPress, reduceMotion }: Props) {
   const [scale] = useState(() => new Animated.Value(1));
-  const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
 
   useEffect(() => {
-    let active = true;
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((enabled) => {
-        if (active) setReduceMotion(enabled);
-      })
-      .catch(() => {
-        if (active) setReduceMotion(true);
-      });
-    const subscription = AccessibilityInfo.addEventListener(
-      'reduceMotionChanged',
-      setReduceMotion,
-    );
-    return () => {
-      active = false;
-      subscription.remove();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (reduceMotion !== false) {
+    if (reduceMotion) {
       scale.stopAnimation();
       scale.setValue(1);
       return;

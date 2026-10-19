@@ -2,7 +2,10 @@ import { useReducer } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Page } from '../components/Page';
 import { RoomSpot } from '../features/home/RoomSpot';
+import { RoomCompanion } from '../features/home/RoomCompanion';
+import { useReducedMotion } from '../features/home/useReducedMotion';
 import {
+  companionPlacement,
   completeMiniGame,
   createWorkshopBond,
   placedItemReaction,
@@ -264,6 +267,7 @@ function reduceWorkshop(
 
 export default function Workshop() {
   const [state, dispatch] = useReducer(reduceWorkshop, undefined, newWorkshop);
+  const reduceMotion = useReducedMotion();
   const board = pairBoard(state.pairs.round);
   const reviewing = state.pairs.revealed.length === 2;
 
@@ -288,6 +292,10 @@ export default function Workshop() {
           {' · '}Courage {state.bond.personality.courage}
           {' · '}Focus {state.bond.personality.focus}
         </Text>
+        <RoomCompanion
+          placement={companionPlacement(state.room)}
+          reduceMotion={reduceMotion}
+        />
         <Text style={styles.companionMood}>{roomMood(state.room)}</Text>
         <Text style={styles.ingredients}>
           Each minigame strengthens your bond once. Replays have no penalty.
@@ -370,6 +378,7 @@ export default function Workshop() {
           <RoomSpot
             key={slot}
             label={ROOM_SLOTS[slot]}
+            reduceMotion={reduceMotion}
             itemName={
               state.room[slot] ? ITEM_CATALOG[state.room[slot]].name : null
             }
