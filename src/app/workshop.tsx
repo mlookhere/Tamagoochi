@@ -8,14 +8,14 @@ import {
   type ItemId,
   type RecipeId,
 } from '../domain/items/inventory';
-import { RoomSpot } from '../features/home/RoomSpot';
+import { RoomSlots } from '../features/home/RoomSlots';
 import { RoomCompanion } from '../features/home/RoomCompanion';
 import { useReducedMotion } from '../features/home/useReducedMotion';
 import {
   companionPlacement,
   roomMood,
 } from '../features/home/companionResponse';
-import { ROOM_ITEMS, ROOM_SLOTS, type RoomSlot } from '../features/home/room';
+import { ROOM_ITEMS } from '../features/home/room';
 import { ECHO_SYMBOLS, echoPattern } from '../features/minigames/echo';
 import { pairBoard } from '../features/minigames/pairs';
 import { HOPS, skipTarget } from '../features/minigames/skips';
@@ -158,25 +158,13 @@ export default function Workshop() {
           );
         })}
       </View>
-      <View style={styles.roomSlots}>
-        {(Object.keys(ROOM_SLOTS) as RoomSlot[]).map((slot) => (
-          <RoomSpot
-            key={slot}
-            label={ROOM_SLOTS[slot]}
-            reduceMotion={reduceMotion}
-            width={roomWidth}
-            selectedItemName={
-              state.selectedRoomItem
-                ? ITEM_CATALOG[state.selectedRoomItem].name
-                : null
-            }
-            itemName={
-              state.room[slot] ? ITEM_CATALOG[state.room[slot]].name : null
-            }
-            onPress={() => dispatch({ type: 'roomSlot', slot })}
-          />
-        ))}
-      </View>
+      <RoomSlots
+        room={state.room}
+        selectedRoomItem={state.selectedRoomItem}
+        reduceMotion={reduceMotion}
+        width={roomWidth}
+        onPress={(slot) => dispatch({ type: 'roomSlot', slot })}
+      />
       <Text style={styles.heading}>Forest Echo</Text>
       <Text style={styles.ingredients}>
         Mini game 1 of 3. Repeat the three nature symbols in order. There is no
@@ -370,7 +358,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
   },
-  roomSlots: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
   pairGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
