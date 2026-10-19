@@ -14,3 +14,12 @@ export function roomColumns(width: number, fontScale: number): RoomColumns {
   if (width < 700 || fontScale >= 1.2) return 2;
   return 3;
 }
+
+export type ColumnWidth = '100%' | '48%' | '31%';
+
+export function columnWidth(columns: RoomColumns): ColumnWidth {
+  if (columns === 1) return '100%';
+  if (columns === 2) return '48%';
+  if (columns === 3) return '31%';
+  throw new Error('Invalid column count');
+}

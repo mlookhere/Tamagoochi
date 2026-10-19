@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { roomColumns } from './workshopLayout.ts';
+import { columnWidth, roomColumns, type RoomColumns } from './workshopLayout.ts';
 
 test('room targets become stacked on narrow phones', () => {
   assert.equal(roomColumns(320, 1), 1);
@@ -30,4 +30,18 @@ test('invalid screen metrics fail closed instead of returning fragile layouts', 
   for (const scale of [0, -1, NaN, Infinity]) {
     assert.throws(() => roomColumns(375, scale));
   }
+});
+
+test('responsive widths are safe for every supported column count', () => {
+  assert.equal(columnWidth(1), '100%');
+  assert.equal(columnWidth(2), '48%');
+  assert.equal(columnWidth(3), '31%');
+  assert.throws(() => columnWidth(4 as RoomColumns));
+});
+
+test('game choices follow the existing room breakpoints', () => {
+  assert.equal(columnWidth(roomColumns(320, 1)), '100%');
+  assert.equal(columnWidth(roomColumns(390, 1)), '48%');
+  assert.equal(columnWidth(roomColumns(1024, 1)), '31%');
+  assert.equal(columnWidth(roomColumns(1024, 1.5)), '100%');
 });

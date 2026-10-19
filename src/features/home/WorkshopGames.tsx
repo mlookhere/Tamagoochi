@@ -2,14 +2,16 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ECHO_SYMBOLS, echoPattern } from '../minigames/echo';
 import { pairBoard } from '../minigames/pairs';
 import { skipChoices, skipTarget } from '../minigames/skips';
+import type { ColumnWidth } from './workshopLayout';
 import type { WorkshopAction, WorkshopState } from './workshopState';
 
 type Props = Readonly<{
   state: WorkshopState;
   dispatch: (action: WorkshopAction) => void;
+  width: ColumnWidth;
 }>;
 
-function ForestEchoGame({ state, dispatch }: Props) {
+function ForestEchoGame({ state, dispatch, width }: Props) {
   return (
     <>
       <Text style={styles.heading}>Forest Echo</Text>
@@ -27,7 +29,7 @@ function ForestEchoGame({ state, dispatch }: Props) {
             key={symbol}
             accessibilityRole="button"
             accessibilityLabel={`Choose ${symbol} in Forest Echo`}
-            style={styles.echoButton}
+            style={[styles.echoButton, { width }]}
             onPress={() => dispatch({ type: 'echo', symbol })}
           >
             <Text style={styles.makeText}>{symbol}</Text>
@@ -38,7 +40,7 @@ function ForestEchoGame({ state, dispatch }: Props) {
   );
 }
 
-function StoneSkipGame({ state, dispatch }: Props) {
+function StoneSkipGame({ state, dispatch, width }: Props) {
   return (
     <>
       <Text style={styles.heading}>Stone Skip</Text>
@@ -68,6 +70,7 @@ function StoneSkipGame({ state, dispatch }: Props) {
                 accessibilityHint={hint}
                 style={[
                   styles.echoButton,
+                  { width },
                   result === 'miss' && styles.restartChoice,
                   result === 'complete' && styles.finishChoice,
                 ]}
@@ -84,7 +87,7 @@ function StoneSkipGame({ state, dispatch }: Props) {
   );
 }
 
-function MeadowPairsGame({ state, dispatch }: Props) {
+function MeadowPairsGame({ state, dispatch, width }: Props) {
   const board = pairBoard(state.pairs.round);
   const reviewing = state.pairs.revealed.length === 2;
 
@@ -109,8 +112,17 @@ function MeadowPairsGame({ state, dispatch }: Props) {
               accessibilityRole="button"
               accessibilityLabel={`Card ${card + 1}, ${cardState}`}
               accessibilityState={{ disabled: matched || reviewing }}
+              accessibilityHint={
+                matched
+                  ? 'Pair already found'
+                  : reviewing
+                    ? 'Turn over unmatched cards to continue'
+                    : visible
+                      ? 'Find its matching symbol'
+                      : 'Reveal this card'
+              }
               disabled={matched || reviewing}
-              style={[styles.pairCard, matched && styles.matchedCard]}
+              style={[styles.pairCard, { width }, matched && styles.matchedCard]}
               onPress={() => dispatch({ type: 'pair', card })}
             >
               <Text style={styles.makeText}>{visible ? symbol : '?'}</Text>
@@ -132,12 +144,12 @@ function MeadowPairsGame({ state, dispatch }: Props) {
   );
 }
 
-export function WorkshopGames({ state, dispatch }: Props) {
+export function WorkshopGames({ state, dispatch, width }: Props) {
   return (
     <View>
-      <ForestEchoGame state={state} dispatch={dispatch} />
-      <StoneSkipGame state={state} dispatch={dispatch} />
-      <MeadowPairsGame state={state} dispatch={dispatch} />
+      <ForestEchoGame state={state} dispatch={dispatch} width={width} />
+      <StoneSkipGame state={state} dispatch={dispatch} width={width} />
+      <MeadowPairsGame state={state} dispatch={dispatch} width={width} />
     </View>
   );
 }
@@ -161,12 +173,12 @@ const styles = StyleSheet.create({
   },
   echoChoices: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     marginTop: 12,
     marginBottom: 28,
   },
   echoButton: {
-    flex: 1,
     minHeight: 48,
     borderRadius: 12,
     alignItems: 'center',
@@ -188,7 +200,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   pairCard: {
-    width: '31%',
     minHeight: 64,
     borderRadius: 12,
     alignItems: 'center',

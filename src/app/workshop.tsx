@@ -19,14 +19,14 @@ import { WorkshopRecipes } from '../features/home/WorkshopRecipes';
 import { useReducedMotion } from '../features/home/useReducedMotion';
 import { ROOM_ITEMS } from '../features/home/room';
 import { newWorkshop, reduceWorkshop } from '../features/home/workshopState';
-import { roomColumns } from '../features/home/workshopLayout';
+import { columnWidth, roomColumns } from '../features/home/workshopLayout';
 
 export default function Workshop() {
   const [state, dispatch] = useReducer(reduceWorkshop, undefined, newWorkshop);
   const reduceMotion = useReducedMotion();
   const { width, fontScale } = useWindowDimensions();
   const columns = roomColumns(width, fontScale);
-  const roomWidth = columns === 1 ? '100%' : columns === 2 ? '48%' : '31%';
+  const roomWidth = columnWidth(columns);
   const pickerWidth = columns === 1 ? '100%' : '48%';
 
   return (
@@ -111,7 +111,7 @@ export default function Workshop() {
         width={roomWidth}
         onPress={(slot) => dispatch({ type: 'roomSlot', slot })}
       />
-      <WorkshopGames state={state} dispatch={dispatch} />
+      <WorkshopGames state={state} dispatch={dispatch} width={roomWidth} />
     </Page>
   );
 }
