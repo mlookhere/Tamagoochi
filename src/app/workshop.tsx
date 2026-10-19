@@ -7,7 +7,11 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Page } from '../components/Page';
-import { ITEM_CATALOG, itemCount, type ItemId } from '../domain/items/inventory';
+import {
+  ITEM_CATALOG,
+  itemCount,
+  type ItemId,
+} from '../domain/items/inventory';
 import { RoomSlots } from '../features/home/RoomSlots';
 import { CompanionPanel } from '../features/home/CompanionPanel';
 import { WorkshopGames } from '../features/home/WorkshopGames';

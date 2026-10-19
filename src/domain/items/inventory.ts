@@ -129,7 +129,8 @@ export function assessRecipe(
 ): RecipeAssessment {
   const recipe = RECIPES[recipeId];
   if (!recipe) throw new Error('Unknown recipe');
-  const outputFull = count(inventory, recipe.output) >= itemLimit(recipe.output);
+  const outputFull =
+    count(inventory, recipe.output) >= itemLimit(recipe.output);
   const missing: Record<string, number> = {};
   for (const [id, amount] of Object.entries(recipe.ingredients)) {
     const shortage = amount - count(inventory, id as ItemId);
