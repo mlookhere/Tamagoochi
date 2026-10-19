@@ -18,17 +18,37 @@ import {
   echoPattern,
   type EchoSymbol,
 } from '../features/minigames/echo';
+import {
+  choosePair,
+  closePair,
+  newPairs,
+  pairBoard,
+  type PairsState,
+} from '../features/minigames/pairs';
+import {
+  HOPS,
+  chooseSkip,
+  skipTarget,
+  type Hop,
+} from '../features/minigames/skips';
 
 type WorkshopState = Readonly<{
   inventory: Inventory;
   notice: string;
   echoRound: number;
   echoProgress: number;
+  skipRound: number;
+  skipDistance: number;
+  skipHops: number;
+  pairs: PairsState;
 }>;
 
 type WorkshopAction =
   | Readonly<{ type: 'craft'; recipeId: RecipeId }>
-  | Readonly<{ type: 'echo'; symbol: EchoSymbol }>;
+  | Readonly<{ type: 'echo'; symbol: EchoSymbol }>
+  | Readonly<{ type: 'skip'; hop: Hop }>
+  | Readonly<{ type: 'pair'; card: number }>
+  | Readonly<{ type: 'closePair' }>;
 
 function newWorkshop(): WorkshopState {
   return {
@@ -36,6 +56,25 @@ function newWorkshop(): WorkshopState {
     notice: 'Collect materials, then make something for your companion.',
     echoRound: 0,
     echoProgress: 0,
+    skipRound: 0,
+    skipDistance: 0,
+    skipHops: 0,
+    pairs: newPairs(),
+  };
+}
+
+function rewardWorkshop(
+  state: WorkshopState,
+  item: ItemId,
+  success: string,
+): WorkshopState {
+  const reward = giveItem(state.inventory, item);
+  return {
+    ...state,
+    inventory: reward.inventory,
+    notice: reward.ok
+      ? success
+      : `${success} Your ${ITEM_CATALOG[item].name.toLowerCase()} basket is full.`,
   };
 }
 
@@ -50,16 +89,11 @@ function reduceWorkshop(
       action.symbol,
     );
     if (outcome.result === 'complete') {
-      const reward = giveItem(state.inventory, 'flowerPetal');
-      return {
-        ...state,
-        inventory: reward.inventory,
-        echoRound: state.echoRound + 1,
-        echoProgress: 0,
-        notice: reward.ok
-          ? 'Forest Echo complete! Found one flower petal.'
-          : 'Forest Echo complete! Your flower petal basket is full.',
-      };
+      return rewardWorkshop(
+        { ...state, echoRound: state.echoRound + 1, echoProgress: 0 },
+        'flowerPetal',
+        'Forest Echo complete! Found one flower petal.',
+      );
     }
     return {
       ...state,
@@ -68,6 +102,63 @@ function reduceWorkshop(
         outcome.result === 'miss'
           ? 'Try the pattern again. No penalty.'
           : 'Good match! Keep going.',
+    };
+  }
+
+
+  if (action.type === 'skip') {
+    const outcome = chooseSkip(
+      state.skipRound,
+      state.skipDistance,
+      state.skipHops,
+      action.hop,
+    );
+    if (outcome.result === 'complete') {
+      return rewardWorkshop(
+        {
+          ...state,
+          skipRound: state.skipRound + 1,
+          skipDistance: 0,
+          skipHops: 0,
+        },
+        'riverStone',
+        'Stone Skip complete! Found one river stone.',
+      );
+    }
+    return {
+      ...state,
+      skipDistance: outcome.distance,
+      skipHops: outcome.hops,
+      notice:
+        outcome.result === 'miss'
+          ? 'That route cannot reach the shore in three hops. Try again!'
+          : `Nice hop! ${skipTarget(state.skipRound) - outcome.distance} spaces left.`,
+    };
+  }
+
+  if (action.type === 'pair') {
+    const outcome = choosePair(state.pairs, action.card);
+    if (outcome.result === 'complete') {
+      return rewardWorkshop(
+        { ...state, pairs: outcome.state },
+        'softFiber',
+        'Meadow Pairs complete! Found one soft fiber.',
+      );
+    }
+    const notices = {
+      reveal: 'One card revealed. Find its matching symbol.',
+      match: 'A matching pair! Keep going.',
+      miss: 'Look at both cards, then choose Try another pair.',
+      ignored: state.notice,
+    } as const;
+    return { ...state, pairs: outcome.state, notice: notices[outcome.result] };
+  }
+
+  if (action.type === 'closePair') {
+    return {
+      ...state,
+      pairs: closePair(state.pairs),
+      notice: 'Cards turned over. Try another pair!',
     };
   }
 
@@ -91,6 +182,8 @@ function reduceWorkshop(
 
 export default function Workshop() {
   const [state, dispatch] = useReducer(reduceWorkshop, undefined, newWorkshop);
+  const board = pairBoard(state.pairs.round);
+  const reviewing = state.pairs.revealed.length === 2;
 
   return (
     <Page
@@ -167,6 +260,65 @@ export default function Workshop() {
           </Pressable>
         ))}
       </View>
+      <Text style={styles.heading}>Stone Skip</Text>
+      <Text style={styles.ingredients}>
+        Mini game 2 of 3. Cross the river in exactly three hops. Choose 1, 2,
+        or 3 spaces per hop. An impossible route restarts without penalty.
+      </Text>
+      <Text style={styles.echoPattern}>
+        {state.skipDistance} / {skipTarget(state.skipRound)} spaces
+      </Text>
+      <Text style={styles.ingredients}>Hop {state.skipHops + 1} of 3</Text>
+      <View style={styles.echoChoices}>
+        {HOPS.map((hop) => (
+          <Pressable
+            key={hop}
+            accessibilityRole="button"
+            accessibilityLabel={`Hop ${hop} spaces in Stone Skip`}
+            style={styles.echoButton}
+            onPress={() => dispatch({ type: 'skip', hop })}
+          >
+            <Text style={styles.makeText}>{hop} spaces</Text>
+          </Pressable>
+        ))}
+      </View>
+      <Text style={styles.heading}>Meadow Pairs</Text>
+      <Text style={styles.ingredients}>
+        Mini game 3 of 3. Find the three matching symbol pairs. Unmatched cards
+        stay visible until you turn them over. No timer or penalty.
+      </Text>
+      <Text style={styles.echoPattern}>
+        {state.pairs.matched.length / 2} of 3 pairs found
+      </Text>
+      <View style={styles.pairGrid}>
+        {board.map((symbol, card) => {
+          const matched = state.pairs.matched.includes(card);
+          const visible = matched || state.pairs.revealed.includes(card);
+          return (
+            <Pressable
+              key={card}
+              accessibilityRole="button"
+              accessibilityLabel={`Card ${card + 1}, ${visible ? symbol : 'hidden'}`}
+              accessibilityState={{ disabled: matched || reviewing }}
+              disabled={matched || reviewing}
+              style={[styles.pairCard, matched && styles.matchedCard]}
+              onPress={() => dispatch({ type: 'pair', card })}
+            >
+              <Text style={styles.makeText}>{visible ? symbol : '?'}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {reviewing && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Turn over unmatched cards and try again"
+          style={styles.closeButton}
+          onPress={() => dispatch({ type: 'closePair' })}
+        >
+          <Text style={styles.makeText}>Try another pair</Text>
+        </Pressable>
+      )}
     </Page>
   );
 }
@@ -237,6 +389,30 @@ const styles = StyleSheet.create({
   echoButton: {
     flex: 1,
     minHeight: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#345E46',
+  },
+  pairGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 12,
+  },
+  pairCard: {
+    width: '31%',
+    minHeight: 64,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#345E46',
+  },
+  matchedCard: { backgroundColor: '#627F5D' },
+  closeButton: {
+    minHeight: 48,
+    marginTop: 12,
+    marginBottom: 28,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
