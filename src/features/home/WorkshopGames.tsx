@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ECHO_SYMBOLS, echoPattern } from '../minigames/echo';
 import { pairBoard } from '../minigames/pairs';
 import { skipChoices, skipTarget } from '../minigames/skips';
+import { miniGameOptions } from './miniGameMenu';
+import type { MiniGame } from './companionResponse';
 import type { ColumnWidth } from './workshopLayout';
 import type { WorkshopAction, WorkshopState } from './workshopState';
 
@@ -149,16 +152,78 @@ function MeadowPairsGame({ state, dispatch, width }: Props) {
 }
 
 export function WorkshopGames({ state, dispatch, width }: Props) {
+  const [activeGame, setActiveGame] = useState<MiniGame>('echo');
+  const options = miniGameOptions(state.bond);
+  const earned = options.filter((option) => option.firstRewardEarned).length;
+
   return (
     <View>
-      <ForestEchoGame state={state} dispatch={dispatch} width={width} />
-      <StoneSkipGame state={state} dispatch={dispatch} width={width} />
-      <MeadowPairsGame state={state} dispatch={dispatch} width={width} />
+      <Text style={styles.heading}>Choose a minigame</Text>
+      <Text style={styles.ingredients}>
+        Optional and untimed. First-time bond rewards: {earned} of 3 earned.
+      </Text>
+      <View style={styles.gameMenu}>
+        {options.map((option) => {
+          const selected = activeGame === option.game;
+          const reward = option.firstRewardEarned
+            ? 'Bond reward earned · replay for materials'
+            : 'First bond reward available';
+          return (
+            <Pressable
+              key={option.game}
+              accessibilityRole="tab"
+              accessibilityLabel={option.name}
+              accessibilityHint={reward}
+              accessibilityState={{ selected }}
+              onPress={() => setActiveGame(option.game)}
+              style={[
+                styles.gameOption,
+                { width },
+                selected && styles.gameOptionSelected,
+              ]}
+            >
+              <Text style={styles.gameOptionName}>{option.name}</Text>
+              <Text style={styles.gameOptionStatus}>
+                {option.firstRewardEarned ? 'Reward earned' : 'New reward'}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {activeGame === 'echo' && (
+        <ForestEchoGame state={state} dispatch={dispatch} width={width} />
+      )}
+      {activeGame === 'skip' && (
+        <StoneSkipGame state={state} dispatch={dispatch} width={width} />
+      )}
+      {activeGame === 'pairs' && (
+        <MeadowPairsGame state={state} dispatch={dispatch} width={width} />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  gameMenu: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 12,
+  },
+  gameOption: {
+    minHeight: 58,
+    padding: 10,
+    borderRadius: 12,
+    justifyContent: 'center',
+    backgroundColor: '#E5EEDC',
+  },
+  gameOptionSelected: {
+    backgroundColor: '#C4DDC3',
+    borderColor: '#345E46',
+    borderWidth: 2,
+  },
+  gameOptionName: { color: '#2D4A38', fontWeight: '800', fontSize: 13 },
+  gameOptionStatus: { color: '#365742', fontSize: 11 },
   heading: {
     marginTop: 26,
     marginBottom: 12,
