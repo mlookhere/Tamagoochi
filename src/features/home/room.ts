@@ -2,7 +2,7 @@ import {
   giveItem,
   takeItem,
   type Inventory,
-} from '../../domain/items/inventory';
+} from '../../domain/items/inventory.ts';
 
 export const ROOM_SLOTS = {
   window: 'Sunny window',

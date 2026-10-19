@@ -41,7 +41,10 @@ test('occupied, empty and insufficient interactions remain atomic', () => {
   assert.equal(occupied.ok, false);
   assert.equal(occupied.reason, 'occupied');
   assert.equal(occupied.inventory, inventory);
-  assert.equal(placeRoomItem(inventory, {}, 'nook', 'flowerCrown').reason, 'insufficient');
+  assert.equal(
+    placeRoomItem(inventory, {}, 'nook', 'flowerCrown').reason,
+    'insufficient',
+  );
   assert.equal(pickUpRoomItem(inventory, {}, 'nook').reason, 'empty');
   assert.equal(placed.ok, true);
 });
