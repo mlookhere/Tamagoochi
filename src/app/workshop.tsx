@@ -9,12 +9,8 @@ import {
   type RecipeId,
 } from '../domain/items/inventory';
 import { RoomSlots } from '../features/home/RoomSlots';
-import { RoomCompanion } from '../features/home/RoomCompanion';
+import { CompanionPanel } from '../features/home/CompanionPanel';
 import { useReducedMotion } from '../features/home/useReducedMotion';
-import {
-  companionPlacement,
-  roomMood,
-} from '../features/home/companionResponse';
 import { ROOM_ITEMS } from '../features/home/room';
 import { ECHO_SYMBOLS, echoPattern } from '../features/minigames/echo';
 import { pairBoard } from '../features/minigames/pairs';
@@ -45,46 +41,13 @@ export default function Workshop() {
       <Text accessibilityRole="summary" accessibilityLiveRegion="polite" style={styles.notice}>
         {state.notice}
       </Text>
-      <View style={styles.companionPanel}>
-        <Text style={styles.itemName}>Mochi&apos;s corner</Text>
-        <Text style={styles.companionProgress}>
-          Bond {state.bond.bond}/100 · Curiosity{' '}
-          {state.bond.personality.curiosity}
-          {' · '}Courage {state.bond.personality.courage}
-          {' · '}Focus {state.bond.personality.focus}
-        </Text>
-        <RoomCompanion
-          placement={companionPlacement(state.room)}
-          reduceMotion={reduceMotion}
-        />
-        <Text style={styles.companionMood}>{roomMood(state.room)}</Text>
-        <Text style={styles.ingredients}>
-          Craft a picnic snack to share with Mochi. The first one adds bond.
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Share picnic snack with Mochi"
-          accessibilityHint="Spends one crafted picnic snack"
-          accessibilityState={{
-            disabled: itemCount(state.inventory, 'picnicSnack') === 0,
-          }}
-          disabled={itemCount(state.inventory, 'picnicSnack') === 0}
-          onPress={() => dispatch({ type: 'shareSnack' })}
-          style={[
-            styles.makeButton,
-            styles.snackButton,
-            itemCount(state.inventory, 'picnicSnack') === 0 &&
-              styles.roomChoiceUnavailable,
-          ]}
-        >
-          <Text style={styles.makeText}>
-            Share snack ({itemCount(state.inventory, 'picnicSnack')})
-          </Text>
-        </Pressable>
-        <Text style={styles.ingredients}>
-          Each minigame strengthens your bond once. Replays have no penalty.
-        </Text>
-      </View>
+      <CompanionPanel
+        bond={state.bond}
+        room={state.room}
+        inventory={state.inventory}
+        reduceMotion={reduceMotion}
+        onShare={() => dispatch({ type: 'shareSnack' })}
+      />
       <Text style={styles.heading}>Your basket</Text>
       <View style={styles.inventory}>
         {(Object.keys(ITEM_CATALOG) as ItemId[]).map((item) => (
@@ -261,20 +224,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#E3EDD9',
     fontWeight: '600',
   },
-  companionPanel: {
-    marginTop: 14,
-    padding: 14,
-    gap: 6,
-    backgroundColor: '#EFF2E7',
-    borderRadius: 14,
-  },
-  snackButton: { alignSelf: 'flex-start', marginTop: 6 },
-  companionProgress: {
-    color: '#365742',
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  companionMood: { color: '#526E58', fontSize: 13, lineHeight: 19 },
   heading: {
     marginTop: 26,
     marginBottom: 12,
