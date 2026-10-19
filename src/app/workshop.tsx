@@ -1,6 +1,16 @@
 import { useReducer } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Page } from '../components/Page';
+import { RoomSpot } from '../features/home/RoomSpot';
+import {
+  ROOM_ITEMS,
+  ROOM_SLOTS,
+  pickUpRoomItem,
+  placeRoomItem,
+  type Room,
+  type RoomItem,
+  type RoomSlot,
+} from '../features/home/room';
 import {
   ITEM_CATALOG,
   RECIPES,
@@ -34,6 +44,8 @@ import {
 
 type WorkshopState = Readonly<{
   inventory: Inventory;
+  room: Room;
+  selectedRoomItem: RoomItem | null;
   notice: string;
   echoRound: number;
   echoProgress: number;
@@ -48,11 +60,15 @@ type WorkshopAction =
   | Readonly<{ type: 'echo'; symbol: EchoSymbol }>
   | Readonly<{ type: 'skip'; hop: Hop }>
   | Readonly<{ type: 'pair'; card: number }>
-  | Readonly<{ type: 'closePair' }>;
+  | Readonly<{ type: 'closePair' }>
+  | Readonly<{ type: 'roomItem'; item: RoomItem }>
+  | Readonly<{ type: 'roomSlot'; slot: RoomSlot }>;
 
 function newWorkshop(): WorkshopState {
   return {
     inventory: createInventory(),
+    room: {},
+    selectedRoomItem: null,
     notice: 'Collect materials, then make something for your companion.',
     echoRound: 0,
     echoProgress: 0,
@@ -79,16 +95,59 @@ function rewardWorkshop(
   };
 }
 
+
+function reduceRoom(
+  state: WorkshopState,
+  action: Extract<WorkshopAction, { type: 'roomItem' | 'roomSlot' }>,
+): WorkshopState {
+  if (action.type === 'roomItem') {
+    return {
+      ...state,
+      selectedRoomItem: action.item,
+      notice: 'Tap an empty room space to place your ' +
+        ITEM_CATALOG[action.item].name.toLowerCase() + '.',
+    };
+  }
+
+  const occupant = state.room[action.slot];
+  if (occupant) {
+    const result = pickUpRoomItem(state.inventory, state.room, action.slot);
+    return {
+      ...state,
+      inventory: result.inventory,
+      room: result.room,
+      selectedRoomItem: null,
+      notice: result.ok
+        ? 'Picked up your ' + ITEM_CATALOG[occupant].name.toLowerCase() + '.'
+        : 'Your basket is full. This object stays in the room.',
+    };
+  }
+  const item = state.selectedRoomItem;
+  if (!item) {
+    return { ...state, notice: 'Select a crafted object before placing it.' };
+  }
+  const result = placeRoomItem(state.inventory, state.room, action.slot, item);
+  return {
+    ...state,
+    inventory: result.inventory,
+    room: result.room,
+    selectedRoomItem: result.ok ? null : item,
+    notice: result.ok
+      ? 'Placed your ' + ITEM_CATALOG[item].name.toLowerCase() + '!'
+      : 'Craft this object before placing it.',
+  };
+}
+
 function reduceWorkshop(
   state: WorkshopState,
   action: WorkshopAction,
 ): WorkshopState {
+  if (action.type === 'roomItem' || action.type === 'roomSlot') {
+    return reduceRoom(state, action);
+  }
+
   if (action.type === 'echo') {
-    const outcome = chooseEcho(
-      state.echoRound,
-      state.echoProgress,
-      action.symbol,
-    );
+    const outcome = chooseEcho(state.echoRound, state.echoProgress, action.symbol);
     if (outcome.result === 'complete') {
       return rewardWorkshop(
         { ...state, echoRound: state.echoRound + 1, echoProgress: 0 },
@@ -239,6 +298,50 @@ export default function Workshop() {
           </View>
         );
       })}
+      <Text style={styles.heading}>Decorate the room</Text>
+      <Text style={styles.ingredients}>
+        Select a crafted object, then tap an empty space to place it. Tap an
+        occupied space to pick the object up. Items return to your basket.
+      </Text>
+      <View style={styles.roomPicker}>
+        {ROOM_ITEMS.map((item) => {
+          const selected = state.selectedRoomItem === item;
+          const available = itemCount(state.inventory, item) > 0;
+          return (
+            <Pressable
+              key={item}
+              accessibilityRole="button"
+              accessibilityLabel={
+                'Choose ' + ITEM_CATALOG[item].name + ' for the room'
+              }
+              accessibilityState={{ selected, disabled: !available }}
+              disabled={!available}
+              onPress={() => dispatch({ type: 'roomItem', item })}
+              style={[
+                styles.roomChoice,
+                selected && styles.roomChoiceSelected,
+                !available && styles.roomChoiceUnavailable,
+              ]}
+            >
+              <Text style={styles.roomChoiceText}>
+                {ITEM_CATALOG[item].name} ({itemCount(state.inventory, item)})
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <View style={styles.roomSlots}>
+        {(Object.keys(ROOM_SLOTS) as RoomSlot[]).map((slot) => (
+          <RoomSpot
+            key={slot}
+            label={ROOM_SLOTS[slot]}
+            itemName={
+              state.room[slot] ? ITEM_CATALOG[state.room[slot]].name : null
+            }
+            onPress={() => dispatch({ type: 'roomSlot', slot })}
+          />
+        ))}
+      </View>
       <Text style={styles.heading}>Forest Echo</Text>
       <Text style={styles.ingredients}>
         Mini game 1 of 3. Repeat the three nature symbols in order. There is no
@@ -396,6 +499,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#345E46',
   },
+  roomPicker: {
+    marginTop: 12,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  roomChoice: {
+    width: '48%',
+    minHeight: 48,
+    borderRadius: 12,
+    padding: 9,
+    backgroundColor: '#345E46',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  roomChoiceSelected: { backgroundColor: '#507D5A' },
+  roomChoiceUnavailable: { opacity: 0.45 },
+  roomChoiceText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  roomSlots: { flexDirection: 'row', gap: 8, marginTop: 14 },
   pairGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
