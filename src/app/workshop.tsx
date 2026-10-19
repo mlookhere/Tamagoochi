@@ -73,7 +73,7 @@ function rewardWorkshop(
     ...state,
     inventory: reward.inventory,
     notice: reward.ok
-      ? success
+      ? `${success} Found one ${ITEM_CATALOG[item].name.toLowerCase()}.`
       : `${success} Your ${ITEM_CATALOG[item].name.toLowerCase()} basket is full.`,
   };
 }
@@ -92,7 +92,7 @@ function reduceWorkshop(
       return rewardWorkshop(
         { ...state, echoRound: state.echoRound + 1, echoProgress: 0 },
         'flowerPetal',
-        'Forest Echo complete! Found one flower petal.',
+        'Forest Echo complete!',
       );
     }
     return {
@@ -121,7 +121,7 @@ function reduceWorkshop(
           skipHops: 0,
         },
         'riverStone',
-        'Stone Skip complete! Found one river stone.',
+        'Stone Skip complete!',
       );
     }
     return {
@@ -141,7 +141,7 @@ function reduceWorkshop(
       return rewardWorkshop(
         { ...state, pairs: outcome.state },
         'softFiber',
-        'Meadow Pairs complete! Found one soft fiber.',
+        'Meadow Pairs complete!',
       );
     }
     const notices = {
