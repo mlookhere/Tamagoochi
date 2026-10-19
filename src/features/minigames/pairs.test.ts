@@ -63,3 +63,48 @@ test('bad indices, rounds and duplicated/corrupted pair state are rejected', () 
   assert.throws(() => choosePair(broken, 2));
   assert.throws(() => choosePair({ round: 0, matched: [], revealed: [7] }, 2));
 });
+
+test('partial matched progress must contain complete same-symbol pairs', () => {
+  const invalid: PairsState[] = [
+    { round: 0, matched: [0], revealed: [] },
+    { round: 0, matched: [0, 1], revealed: [] },
+    { round: 0, matched: [0, 5, 1, 2], revealed: [] },
+  ];
+  for (const state of invalid) {
+    assert.throws(() => choosePair(state, 3), /Invalid pair state/);
+    assert.throws(() => closePair(state), /Invalid pair state/);
+  }
+});
+
+test('matching revealed cards cannot remain open as a fake mismatch', () => {
+  const invalid: PairsState = {
+    round: 0,
+    matched: [],
+    revealed: [0, 5],
+  };
+  assert.throws(() => choosePair(invalid, 2), /Invalid pair state/);
+  assert.throws(() => closePair(invalid), /Invalid pair state/);
+  assert.deepEqual(invalid.revealed, [0, 5]);
+});
+
+test('valid saved partial matches and mismatches still finish without losing pairs', () => {
+  const partial: PairsState = {
+    round: 0,
+    matched: [0, 5],
+    revealed: [1, 2],
+  };
+  const reset = closePair(partial);
+  assert.deepEqual(reset.matched, [0, 5]);
+  assert.deepEqual(reset.revealed, []);
+  assert.deepEqual(partial.revealed, [1, 2]);
+
+  const second = choosePair(choosePair(reset, 1).state, 4);
+  assert.equal(second.result, 'match');
+  const finished = choosePair(choosePair(second.state, 2).state, 3);
+  assert.equal(finished.result, 'complete');
+  assert.deepEqual(finished.state, {
+    round: 1,
+    matched: [],
+    revealed: [],
+  });
+});

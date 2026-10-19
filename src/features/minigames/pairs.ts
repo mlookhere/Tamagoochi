@@ -34,13 +34,30 @@ function validCard(card: number, length: number): boolean {
   return Number.isSafeInteger(card) && card >= 0 && card < length;
 }
 
-function validatePairState(state: PairsState, length: number): void {
+function matchedSymbolsAgree(
+  matched: readonly number[],
+  board: readonly PairSymbol[],
+): boolean {
+  if (matched.length % 2 !== 0) return false;
+  for (let i = 0; i < matched.length; i += 2) {
+    if (board[matched[i]] !== board[matched[i + 1]]) return false;
+  }
+  return true;
+}
+
+function validatePairState(
+  state: PairsState,
+  board: readonly PairSymbol[],
+): void {
   const indices = [...state.matched, ...state.revealed];
   if (
-    indices.some((index) => !validCard(index, length)) ||
+    indices.some((index) => !validCard(index, board.length)) ||
     new Set(indices).size !== indices.length ||
     state.revealed.length > 2 ||
-    state.matched.length > length - 2
+    state.matched.length > board.length - 2 ||
+    !matchedSymbolsAgree(state.matched, board) ||
+    (state.revealed.length === 2 &&
+      board[state.revealed[0]] === board[state.revealed[1]])
   ) {
     throw new Error('Invalid pair state');
   }
@@ -49,7 +66,7 @@ function validatePairState(state: PairsState, length: number): void {
 export function choosePair(state: PairsState, card: number): PairOutcome {
   const board = pairBoard(state.round);
   if (!validCard(card, board.length)) throw new Error('Invalid card');
-  validatePairState(state, board.length);
+  validatePairState(state, board);
   if (
     state.matched.includes(card) ||
     state.revealed.includes(card) ||
@@ -79,5 +96,6 @@ export function choosePair(state: PairsState, card: number): PairOutcome {
 
 // A mismatched pair stays visible until the player explicitly closes it.
 export function closePair(state: PairsState): PairsState {
+  validatePairState(state, pairBoard(state.round));
   return state.revealed.length === 2 ? { ...state, revealed: [] } : state;
 }
