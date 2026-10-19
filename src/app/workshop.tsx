@@ -1,5 +1,11 @@
 import { useReducer } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { Page } from '../components/Page';
 import {
   ITEM_CATALOG,
@@ -34,7 +40,11 @@ export default function Workshop() {
         Preview inventory. Saving your crafted items will be added after native
         persistence approval.
       </Text>
-      <Text accessibilityRole="summary" accessibilityLiveRegion="polite" style={styles.notice}>
+      <Text
+        accessibilityRole="summary"
+        accessibilityLiveRegion="polite"
+        style={styles.notice}
+      >
         {state.notice}
       </Text>
       <CompanionPanel
