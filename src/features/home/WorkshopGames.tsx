@@ -52,35 +52,33 @@ function StoneSkipGame({ state, dispatch }: Props) {
       </Text>
       <Text style={styles.ingredients}>Hop {state.skipHops + 1} of 3</Text>
       <View style={styles.echoChoices}>
-        {skipChoices(
-          state.skipRound,
-          state.skipDistance,
-          state.skipHops,
-        ).map(({ hop, result }) => {
-          const hint =
-            result === 'complete'
-              ? 'Finish crossing'
-              : result === 'miss'
-                ? 'Free restart'
-                : 'Continue crossing';
-          return (
-            <Pressable
-              key={hop}
-              accessibilityRole="button"
-              accessibilityLabel={`Hop ${hop} spaces in Stone Skip`}
-              accessibilityHint={hint}
-              style={[
-                styles.echoButton,
-                result === 'miss' && styles.restartChoice,
-                result === 'complete' && styles.finishChoice,
-              ]}
-              onPress={() => dispatch({ type: 'skip', hop })}
-            >
-              <Text style={styles.makeText}>{hop} spaces</Text>
-              <Text style={styles.choiceHint}>{hint}</Text>
-            </Pressable>
-          );
-        })}
+        {skipChoices(state.skipRound, state.skipDistance, state.skipHops).map(
+          ({ hop, result }) => {
+            const hint =
+              result === 'complete'
+                ? 'Finish crossing'
+                : result === 'miss'
+                  ? 'Free restart'
+                  : 'Continue crossing';
+            return (
+              <Pressable
+                key={hop}
+                accessibilityRole="button"
+                accessibilityLabel={`Hop ${hop} spaces in Stone Skip`}
+                accessibilityHint={hint}
+                style={[
+                  styles.echoButton,
+                  result === 'miss' && styles.restartChoice,
+                  result === 'complete' && styles.finishChoice,
+                ]}
+                onPress={() => dispatch({ type: 'skip', hop })}
+              >
+                <Text style={styles.makeText}>{hop} spaces</Text>
+                <Text style={styles.choiceHint}>{hint}</Text>
+              </Pressable>
+            );
+          },
+        )}
       </View>
     </>
   );

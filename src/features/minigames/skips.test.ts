@@ -62,12 +62,12 @@ test('invalid progress, hops and round fail closed', () => {
 test('next-hop previews agree with actual outcomes on all rotating banks', () => {
   for (let round = 0; round < 16; round += 1) {
     const options = skipChoices(round, 0, 0);
-    assert.deepEqual(options.map((choice) => choice.hop), [1, 2, 3]);
+    assert.deepEqual(
+      options.map((choice) => choice.hop),
+      [1, 2, 3],
+    );
     for (const option of options) {
-      assert.equal(
-        option.result,
-        chooseSkip(round, 0, 0, option.hop).result,
-      );
+      assert.equal(option.result, chooseSkip(round, 0, 0, option.hop).result);
     }
   }
 });
