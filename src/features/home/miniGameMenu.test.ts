@@ -1,15 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {
-  completeMiniGame,
-  createWorkshopBond,
-} from './companionResponse.ts';
+import { completeMiniGame, createWorkshopBond } from './companionResponse.ts';
 import { miniGameOptions } from './miniGameMenu.ts';
 
 test('activity menu lists each optional minigame exactly once', () => {
   const options = miniGameOptions(createWorkshopBond());
   assert.deepEqual(
-    options.map((option) => [option.game, option.name, option.firstRewardEarned]),
+    options.map((option) => [
+      option.game,
+      option.name,
+      option.firstRewardEarned,
+    ]),
     [
       ['echo', 'Forest Echo', false],
       ['skip', 'Stone Skip', false],
