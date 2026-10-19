@@ -6,9 +6,18 @@ type Props = Readonly<{
   itemName: string | null;
   onPress: () => void;
   reduceMotion: boolean;
+  width: '100%' | '48%' | '31%';
+  selectedItemName: string | null;
 }>;
 
-export function RoomSpot({ label, itemName, onPress, reduceMotion }: Props) {
+export function RoomSpot({
+  label,
+  itemName,
+  onPress,
+  reduceMotion,
+  width,
+  selectedItemName,
+}: Props) {
   const [scale] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
@@ -29,15 +38,23 @@ export function RoomSpot({ label, itemName, onPress, reduceMotion }: Props) {
   }, [itemName, reduceMotion, scale]);
 
   return (
-    <Animated.View style={[styles.animated, { transform: [{ scale }] }]}>
+    <Animated.View style={{ width, transform: [{ scale }] }}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label + ', ' + (itemName ?? 'empty')}
         accessibilityHint={
-          itemName ? 'Pick up this object' : 'Place the selected object'
+          itemName
+            ? 'Pick up this object'
+            : selectedItemName
+              ? 'Place ' + selectedItemName
+              : 'Choose a crafted object first'
         }
         onPress={onPress}
-        style={({ pressed }) => [styles.spot, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.spot,
+          pressed && styles.pressed,
+          pressed && !reduceMotion && styles.pressedMotion,
+        ]}
       >
         <Text style={styles.label}>{label}</Text>
         <Text style={styles.object}>{itemName ?? 'Empty space'}</Text>
@@ -47,7 +64,6 @@ export function RoomSpot({ label, itemName, onPress, reduceMotion }: Props) {
 }
 
 const styles = StyleSheet.create({
-  animated: { flex: 1 },
   spot: {
     minHeight: 88,
     padding: 9,
@@ -57,7 +73,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
   },
-  pressed: { opacity: 0.82, transform: [{ scale: 0.97 }] },
+  pressed: { opacity: 0.82 },
+  pressedMotion: { transform: [{ scale: 0.97 }] },
   label: { fontSize: 12, fontWeight: '700', color: '#365742' },
   object: { fontSize: 12, color: '#4F6954', textAlign: 'center' },
 });

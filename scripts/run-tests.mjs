@@ -21,6 +21,7 @@ args.push(
   'src/features/home/room.test.ts',
   'src/features/home/companionResponse.test.ts',
   'src/features/home/workshopState.test.ts',
+  'src/features/home/workshopLayout.test.ts',
   'src/config/public.test.ts',
   'scripts/vendor-security.test.mjs',
 );

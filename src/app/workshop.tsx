@@ -1,5 +1,5 @@
 import { useReducer } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Page } from '../components/Page';
 import {
   ITEM_CATALOG,
@@ -20,10 +20,15 @@ import { ECHO_SYMBOLS, echoPattern } from '../features/minigames/echo';
 import { pairBoard } from '../features/minigames/pairs';
 import { HOPS, skipTarget } from '../features/minigames/skips';
 import { newWorkshop, reduceWorkshop } from '../features/home/workshopState';
+import { roomColumns } from '../features/home/workshopLayout';
 
 export default function Workshop() {
   const [state, dispatch] = useReducer(reduceWorkshop, undefined, newWorkshop);
   const reduceMotion = useReducedMotion();
+  const { width, fontScale } = useWindowDimensions();
+  const columns = roomColumns(width, fontScale);
+  const roomWidth = columns === 1 ? '100%' : columns === 2 ? '48%' : '31%';
+  const pickerWidth = columns === 1 ? '100%' : '48%';
   const board = pairBoard(state.pairs.round);
   const reviewing = state.pairs.revealed.length === 2;
 
@@ -37,7 +42,7 @@ export default function Workshop() {
         Preview inventory. Saving your crafted items will be added after native
         persistence approval.
       </Text>
-      <Text accessibilityRole="summary" style={styles.notice}>
+      <Text accessibilityRole="summary" accessibilityLiveRegion="polite" style={styles.notice}>
         {state.notice}
       </Text>
       <View style={styles.companionPanel}>
@@ -141,6 +146,7 @@ export default function Workshop() {
               onPress={() => dispatch({ type: 'roomItem', item })}
               style={[
                 styles.roomChoice,
+                { width: pickerWidth },
                 selected && styles.roomChoiceSelected,
                 !available && styles.roomChoiceUnavailable,
               ]}
@@ -158,6 +164,12 @@ export default function Workshop() {
             key={slot}
             label={ROOM_SLOTS[slot]}
             reduceMotion={reduceMotion}
+            width={roomWidth}
+            selectedItemName={
+              state.selectedRoomItem
+                ? ITEM_CATALOG[state.selectedRoomItem].name
+                : null
+            }
             itemName={
               state.room[slot] ? ITEM_CATALOG[state.room[slot]].name : null
             }
@@ -343,7 +355,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   roomChoice: {
-    width: '48%',
     minHeight: 48,
     borderRadius: 12,
     padding: 9,
@@ -359,7 +370,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
   },
-  roomSlots: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  roomSlots: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
   pairGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
