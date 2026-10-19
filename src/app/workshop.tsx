@@ -1,11 +1,20 @@
 import { useReducer } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Page } from '../components/Page';
-import { ITEM_CATALOG, RECIPES, itemCount, type ItemId, type RecipeId } from '../domain/items/inventory';
+import {
+  ITEM_CATALOG,
+  RECIPES,
+  itemCount,
+  type ItemId,
+  type RecipeId,
+} from '../domain/items/inventory';
 import { RoomSpot } from '../features/home/RoomSpot';
 import { RoomCompanion } from '../features/home/RoomCompanion';
 import { useReducedMotion } from '../features/home/useReducedMotion';
-import { companionPlacement, roomMood } from '../features/home/companionResponse';
+import {
+  companionPlacement,
+  roomMood,
+} from '../features/home/companionResponse';
 import { ROOM_ITEMS, ROOM_SLOTS, type RoomSlot } from '../features/home/room';
 import { ECHO_SYMBOLS, echoPattern } from '../features/minigames/echo';
 import { pairBoard } from '../features/minigames/pairs';

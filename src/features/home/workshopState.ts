@@ -24,7 +24,12 @@ import {
   type RoomSlot,
 } from './room.ts';
 import { chooseEcho, type EchoSymbol } from '../minigames/echo.ts';
-import { choosePair, closePair, newPairs, type PairsState } from '../minigames/pairs.ts';
+import {
+  choosePair,
+  closePair,
+  newPairs,
+  type PairsState,
+} from '../minigames/pairs.ts';
 import { chooseSkip, skipTarget, type Hop } from '../minigames/skips.ts';
 
 export type WorkshopState = Readonly<{
@@ -272,4 +277,3 @@ export function reduceWorkshop(
     notice: `Made a ${name.toLowerCase()}!`,
   };
 }
-

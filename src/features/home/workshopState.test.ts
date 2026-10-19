@@ -3,7 +3,11 @@ import test from 'node:test';
 import { itemCount } from '../../domain/items/inventory.ts';
 import { echoPattern } from '../minigames/echo.ts';
 import { pairBoard } from '../minigames/pairs.ts';
-import { newWorkshop, reduceWorkshop, type WorkshopState } from './workshopState.ts';
+import {
+  newWorkshop,
+  reduceWorkshop,
+  type WorkshopState,
+} from './workshopState.ts';
 
 test('workshop preview initializes without saved state or side effects', () => {
   const first = newWorkshop();
@@ -19,7 +23,10 @@ test('workshop preview initializes without saved state or side effects', () => {
 
 test('crafting then sharing a snack consumes exactly one and awards bond once', () => {
   const start = newWorkshop();
-  const made = reduceWorkshop(start, { type: 'craft', recipeId: 'picnicSnack' });
+  const made = reduceWorkshop(start, {
+    type: 'craft',
+    recipeId: 'picnicSnack',
+  });
   assert.equal(itemCount(start.inventory, 'wildBerry'), 6);
   assert.equal(itemCount(made.inventory, 'wildBerry'), 4);
   assert.equal(itemCount(made.inventory, 'picnicSnack'), 1);
@@ -30,7 +37,10 @@ test('crafting then sharing a snack consumes exactly one and awards bond once', 
   const empty = reduceWorkshop(shared, { type: 'shareSnack' });
   assert.equal(empty.inventory, shared.inventory);
   assert.equal(empty.bond, shared.bond);
-  const more = reduceWorkshop(empty, { type: 'craft', recipeId: 'picnicSnack' });
+  const more = reduceWorkshop(empty, {
+    type: 'craft',
+    recipeId: 'picnicSnack',
+  });
   const again = reduceWorkshop(more, { type: 'shareSnack' });
   assert.equal(again.bond, shared.bond);
   assert.equal(itemCount(again.inventory, 'picnicSnack'), 0);
@@ -94,7 +104,8 @@ test('Forest Echo completes a round, preserves snack status and cannot farm bond
 test('Stone Skip and Meadow Pairs grant rewards without repeated bond farming', () => {
   const start = newWorkshop();
   const skipped = [1, 2, 3].reduce(
-    (state, hop) => reduceWorkshop(state, { type: 'skip', hop: hop as 1 | 2 | 3 }),
+    (state, hop) =>
+      reduceWorkshop(state, { type: 'skip', hop: hop as 1 | 2 | 3 }),
     start,
   );
   assert.equal(skipped.skipRound, 1);
