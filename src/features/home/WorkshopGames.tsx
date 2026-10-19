@@ -122,7 +122,11 @@ function MeadowPairsGame({ state, dispatch, width }: Props) {
                       : 'Reveal this card'
               }
               disabled={matched || reviewing}
-              style={[styles.pairCard, { width }, matched && styles.matchedCard]}
+              style={[
+                styles.pairCard,
+                { width },
+                matched && styles.matchedCard,
+              ]}
               onPress={() => dispatch({ type: 'pair', card })}
             >
               <Text style={styles.makeText}>{visible ? symbol : '?'}</Text>

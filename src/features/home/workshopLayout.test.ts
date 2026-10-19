@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { columnWidth, roomColumns, type RoomColumns } from './workshopLayout.ts';
+import {
+  columnWidth,
+  roomColumns,
+  type RoomColumns,
+} from './workshopLayout.ts';
 
 test('room targets become stacked on narrow phones', () => {
   assert.equal(roomColumns(320, 1), 1);
