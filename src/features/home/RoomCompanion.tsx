@@ -13,7 +13,8 @@ type Props = Readonly<{
 export function RoomCompanion({ placement, reduceMotion }: Props) {
   const [offset] = useState(() => new Animated.Value(0));
   const description = `Mochi is ${placement.mood} near the ${ROOM_SLOTS[placement.slot]}`;
-  const feeling = placement.mood === 'resting' ? 'Resting' : `Feeling ${placement.mood}`;
+  const feeling =
+    placement.mood === 'resting' ? 'Resting' : `Feeling ${placement.mood}`;
 
   useEffect(() => {
     const target = OFFSETS[placement.slot];
@@ -48,7 +49,9 @@ export function RoomCompanion({ placement, reduceMotion }: Props) {
             <View style={styles.eye} />
             <View style={styles.eye} />
           </View>
-          <View style={[styles.mouth, placement.mood === 'shy' && styles.shyMouth]} />
+          <View
+            style={[styles.mouth, placement.mood === 'shy' && styles.shyMouth]}
+          />
         </View>
       </Animated.View>
       <Text style={styles.caption}>
