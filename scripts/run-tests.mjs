@@ -1,5 +1,23 @@
 import { spawnSync } from 'node:child_process';
 
+// Temporary formatter diagnostic; remove before final verification.
+if (process.env.CI === 'true') {
+  const targets = [
+    'src/features/home/WorkshopGames.tsx',
+    'src/features/home/workshopLayout.test.ts',
+  ];
+  const formatted = spawnSync('node_modules/.bin/prettier', ['--write', ...targets], {
+    encoding: 'utf8',
+  });
+  if (formatted.status === 0) {
+    const diff = spawnSync('git', ['diff', '--', ...targets], {
+      encoding: 'utf8',
+    });
+    process.stdout.write('PRETTIER_DIFF_BEGIN\n' + diff.stdout + '\nPRETTIER_DIFF_END\n');
+    spawnSync('git', ['restore', '--', ...targets]);
+  }
+}
+
 const coverage = process.argv.includes('--coverage');
 const args = ['--experimental-strip-types', '--test'];
 if (coverage) {
