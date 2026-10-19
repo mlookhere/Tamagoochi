@@ -10,6 +10,10 @@ The Workshop basket, room layout, minigame progress, bond, and personality are d
 
 Run an installed native build on at least one representative mid-range **Android** phone and one **iPhone**. Record OS version, app/build SHA, device model, orientation, accessibility settings, any frame stutter, and a screenshot or short screen recording of each scenario. Repeat large-text and screen-reader tests on both platforms.
 
+## Automated interaction regression
+
+The screen's state transitions live in a pure, tested reducer (`src/features/home/workshopState.ts`). The integrated tests exercise crafting, snack sharing, minigame rewards, room pickup/placement, full baskets, and penalty-free errors. Those tests do **not** establish device accessibility, saved-state durability, or frame-rate performance.
+
 ## Acceptance scenarios
 
 1. **Crafting and inventory:** Craft a picnic snack, leaf spinner, moss cushion, lucky stone, and flower crown from the supplied materials. Check ingredient deductions, capped quantities, full outputs, and insufficient-material attempts. Failed attempts must not consume anything. Share a crafted picnic snack: the basket loses exactly one, the first share adds 4 bond, later shares cost one snack but cannot farm bond, and an empty basket disables sharing. Verify no cross-screen saved-state claim is made.
