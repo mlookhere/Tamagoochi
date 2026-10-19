@@ -3,6 +3,14 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Page } from '../components/Page';
 import { RoomSpot } from '../features/home/RoomSpot';
 import {
+  completeMiniGame,
+  createWorkshopBond,
+  placedItemReaction,
+  roomMood,
+  type MiniGame,
+  type WorkshopBond,
+} from '../features/home/companionResponse';
+import {
   ROOM_ITEMS,
   ROOM_SLOTS,
   pickUpRoomItem,
@@ -44,6 +52,7 @@ import {
 
 type WorkshopState = Readonly<{
   inventory: Inventory;
+  bond: WorkshopBond;
   room: Room;
   selectedRoomItem: RoomItem | null;
   notice: string;
@@ -67,6 +76,7 @@ type WorkshopAction =
 function newWorkshop(): WorkshopState {
   return {
     inventory: createInventory(),
+    bond: createWorkshopBond(),
     room: {},
     selectedRoomItem: null,
     notice: 'Collect materials, then make something for your companion.',
@@ -83,15 +93,19 @@ function rewardWorkshop(
   state: WorkshopState,
   item: ItemId,
   success: string,
+  game: MiniGame,
 ): WorkshopState {
   const reward = giveItem(state.inventory, item);
+  const bond = completeMiniGame(state.bond, game);
+  const bondMessage = bond === state.bond ? '' : ' Your bond grew!';
   const itemName = ITEM_CATALOG[item].name.toLowerCase();
   return {
     ...state,
     inventory: reward.inventory,
+    bond,
     notice: reward.ok
-      ? `${success} Found one ${itemName}.`
-      : `${success} Your ${itemName} basket is full.`,
+      ? `${success} Found one ${itemName}.${bondMessage}`
+      : `${success} Your ${itemName} basket is full.${bondMessage}`,
   };
 }
 
@@ -134,7 +148,7 @@ function reduceRoom(
     room: result.room,
     selectedRoomItem: result.ok ? null : item,
     notice: result.ok
-      ? 'Placed your ' + ITEM_CATALOG[item].name.toLowerCase() + '!'
+      ? placedItemReaction(item)
       : 'Craft this object before placing it.',
   };
 }
@@ -158,6 +172,7 @@ function reduceWorkshop(
         { ...state, echoRound: state.echoRound + 1, echoProgress: 0 },
         'flowerPetal',
         'Forest Echo complete!',
+        'echo',
       );
     }
     return {
@@ -187,6 +202,7 @@ function reduceWorkshop(
         },
         'riverStone',
         'Stone Skip complete!',
+        'skip',
       );
     }
     const remaining = skipTarget(state.skipRound) - outcome.distance;
@@ -208,6 +224,7 @@ function reduceWorkshop(
         { ...state, pairs: outcome.state },
         'softFiber',
         'Meadow Pairs complete!',
+        'pairs',
       );
     }
     const notices = {
@@ -263,6 +280,18 @@ export default function Workshop() {
       <Text accessibilityRole="summary" style={styles.notice}>
         {state.notice}
       </Text>
+      <View style={styles.companionPanel}>
+        <Text style={styles.itemName}>Mochi's corner</Text>
+        <Text style={styles.companionProgress}>
+          Bond {state.bond.bond}/100 · Curiosity {state.bond.personality.curiosity}
+          {' · '}Courage {state.bond.personality.courage}
+          {' · '}Focus {state.bond.personality.focus}
+        </Text>
+        <Text style={styles.companionMood}>{roomMood(state.room)}</Text>
+        <Text style={styles.ingredients}>
+          Each minigame strengthens your bond once. Replays have no penalty.
+        </Text>
+      </View>
       <Text style={styles.heading}>Your basket</Text>
       <View style={styles.inventory}>
         {(Object.keys(ITEM_CATALOG) as ItemId[]).map((item) => (
@@ -443,6 +472,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#E3EDD9',
     fontWeight: '600',
   },
+  companionPanel: {
+    marginTop: 14,
+    padding: 14,
+    gap: 6,
+    backgroundColor: '#EFF2E7',
+    borderRadius: 14,
+  },
+  companionProgress: {
+    color: '#365742',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  companionMood: { color: '#526E58', fontSize: 13, lineHeight: 19 },
   heading: {
     marginTop: 26,
     marginBottom: 12,

@@ -19,6 +19,7 @@ args.push(
   'src/features/minigames/skips.test.ts',
   'src/features/minigames/pairs.test.ts',
   'src/features/home/room.test.ts',
+  'src/features/home/companionResponse.test.ts',
   'src/config/public.test.ts',
   'scripts/vendor-security.test.mjs',
 );
