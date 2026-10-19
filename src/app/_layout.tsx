@@ -22,6 +22,7 @@ function AppTabs() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Home' }} />
+      <Tabs.Screen name="workshop" options={{ title: 'Workshop' }} />
       <Tabs.Screen name="adventure" options={{ title: 'Adventure' }} />
       <Tabs.Screen name="memories" options={{ title: 'Memories' }} />
       <Tabs.Screen name="friends" options={{ title: 'Friends' }} />

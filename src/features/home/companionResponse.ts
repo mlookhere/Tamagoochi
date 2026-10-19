@@ -1,0 +1,130 @@
+import { takeItem, type Inventory } from '../../domain/items/inventory.ts';
+import { ROOM_SLOTS, type Room, type RoomItem, type RoomSlot } from './room.ts';
+
+export const MINI_GAMES = ['echo', 'skip', 'pairs'] as const;
+export type MiniGame = (typeof MINI_GAMES)[number];
+
+export type Personality = Readonly<{
+  curiosity: number;
+  courage: number;
+  focus: number;
+}>;
+
+export type WorkshopBond = Readonly<{
+  bond: number;
+  personality: Personality;
+  completed: readonly MiniGame[];
+  snackShared: boolean;
+}>;
+
+const GAME_TRAITS: Readonly<Record<MiniGame, keyof Personality>> = {
+  echo: 'focus',
+  skip: 'courage',
+  pairs: 'curiosity',
+};
+
+export function createWorkshopBond(): WorkshopBond {
+  return {
+    bond: 40,
+    personality: { curiosity: 0, courage: 0, focus: 0 },
+    completed: [],
+    snackShared: false,
+  };
+}
+
+// Each activity rewards connection once; replay remains optional and penalty-free.
+export function completeMiniGame(
+  state: WorkshopBond,
+  game: MiniGame,
+): WorkshopBond {
+  if (!MINI_GAMES.includes(game)) throw new Error('Unknown minigame');
+  if (state.completed.includes(game)) return state;
+  const trait = GAME_TRAITS[game];
+  return {
+    ...state,
+    bond: Math.min(100, state.bond + 8),
+    personality: {
+      ...state.personality,
+      [trait]: state.personality[trait] + 1,
+    },
+    completed: [...state.completed, game],
+  };
+}
+
+export type SnackShareResult = Readonly<{
+  ok: boolean;
+  inventory: Inventory;
+  bond: WorkshopBond;
+}>;
+
+// A snack always costs one item; connection rewards are earned only once.
+export function sharePicnicSnack(
+  inventory: Inventory,
+  bond: WorkshopBond,
+): SnackShareResult {
+  const spent = takeItem(inventory, 'picnicSnack');
+  if (!spent.ok) return { ok: false, inventory, bond };
+  if (bond.snackShared) return { ok: true, inventory: spent.inventory, bond };
+  return {
+    ok: true,
+    inventory: spent.inventory,
+    bond: { ...bond, bond: Math.min(100, bond.bond + 4), snackShared: true },
+  };
+}
+
+export type RoomPreference = 'favorite' | 'wary' | 'neutral';
+
+export const ROOM_PREFERENCES: Readonly<Record<RoomItem, RoomPreference>> = {
+  leafToy: 'favorite',
+  mossCushion: 'favorite',
+  starKeepsake: 'wary',
+  flowerCrown: 'neutral',
+};
+
+const PLACEMENT_REACTIONS: Readonly<Record<RoomItem, string>> = {
+  leafToy: 'Mochi perks up and follows the spinning leaf.',
+  mossCushion: 'Mochi nestles close to the soft cushion.',
+  starKeepsake: 'Mochi watches the shiny stone cautiously.',
+  flowerCrown: 'Mochi tilts their head at the flower crown.',
+};
+
+export function placedItemReaction(item: RoomItem): string {
+  const reaction = PLACEMENT_REACTIONS[item];
+  if (!reaction) throw new Error('Unknown room item');
+  return reaction;
+}
+
+export function roomMood(room: Room): string {
+  const preferences = Object.values(room).map((item) => ROOM_PREFERENCES[item]);
+  const favorite = preferences.includes('favorite');
+  const wary = preferences.includes('wary');
+  if (favorite && wary) {
+    return 'Mochi enjoys the cozy decor but keeps an eye on the shiny stone.';
+  }
+  if (favorite) return 'Mochi feels at home near a favorite object.';
+  if (wary) return 'Mochi gives the shiny stone a little space.';
+  if (preferences.length) return 'Mochi is curious about the new decor.';
+  return 'Mochi is ready to discover what you make next.';
+}
+
+export type CompanionPlacement = Readonly<{
+  slot: RoomSlot;
+  mood: 'delighted' | 'curious' | 'shy' | 'resting';
+}>;
+
+// Favorites attract the pet; an otherwise solitary wary object makes it retreat.
+export function companionPlacement(room: Room): CompanionPlacement {
+  const slots = Object.keys(ROOM_SLOTS) as RoomSlot[];
+  for (const preference of ['favorite', 'neutral', 'wary'] as const) {
+    const slot = slots.find((candidate) => {
+      const item = room[candidate];
+      return item !== undefined && ROOM_PREFERENCES[item] === preference;
+    });
+    if (!slot) continue;
+    if (preference === 'wary') {
+      return { slot: slot === 'window' ? 'garden' : 'window', mood: 'shy' };
+    }
+    return { slot, mood: preference === 'favorite' ? 'delighted' : 'curious' };
+  }
+  return { slot: 'nook', mood: 'resting' };
+}

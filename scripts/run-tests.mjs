@@ -14,6 +14,16 @@ if (coverage) {
 }
 args.push(
   'src/domain/pet/state.test.ts',
+  'src/domain/items/inventory.test.ts',
+  'src/features/minigames/echo.test.ts',
+  'src/features/minigames/skips.test.ts',
+  'src/features/minigames/pairs.test.ts',
+  'src/features/home/room.test.ts',
+  'src/features/home/companionResponse.test.ts',
+  'src/features/home/workshopState.test.ts',
+  'src/features/home/workshopLayout.test.ts',
+  'src/features/home/miniGameMenu.test.ts',
+  'src/features/home/motionPreference.test.ts',
   'src/config/public.test.ts',
   'scripts/vendor-security.test.mjs',
 );
