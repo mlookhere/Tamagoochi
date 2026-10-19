@@ -9,6 +9,7 @@ import {
   createWorkshopBond,
   placedItemReaction,
   roomMood,
+  sharePicnicSnack,
   type MiniGame,
   type WorkshopBond,
 } from './companionResponse.ts';
@@ -18,6 +19,7 @@ test('starter bond has neutral traits and is independent from care state', () =>
     bond: 40,
     personality: { curiosity: 0, courage: 0, focus: 0 },
     completed: [],
+    snackShared: false,
   });
 });
 
@@ -107,4 +109,51 @@ test('companion placement is deterministic and never mutates the room', () => {
     mood: 'delighted',
   });
   assert.deepEqual(room, before);
+});
+
+test('sharing a crafted snack spends exactly one item and rewards bond once', () => {
+  const bond = createWorkshopBond();
+  const inventory = { picnicSnack: 2 };
+  const first = sharePicnicSnack(inventory, bond);
+  assert.equal(first.ok, true);
+  assert.equal(first.inventory.picnicSnack, 1);
+  assert.equal(first.bond.bond, 44);
+  assert.equal(first.bond.snackShared, true);
+  assert.deepEqual(inventory, { picnicSnack: 2 });
+  assert.equal(bond.snackShared, false);
+
+  const replay = sharePicnicSnack(first.inventory, first.bond);
+  assert.equal(replay.ok, true);
+  assert.equal(replay.inventory.picnicSnack, 0);
+  assert.equal(replay.bond, first.bond);
+  assert.equal(replay.bond.bond, 44);
+});
+
+test('no snack and invalid inventory never grant free bond', () => {
+  const bond = createWorkshopBond();
+  const missing = sharePicnicSnack({}, bond);
+  assert.deepEqual(missing, { ok: false, inventory: {}, bond });
+  const out = sharePicnicSnack({ picnicSnack: 0 }, bond);
+  assert.equal(out.ok, false);
+  assert.equal(out.bond, bond);
+  assert.throws(() => sharePicnicSnack({ picnicSnack: -1 }, bond));
+});
+
+test('first snack bonus clamps to the maximum bond', () => {
+  const bond = { ...createWorkshopBond(), bond: 99 };
+  const result = sharePicnicSnack({ picnicSnack: 1 }, bond);
+  assert.equal(result.ok, true);
+  assert.equal(result.bond.bond, 100);
+  assert.equal(result.bond.snackShared, true);
+  assert.equal(bond.bond, 99);
+});
+
+test('snack completion does not change distinct minigame rewards', () => {
+  const initial = createWorkshopBond();
+  const shared = sharePicnicSnack({ picnicSnack: 1 }, initial);
+  const played = completeMiniGame(shared.bond, 'echo');
+  assert.equal(played.bond, 52);
+  assert.equal(played.personality.focus, 1);
+  assert.equal(played.snackShared, true);
+  assert.equal(completeMiniGame(played, 'echo'), played);
 });

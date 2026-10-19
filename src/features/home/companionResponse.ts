@@ -1,3 +1,4 @@
+import { takeItem, type Inventory } from '../../domain/items/inventory.ts';
 import { ROOM_SLOTS, type Room, type RoomItem, type RoomSlot } from './room.ts';
 
 export const MINI_GAMES = ['echo', 'skip', 'pairs'] as const;
@@ -13,6 +14,7 @@ export type WorkshopBond = Readonly<{
   bond: number;
   personality: Personality;
   completed: readonly MiniGame[];
+  snackShared: boolean;
 }>;
 
 const GAME_TRAITS: Readonly<Record<MiniGame, keyof Personality>> = {
@@ -26,6 +28,7 @@ export function createWorkshopBond(): WorkshopBond {
     bond: 40,
     personality: { curiosity: 0, courage: 0, focus: 0 },
     completed: [],
+    snackShared: false,
   };
 }
 
@@ -44,6 +47,27 @@ export function completeMiniGame(
       [trait]: state.personality[trait] + 1,
     },
     completed: [...state.completed, game],
+  };
+}
+
+export type SnackShareResult = Readonly<{
+  ok: boolean;
+  inventory: Inventory;
+  bond: WorkshopBond;
+}>;
+
+// A snack always costs one item; connection rewards are earned only once.
+export function sharePicnicSnack(
+  inventory: Inventory,
+  bond: WorkshopBond,
+): SnackShareResult {
+  const spent = takeItem(inventory, 'picnicSnack');
+  if (!spent.ok) return { ok: false, inventory, bond };
+  if (bond.snackShared) return { ok: true, inventory: spent.inventory, bond };
+  return {
+    ok: true,
+    inventory: spent.inventory,
+    bond: { ...bond, bond: Math.min(100, bond.bond + 4), snackShared: true },
   };
 }
 
