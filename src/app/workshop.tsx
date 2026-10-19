@@ -283,7 +283,8 @@ export default function Workshop() {
       <View style={styles.companionPanel}>
         <Text style={styles.itemName}>Mochi's corner</Text>
         <Text style={styles.companionProgress}>
-          Bond {state.bond.bond}/100 · Curiosity {state.bond.personality.curiosity}
+          Bond {state.bond.bond}/100 · Curiosity{' '}
+          {state.bond.personality.curiosity}
           {' · '}Courage {state.bond.personality.courage}
           {' · '}Focus {state.bond.personality.focus}
         </Text>

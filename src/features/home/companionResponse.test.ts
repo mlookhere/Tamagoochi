@@ -40,9 +40,7 @@ test('replay cannot farm bond or personality', () => {
   assert.equal(completeMiniGame(earned, 'pairs'), earned);
   assert.equal(earned.bond, 48);
   assert.equal(earned.personality.curiosity, 1);
-  assert.throws(() =>
-    completeMiniGame(earned, 'unknown' as MiniGame),
-  );
+  assert.throws(() => completeMiniGame(earned, 'unknown' as MiniGame));
 });
 
 test('bond is capped even when entering near maximum', () => {
@@ -54,12 +52,15 @@ test('bond is capped even when entering near maximum', () => {
 });
 
 test('every placeable room item has a preference and visible reaction', () => {
-  assert.deepEqual(Object.keys(ROOM_PREFERENCES).sort(), [...ROOM_ITEMS].sort());
+  assert.deepEqual(
+    Object.keys(ROOM_PREFERENCES).sort(),
+    [...ROOM_ITEMS].sort(),
+  );
   for (const item of ROOM_ITEMS) {
     assert.ok(['favorite', 'wary', 'neutral'].includes(ROOM_PREFERENCES[item]));
     assert.ok(placedItemReaction(item).includes('Mochi'));
   }
-  assert.throws(() => placedItemReaction('bad' as typeof ROOM_ITEMS[number]));
+  assert.throws(() => placedItemReaction('bad' as (typeof ROOM_ITEMS)[number]));
 });
 
 test('room mood reacts to favorites, cautious objects, and their mixture', () => {
@@ -67,8 +68,5 @@ test('room mood reacts to favorites, cautious objects, and their mixture', () =>
   assert.match(roomMood({ window: 'leafToy' }), /favorite/);
   assert.match(roomMood({ garden: 'starKeepsake' }), /space/);
   assert.match(roomMood({ nook: 'flowerCrown' }), /curious/);
-  assert.match(
-    roomMood({ window: 'leafToy', garden: 'starKeepsake' }),
-    /cozy/,
-  );
+  assert.match(roomMood({ window: 'leafToy', garden: 'starKeepsake' }), /cozy/);
 });
