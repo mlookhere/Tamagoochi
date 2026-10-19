@@ -41,6 +41,7 @@ export function completeMiniGame(
   if (state.completed.includes(game)) return state;
   const trait = GAME_TRAITS[game];
   return {
+    ...state,
     bond: Math.min(100, state.bond + 8),
     personality: {
       ...state.personality,
