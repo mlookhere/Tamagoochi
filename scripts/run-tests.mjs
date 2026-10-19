@@ -1,5 +1,24 @@
 import { spawnSync } from 'node:child_process';
 
+// Temporary formatter diagnostic for failing CI; removed after exact fixes.
+if (process.env.CI === 'true') {
+  const targets = [
+    'src/app/workshop.tsx',
+    'src/features/home/companionResponse.test.ts',
+    'src/features/home/RoomSpot.tsx',
+  ];
+  const formatted = spawnSync('node_modules/.bin/prettier', ['--write', ...targets], {
+    encoding: 'utf8',
+  });
+  if (formatted.status === 0) {
+    const diff = spawnSync('git', ['diff', '--', ...targets], {
+      encoding: 'utf8',
+    });
+    process.stdout.write('PRETTIER_DIFF_BEGIN\n' + diff.stdout + '\nPRETTIER_DIFF_END\n');
+    spawnSync('git', ['restore', '--', ...targets]);
+  }
+}
+
 const coverage = process.argv.includes('--coverage');
 const args = ['--experimental-strip-types', '--test'];
 if (coverage) {
