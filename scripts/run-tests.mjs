@@ -23,6 +23,7 @@ args.push(
   'src/features/home/workshopState.test.ts',
   'src/features/home/workshopLayout.test.ts',
   'src/features/home/miniGameMenu.test.ts',
+  'src/features/home/motionPreference.test.ts',
   'src/config/public.test.ts',
   'scripts/vendor-security.test.mjs',
 );

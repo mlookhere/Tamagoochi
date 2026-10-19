@@ -1,24 +1,22 @@
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo } from 'react-native';
+import { createMotionPreferenceGuard } from './motionPreference';
 
 export function useReducedMotion(): boolean {
   const [reduced, setReduced] = useState(true);
 
   useEffect(() => {
-    let active = true;
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((enabled) => {
-        if (active) setReduced(enabled);
-      })
-      .catch(() => {
-        if (active) setReduced(true);
-      });
+    const guard = createMotionPreferenceGuard(setReduced);
+    // Subscribe before requesting the snapshot so a delayed read cannot win.
     const subscription = AccessibilityInfo.addEventListener(
       'reduceMotionChanged',
-      setReduced,
+      guard.onChange,
     );
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then(guard.onInitial)
+      .catch(() => guard.onInitial(true));
     return () => {
-      active = false;
+      guard.dispose();
       subscription.remove();
     };
   }, []);
