@@ -4,6 +4,7 @@ import {
   craftItem,
   createInventory,
   giveItem,
+  itemCount,
   type Inventory,
   type ItemId,
   type RecipeId,
@@ -97,13 +98,21 @@ function reduceRoom(
   action: Extract<WorkshopAction, { type: 'roomItem' | 'roomSlot' }>,
 ): WorkshopState {
   if (action.type === 'roomItem') {
+    const name = ITEM_CATALOG[action.item].name.toLowerCase();
+    if (state.selectedRoomItem === action.item) {
+      return {
+        ...state,
+        selectedRoomItem: null,
+        notice: 'Canceled placing your ' + name + '.',
+      };
+    }
+    if (itemCount(state.inventory, action.item) === 0) {
+      return { ...state, notice: 'Craft this object before selecting it.' };
+    }
     return {
       ...state,
       selectedRoomItem: action.item,
-      notice:
-        'Tap an empty room space to place your ' +
-        ITEM_CATALOG[action.item].name.toLowerCase() +
-        '.',
+      notice: 'Tap an empty room space to place your ' + name + '.',
     };
   }
 
@@ -114,7 +123,7 @@ function reduceRoom(
       ...state,
       inventory: result.inventory,
       room: result.room,
-      selectedRoomItem: null,
+      selectedRoomItem: result.ok ? null : state.selectedRoomItem,
       notice: result.ok
         ? 'Picked up your ' + ITEM_CATALOG[occupant].name.toLowerCase() + '.'
         : 'Your basket is full. This object stays in the room.',

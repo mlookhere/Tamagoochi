@@ -140,3 +140,88 @@ test('wrong guesses and mismatches are penalty-free, and ignored taps are safe',
   const noOp = reduceWorkshop(start, { type: 'closePair' });
   assert.equal(noOp.bond, start.bond);
 });
+
+test('tapping a selected decoration again cancels without spending materials', () => {
+  const start = newWorkshop();
+  const made = reduceWorkshop(start, { type: 'craft', recipeId: 'leafToy' });
+  const selected = reduceWorkshop(made, {
+    type: 'roomItem',
+    item: 'leafToy',
+  });
+  const canceled = reduceWorkshop(selected, {
+    type: 'roomItem',
+    item: 'leafToy',
+  });
+  assert.equal(canceled.selectedRoomItem, null);
+  assert.equal(canceled.inventory, selected.inventory);
+  assert.equal(canceled.room, selected.room);
+  assert.match(canceled.notice, /Canceled/);
+  const empty = reduceWorkshop(canceled, { type: 'roomSlot', slot: 'window' });
+  assert.deepEqual(empty.room, {});
+  assert.equal(empty.inventory, selected.inventory);
+});
+
+test('unavailable room items cannot be selected by stale dispatched actions', () => {
+  const start = newWorkshop();
+  const unavailable = reduceWorkshop(start, {
+    type: 'roomItem',
+    item: 'leafToy',
+  });
+  assert.equal(unavailable.selectedRoomItem, null);
+  assert.equal(unavailable.inventory, start.inventory);
+  assert.match(unavailable.notice, /Craft this object/);
+  const made = reduceWorkshop(start, { type: 'craft', recipeId: 'leafToy' });
+  const selected = reduceWorkshop(made, {
+    type: 'roomItem',
+    item: 'leafToy',
+  });
+  const rejected = reduceWorkshop(selected, {
+    type: 'roomItem',
+    item: 'flowerCrown',
+  });
+  assert.equal(rejected.selectedRoomItem, 'leafToy');
+  assert.equal(rejected.inventory, selected.inventory);
+  assert.match(rejected.notice, /Craft this object/);
+});
+
+test('switching between crafted decorations places only the latest selection', () => {
+  const start = newWorkshop();
+  const leaf = reduceWorkshop(start, { type: 'craft', recipeId: 'leafToy' });
+  const flower = reduceWorkshop(leaf, {
+    type: 'craft',
+    recipeId: 'flowerCrown',
+  });
+  const selected = reduceWorkshop(flower, {
+    type: 'roomItem',
+    item: 'leafToy',
+  });
+  const switched = reduceWorkshop(selected, {
+    type: 'roomItem',
+    item: 'flowerCrown',
+  });
+  assert.equal(switched.selectedRoomItem, 'flowerCrown');
+  assert.equal(switched.inventory, selected.inventory);
+  const placed = reduceWorkshop(switched, { type: 'roomSlot', slot: 'garden' });
+  assert.equal(placed.room.garden, 'flowerCrown');
+  assert.equal(placed.selectedRoomItem, null);
+  assert.equal(itemCount(placed.inventory, 'leafToy'), 1);
+  assert.equal(itemCount(placed.inventory, 'flowerCrown'), 0);
+});
+
+test('a full-basket pickup does not discard the pending decoration', () => {
+  const start = newWorkshop();
+  const selected = {
+    ...start,
+    inventory: { ...start.inventory, leafToy: 10, flowerCrown: 1 },
+    room: { window: 'leafToy' },
+    selectedRoomItem: 'flowerCrown',
+  } as const satisfies WorkshopState;
+  const blocked = reduceWorkshop(selected, {
+    type: 'roomSlot',
+    slot: 'window',
+  });
+  assert.equal(blocked.selectedRoomItem, 'flowerCrown');
+  assert.equal(blocked.inventory, selected.inventory);
+  assert.equal(blocked.room, selected.room);
+  assert.match(blocked.notice, /basket is full/);
+});

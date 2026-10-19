@@ -73,8 +73,8 @@ export default function Workshop() {
       />
       <Text style={styles.heading}>Decorate the room</Text>
       <Text style={styles.ingredients}>
-        Select a crafted object, then tap an empty space to place it. Tap an
-        occupied space to pick the object up. Items return to your basket.
+        Select a crafted object, then tap an empty space to place it. Tap the
+        selected object again to cancel. Occupied spaces pick up items.
       </Text>
       <View style={styles.roomPicker}>
         {ROOM_ITEMS.map((item) => {
@@ -88,6 +88,13 @@ export default function Workshop() {
                 'Choose ' + ITEM_CATALOG[item].name + ' for the room'
               }
               accessibilityState={{ selected, disabled: !available }}
+              accessibilityHint={
+                selected
+                  ? 'Tap again to cancel placing this object'
+                  : available
+                    ? 'Choose this object to place in an empty room space'
+                    : 'Craft this object to select it'
+              }
               disabled={!available}
               onPress={() => dispatch({ type: 'roomItem', item })}
               style={[
