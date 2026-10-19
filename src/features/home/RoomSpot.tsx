@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 
 type Props = Readonly<{
@@ -8,7 +8,7 @@ type Props = Readonly<{
 }>;
 
 export function RoomSpot({ label, itemName, onPress }: Props) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const [scale] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
     scale.setValue(0.88);
