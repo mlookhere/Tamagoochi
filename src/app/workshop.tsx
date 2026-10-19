@@ -69,12 +69,13 @@ function rewardWorkshop(
   success: string,
 ): WorkshopState {
   const reward = giveItem(state.inventory, item);
+  const itemName = ITEM_CATALOG[item].name.toLowerCase();
   return {
     ...state,
     inventory: reward.inventory,
     notice: reward.ok
-      ? `${success} Found one ${ITEM_CATALOG[item].name.toLowerCase()}.`
-      : `${success} Your ${ITEM_CATALOG[item].name.toLowerCase()} basket is full.`,
+      ? `${success} Found one ${itemName}.`
+      : `${success} Your ${itemName} basket is full.`,
   };
 }
 
@@ -124,6 +125,7 @@ function reduceWorkshop(
         'Stone Skip complete!',
       );
     }
+    const remaining = skipTarget(state.skipRound) - outcome.distance;
     return {
       ...state,
       skipDistance: outcome.distance,
@@ -131,7 +133,7 @@ function reduceWorkshop(
       notice:
         outcome.result === 'miss'
           ? 'That route cannot reach the shore in three hops. Try again!'
-          : `Nice hop! ${skipTarget(state.skipRound) - outcome.distance} spaces left.`,
+          : `Nice hop! ${remaining} spaces left.`,
     };
   }
 
@@ -293,11 +295,12 @@ export default function Workshop() {
         {board.map((symbol, card) => {
           const matched = state.pairs.matched.includes(card);
           const visible = matched || state.pairs.revealed.includes(card);
+          const cardState = visible ? symbol : 'hidden';
           return (
             <Pressable
               key={card}
               accessibilityRole="button"
-              accessibilityLabel={`Card ${card + 1}, ${visible ? symbol : 'hidden'}`}
+              accessibilityLabel={`Card ${card + 1}, ${cardState}`}
               accessibilityState={{ disabled: matched || reviewing }}
               disabled={matched || reviewing}
               style={[styles.pairCard, matched && styles.matchedCard]}
