@@ -30,27 +30,26 @@ export function pairBoard(round: number): readonly PairSymbol[] {
   return BOARDS[round % BOARDS.length];
 }
 
-export function choosePair(state: PairsState, card: number): PairOutcome {
-  const board = pairBoard(state.round);
-  if (!Number.isSafeInteger(card) || card < 0 || card >= board.length) {
-    throw new Error('Invalid card');
-  }
+function validCard(card: number, length: number): boolean {
+  return Number.isSafeInteger(card) && card >= 0 && card < length;
+}
+
+function validatePairState(state: PairsState, length: number): void {
+  const indices = [...state.matched, ...state.revealed];
   if (
-    state.matched.some(
-      (index) =>
-        !Number.isSafeInteger(index) || index < 0 || index >= board.length,
-    ) ||
-    state.revealed.some(
-      (index) =>
-        !Number.isSafeInteger(index) || index < 0 || index >= board.length,
-    ) ||
-    new Set([...state.matched, ...state.revealed]).size !==
-      state.matched.length + state.revealed.length ||
+    indices.some((index) => !validCard(index, length)) ||
+    new Set(indices).size !== indices.length ||
     state.revealed.length > 2 ||
-    state.matched.length > board.length - 2
+    state.matched.length > length - 2
   ) {
     throw new Error('Invalid pair state');
   }
+}
+
+export function choosePair(state: PairsState, card: number): PairOutcome {
+  const board = pairBoard(state.round);
+  if (!validCard(card, board.length)) throw new Error('Invalid card');
+  validatePairState(state, board.length);
   if (
     state.matched.includes(card) ||
     state.revealed.includes(card) ||

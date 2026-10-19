@@ -105,7 +105,6 @@ function reduceWorkshop(
     };
   }
 
-
   if (action.type === 'skip') {
     const outcome = chooseSkip(
       state.skipRound,
