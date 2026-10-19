@@ -131,28 +131,13 @@ function reduceRoom(
   };
 }
 
-export function reduceWorkshop(
+function reduceMiniGame(
   state: WorkshopState,
-  action: WorkshopAction,
+  action: Extract<
+    WorkshopAction,
+    { type: 'echo' | 'skip' | 'pair' | 'closePair' }
+  >,
 ): WorkshopState {
-  if (action.type === 'shareSnack') {
-    const result = sharePicnicSnack(state.inventory, state.bond);
-    return {
-      ...state,
-      inventory: result.inventory,
-      bond: result.bond,
-      notice: !result.ok
-        ? 'Craft a picnic snack before sharing.'
-        : result.bond === state.bond
-          ? 'Mochi enjoyed sharing another snack!'
-          : 'Mochi loved the picnic snack. Your bond grew!',
-    };
-  }
-
-  if (action.type === 'roomItem' || action.type === 'roomSlot') {
-    return reduceRoom(state, action);
-  }
-
   if (action.type === 'echo') {
     const outcome = chooseEcho(
       state.echoRound,
@@ -234,6 +219,40 @@ export function reduceWorkshop(
       pairs: closePair(state.pairs),
       notice: 'Cards turned over. Try another pair!',
     };
+  }
+
+  throw new Error('Unknown minigame action');
+}
+
+export function reduceWorkshop(
+  state: WorkshopState,
+  action: WorkshopAction,
+): WorkshopState {
+  if (action.type === 'shareSnack') {
+    const result = sharePicnicSnack(state.inventory, state.bond);
+    return {
+      ...state,
+      inventory: result.inventory,
+      bond: result.bond,
+      notice: !result.ok
+        ? 'Craft a picnic snack before sharing.'
+        : result.bond === state.bond
+          ? 'Mochi enjoyed sharing another snack!'
+          : 'Mochi loved the picnic snack. Your bond grew!',
+    };
+  }
+
+  if (action.type === 'roomItem' || action.type === 'roomSlot') {
+    return reduceRoom(state, action);
+  }
+
+  if (
+    action.type === 'echo' ||
+    action.type === 'skip' ||
+    action.type === 'pair' ||
+    action.type === 'closePair'
+  ) {
+    return reduceMiniGame(state, action);
   }
 
   const result = craftItem(state.inventory, action.recipeId);
