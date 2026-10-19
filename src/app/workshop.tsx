@@ -95,7 +95,6 @@ function rewardWorkshop(
   };
 }
 
-
 function reduceRoom(
   state: WorkshopState,
   action: Extract<WorkshopAction, { type: 'roomItem' | 'roomSlot' }>,
@@ -104,8 +103,10 @@ function reduceRoom(
     return {
       ...state,
       selectedRoomItem: action.item,
-      notice: 'Tap an empty room space to place your ' +
-        ITEM_CATALOG[action.item].name.toLowerCase() + '.',
+      notice:
+        'Tap an empty room space to place your ' +
+        ITEM_CATALOG[action.item].name.toLowerCase() +
+        '.',
     };
   }
 
@@ -147,7 +148,11 @@ function reduceWorkshop(
   }
 
   if (action.type === 'echo') {
-    const outcome = chooseEcho(state.echoRound, state.echoProgress, action.symbol);
+    const outcome = chooseEcho(
+      state.echoRound,
+      state.echoProgress,
+      action.symbol,
+    );
     if (outcome.result === 'complete') {
       return rewardWorkshop(
         { ...state, echoRound: state.echoRound + 1, echoProgress: 0 },
@@ -366,8 +371,8 @@ export default function Workshop() {
       </View>
       <Text style={styles.heading}>Stone Skip</Text>
       <Text style={styles.ingredients}>
-        Mini game 2 of 3. Cross the river in exactly three hops. Choose 1, 2,
-        or 3 spaces per hop. An impossible route restarts without penalty.
+        Mini game 2 of 3. Cross the river in exactly three hops. Choose 1, 2, or
+        3 spaces per hop. An impossible route restarts without penalty.
       </Text>
       <Text style={styles.echoPattern}>
         {state.skipDistance} / {skipTarget(state.skipRound)} spaces

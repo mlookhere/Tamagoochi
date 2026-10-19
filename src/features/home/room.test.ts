@@ -54,7 +54,9 @@ test('full baskets cannot duplicate objects and invalid inputs are rejected', ()
   const room = { window: 'leafToy' } as const;
   const full = pickUpRoomItem(inventory, room, 'window');
   assert.deepEqual(full, { ok: false, reason: 'full', inventory, room });
-  assert.throws(() => placeRoomItem(inventory, {}, 'bad' as RoomSlot, 'leafToy'));
+  assert.throws(() =>
+    placeRoomItem(inventory, {}, 'bad' as RoomSlot, 'leafToy'),
+  );
   assert.throws(() =>
     placeRoomItem(inventory, {}, 'window', 'bad' as RoomItem),
   );
