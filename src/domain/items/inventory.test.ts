@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   ITEM_CATALOG,
   RECIPES,
+  assessRecipe,
   craftItem,
   createInventory,
   giveItem,
@@ -116,4 +117,49 @@ test('crafting refuses insufficient material or a full output without loss', () 
   assert.equal(itemCount(crafted.inventory, 'softFiber'), 3);
   assert.equal(itemCount(crafted.inventory, 'flowerPetal'), 4);
   assert.throws(() => craftItem(start, 'unknown' as RecipeId));
+});
+
+test('recipe readiness reports exact shortages and agrees with crafting', () => {
+  const inventory = createInventory();
+  for (const recipeId of Object.keys(RECIPES) as RecipeId[]) {
+    const assessment = assessRecipe(inventory, recipeId);
+    const crafted = craftItem(inventory, recipeId);
+    assert.equal(assessment.canCraft, crafted.ok);
+    assert.equal(assessment.outputFull, false);
+    assert.deepEqual(assessment.missing, {});
+  }
+
+  const missing = assessRecipe({ wildBerry: 1 }, 'picnicSnack');
+  assert.deepEqual(missing, {
+    canCraft: false,
+    outputFull: false,
+    missing: { wildBerry: 1, flowerPetal: 1 },
+  });
+  assert.deepEqual(craftItem({ wildBerry: 1 }, 'picnicSnack'), {
+    ok: false,
+    reason: 'insufficient',
+    inventory: { wildBerry: 1 },
+  });
+});
+
+test('full output takes precedence over missing ingredients without consuming any', () => {
+  const inventory = { mossCushion: 5, flowerPetal: 1 };
+  const assessment = assessRecipe(inventory, 'mossCushion');
+  assert.deepEqual(assessment, {
+    canCraft: false,
+    outputFull: true,
+    missing: { flowerPetal: 1, softFiber: 2 },
+  });
+  const result = craftItem(inventory, 'mossCushion');
+  assert.equal(result.ok, false);
+  assert.equal(result.inventory, inventory);
+  if (!result.ok) assert.equal(result.reason, 'full');
+});
+
+test('recipe readiness rejects unknown recipes and malformed inventory', () => {
+  assert.throws(() => assessRecipe({}, 'unknown' as RecipeId));
+  assert.throws(() => assessRecipe({ softFiber: -1 }, 'leafToy'));
+  assert.throws(() => assessRecipe({ flowerPetal: NaN }, 'leafToy'));
+  assert.throws(() => assessRecipe({ leafToy: 1.5 }, 'leafToy'));
+  assert.throws(() => assessRecipe({ wildBerry: Infinity }, 'picnicSnack'));
 });

@@ -116,21 +116,45 @@ export const RECIPES = {
 
 export type RecipeId = keyof typeof RECIPES;
 
+export type RecipeAssessment = Readonly<{
+  canCraft: boolean;
+  outputFull: boolean;
+  missing: Inventory;
+}>;
+
+// One shared availability check keeps button state and transactions consistent.
+export function assessRecipe(
+  inventory: Inventory,
+  recipeId: RecipeId,
+): RecipeAssessment {
+  const recipe = RECIPES[recipeId];
+  if (!recipe) throw new Error('Unknown recipe');
+  const outputFull = count(inventory, recipe.output) >= itemLimit(recipe.output);
+  const missing: Record<string, number> = {};
+  for (const [id, amount] of Object.entries(recipe.ingredients)) {
+    const shortage = amount - count(inventory, id as ItemId);
+    if (shortage > 0) missing[id] = shortage;
+  }
+  return {
+    canCraft: !outputFull && Object.keys(missing).length === 0,
+    outputFull,
+    missing,
+  };
+}
+
 export function craftItem(
   inventory: Inventory,
   recipeId: RecipeId,
 ): InventoryResult {
+  const assessment = assessRecipe(inventory, recipeId);
+  if (!assessment.canCraft) {
+    return {
+      ok: false,
+      reason: assessment.outputFull ? 'full' : 'insufficient',
+      inventory,
+    };
+  }
   const recipe = RECIPES[recipeId];
-  if (!recipe) throw new Error('Unknown recipe');
-  if (count(inventory, recipe.output) >= itemLimit(recipe.output)) {
-    return { ok: false, reason: 'full', inventory };
-  }
-  for (const [id, amount] of Object.entries(recipe.ingredients)) {
-    const item = id as ItemId;
-    if (count(inventory, item) < amount) {
-      return { ok: false, reason: 'insufficient', inventory };
-    }
-  }
   const next: Record<string, number> = { ...inventory };
   for (const [id, amount] of Object.entries(recipe.ingredients)) {
     next[id] = (next[id] ?? 0) - amount;

@@ -7,16 +7,11 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Page } from '../components/Page';
-import {
-  ITEM_CATALOG,
-  RECIPES,
-  itemCount,
-  type ItemId,
-  type RecipeId,
-} from '../domain/items/inventory';
+import { ITEM_CATALOG, itemCount, type ItemId } from '../domain/items/inventory';
 import { RoomSlots } from '../features/home/RoomSlots';
 import { CompanionPanel } from '../features/home/CompanionPanel';
 import { WorkshopGames } from '../features/home/WorkshopGames';
+import { WorkshopRecipes } from '../features/home/WorkshopRecipes';
 import { useReducedMotion } from '../features/home/useReducedMotion';
 import { ROOM_ITEMS } from '../features/home/room';
 import { newWorkshop, reduceWorkshop } from '../features/home/workshopState';
@@ -68,32 +63,10 @@ export default function Workshop() {
           </View>
         ))}
       </View>
-      <Text style={styles.heading}>Make something</Text>
-      {(Object.keys(RECIPES) as RecipeId[]).map((recipeId) => {
-        const recipe = RECIPES[recipeId];
-        const requirements = Object.entries(recipe.ingredients)
-          .map(
-            ([id, amount]) =>
-              `${amount} ${ITEM_CATALOG[id as ItemId].name.toLowerCase()}`,
-          )
-          .join(' + ');
-        return (
-          <View key={recipeId} style={styles.recipe}>
-            <View style={styles.recipeInfo}>
-              <Text style={styles.itemName}>{recipe.name}</Text>
-              <Text style={styles.ingredients}>{requirements}</Text>
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Make ${recipe.name}`}
-              onPress={() => dispatch({ type: 'craft', recipeId })}
-              style={styles.makeButton}
-            >
-              <Text style={styles.makeText}>Make</Text>
-            </Pressable>
-          </View>
-        );
-      })}
+      <WorkshopRecipes
+        inventory={state.inventory}
+        onCraft={(recipeId) => dispatch({ type: 'craft', recipeId })}
+      />
       <Text style={styles.heading}>Decorate the room</Text>
       <Text style={styles.ingredients}>
         Select a crafted object, then tap an empty space to place it. Tap an
@@ -168,27 +141,7 @@ const styles = StyleSheet.create({
   itemName: { fontSize: 14, fontWeight: '700', color: '#324B38' },
   category: { marginTop: 3, fontSize: 11, color: '#6B7A6D' },
   quantity: { fontSize: 15, fontWeight: '800', color: '#3E694A' },
-  recipe: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-    borderRadius: 14,
-    padding: 12,
-    backgroundColor: '#EFF2E7',
-  },
-  recipeInfo: { flex: 1, gap: 5 },
   ingredients: { fontSize: 12, color: '#6B7A6D' },
-  makeButton: {
-    minWidth: 72,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    backgroundColor: '#345E46',
-  },
-  makeText: { color: '#FFFFFF', fontWeight: '800' },
   roomPicker: {
     marginTop: 12,
     flexDirection: 'row',
