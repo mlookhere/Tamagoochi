@@ -37,11 +37,32 @@ namespace Tamagoochi
 
         public void SetReducedMotion(bool enabled) => reduceMotion = enabled;
 
+        // Explicit feedback takes priority over an otherwise low-mood expression;
+        // sleeping always retains its own pose.
+        public static string PoseFor(bool sleeping, float mood, string response,
+            float now, float responseUntil) =>
+            sleeping ? "asleep" :
+            now < responseUntil && !string.IsNullOrEmpty(response) ? response :
+            mood < 40 ? "sad" : "neutral";
+
+        // A small, frame-independent breathing/reaction shape. No animation
+        // objects, allocations, particle emitters or camera movement.
+        public static Vector3 ScaleFor(float seconds, bool sleeping,
+            bool reducedMotion, bool reacting)
+        {
+            if (sleeping || reducedMotion) return Vector3.one;
+            float breath = Mathf.Sin(seconds * 2.2f) * 0.025f;
+            float pulse = reacting ? 0.065f * Mathf.Abs(Mathf.Sin(seconds * 11f)) : 0f;
+            return new Vector3(1f + breath - pulse * 0.3f,
+                1f - breath + pulse, 1f);
+        }
+
         public void Present(Pet pet, Room room)
         {
             if (companion == null || pet == null || room == null) return;
-            string pose = pet.sleeping ? "asleep" : pet.mood < 40 ? "sad" :
-                Time.unscaledTime < reactionUntil ? reaction : "neutral";
+            float now = Time.unscaledTime;
+            bool reacting = now < reactionUntil;
+            string pose = PoseFor(pet.sleeping, pet.mood, reaction, now, reactionUntil);
             if (pose != currentPose)
             {
                 string art = pose switch
@@ -62,8 +83,10 @@ namespace Tamagoochi
                 RoomSlot.Garden => 0.6f,
                 _ => 0
             };
+            companion.transform.localScale = ScaleFor(now, pet.sleeping,
+                reduceMotion, reacting);
             float bounce = reduceMotion || pet.sleeping ? 0 :
-                Mathf.Sin(Time.unscaledTime * 2.1f) * 0.055f;
+                Mathf.Sin(now * 2.1f) * 0.055f;
             Vector3 destination = home + new Vector3(x, bounce, 0);
             companion.transform.position = reduceMotion ? destination :
                 Vector3.Lerp(companion.transform.position, destination,
@@ -109,7 +132,6 @@ namespace Tamagoochi
         {
             if (sprites.TryGetValue(path, out var cached)) return cached;
             var sprite = Resources.Load<Sprite>("Art/" + path);
-            if (sprite == null) return null;
             sprites.Add(path, sprite);
             return sprite;
         }

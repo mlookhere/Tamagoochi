@@ -31,6 +31,30 @@ namespace Tamagoochi.Tests
             Assert.AreSame(panel, Resources.Load<PanelSettings>("TamagoochiPanel"));
         }
 
+        [Test]
+        public void CompanionCareReactionOverridesSadMoodButNeverSleep()
+        {
+            Assert.AreEqual("sad", CompanionStage.PoseFor(false, 25f, null, 10f, 0f));
+            Assert.AreEqual("play", CompanionStage.PoseFor(false, 25f, "play", 10f, 11f));
+            Assert.AreEqual("sad", CompanionStage.PoseFor(false, 25f, "play", 11f, 11f));
+            Assert.AreEqual("asleep", CompanionStage.PoseFor(true, 25f, "play", 10f, 11f));
+        }
+
+        [Test]
+        public void CompanionMotionHonorsReducedMotionAndStaysWithinSmallBounds()
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                float now = i * 0.13f;
+                Assert.AreEqual(Vector3.one, CompanionStage.ScaleFor(now, false, true, true));
+                Assert.AreEqual(Vector3.one, CompanionStage.ScaleFor(now, true, false, true));
+                var scale = CompanionStage.ScaleFor(now, false, false, true);
+                Assert.That(scale.x, Is.InRange(0.95f, 1.03f));
+                Assert.That(scale.y, Is.InRange(0.97f, 1.10f));
+                Assert.AreEqual(1f, scale.z);
+            }
+        }
+
         [TestCase("companions/seedling-neutral", 256)]
         [TestCase("companions/seedling-joyful", 256)]
         [TestCase("companions/seedling-sad", 256)]

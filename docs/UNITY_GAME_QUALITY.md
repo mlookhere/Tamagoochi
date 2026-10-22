@@ -73,3 +73,7 @@ An optional two-step “return home early” control is now authored in Explore,
 ### Expedition reward visibility and claim recovery
 
 Habitat choices preview their deterministic material reward and the exact free-space count reported by Inventory. A ready-to-claim trip with a full reward stack points the player to Craft for inventory space; the unclaimed trip remains in the offline snapshot. The claim uses the same reward mapping as the preview. Existing craft and resource caps remain unchanged. Unity EditMode tests cover reward parity for all habitats, atomic capacity checks, full-stack recovery and invalid input. These tests and narrow-screen labeling remain unverified until genuine Unity Editor/device execution.
+
+### Companion expression and tactile silhouette
+
+The seedling 2D stage now prioritizes authored care-reaction expressions over a sad idle expression (sleeping still wins), adds low-amplitude breathing and brief celebratory squash/stretch, and disables all shape/bounce motion when reduced motion is enabled. Motion is computed from unscaled elapsed time without per-frame allocations; missing sprite paths are cached, preventing repeated resource lookups. Editor tests assert reaction precedence and bounded, reduced-motion-safe transforms. Unity import, render smoothness and animation art quality **remain unverified** on real devices.
