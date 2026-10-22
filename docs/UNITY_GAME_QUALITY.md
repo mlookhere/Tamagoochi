@@ -68,7 +68,7 @@ The six pet stats are now presented as two compact three-column rows of proporti
 
 ### Manual expedition return
 
-An optional two-step “return home early” control is now authored in Explore, including a clear no-reward warning and a non-destructive “keep exploring” escape. The offline domain resets only the active trip timer; claimed materials, discovery journal, completed count, and memories are retained, with idempotency and no-extra-reward regression tests. This is particularly important for mistaken habitat selections and device-clock changes. As elsewhere, the interaction and EditMode tests remain **unverified on Unity devices and runners**.
+An optional two-step “return home early” control is now authored in Explore, including a clear no-reward warning and a non-destructive “keep exploring” escape. Only unfinished trips expose this action: once a discovery is ready, the return control disappears, and a second domain-level timestamp check rejects stale button callbacks without discarding pending rewards, including when the reward stack is full. Early return resets only the active timer; claimed materials, discovery journal, completed count, and memories are retained, with idempotency and no-extra-reward regression tests. This is particularly important for mistaken habitat selections and device-clock changes. As elsewhere, the interaction and EditMode tests remain **unverified on Unity devices and runners**.
 
 ### Expedition reward visibility and claim recovery
 

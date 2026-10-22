@@ -71,11 +71,12 @@ namespace Tamagoochi
             return true;
         }
 
-        // Explicitly end an unfinished trip without claiming materials or a find.
-        // The accumulated journal, memories and completed-trip count survive.
-        public bool Cancel()
+        // Completed discoveries cannot be abandoned through the early-return action.
+        // Recheck the clock at execution, not just when the button was drawn.
+        public bool Cancel(long now)
         {
-            if (!active.HasValue) return false;
+            if (now < 0) throw new ArgumentOutOfRangeException(nameof(now));
+            if (!active.HasValue || now >= readyAt) return false;
             active = null;
             startedAt = 0;
             readyAt = 0;

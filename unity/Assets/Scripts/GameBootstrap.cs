@@ -445,7 +445,8 @@ namespace Tamagoochi
                         });
                     });
                 }
-                if (confirmExpeditionReturn)
+                if (remaining == 0) confirmExpeditionReturn = false;
+                if (remaining > 0 && confirmExpeditionReturn)
                 {
                     Line("Returning early ends this trip without a discovery. Your earlier finds are safe.");
                     Add("Keep exploring", () =>
@@ -455,14 +456,17 @@ namespace Tamagoochi
                     });
                     Add("Confirm return without reward", () =>
                     {
-                        if (expeditions.Cancel())
-                        {
-                            confirmExpeditionReturn = false;
+                        if (expeditions.Cancel(GameStore.Now()))
                             Commit($"{pet.name} is home again. You can explore anytime.");
+                        else
+                        {
+                            message = "Your discovery is ready. Collect it instead.";
+                            Refresh();
                         }
+                        confirmExpeditionReturn = false;
                     });
                 }
-                else
+                else if (remaining > 0)
                 {
                     Add("Return home early", () =>
                     {

@@ -67,10 +67,10 @@ namespace Tamagoochi.Tests
             var game = new Expeditions();
             var bag = Inventory.Starter();
             int original = bag.Count(ItemId.WildBerry);
-            Assert.IsFalse(game.Cancel());
+            Assert.IsFalse(game.Cancel(0));
             Assert.IsTrue(game.Start(Habitat.Grove, 0));
-            Assert.IsTrue(game.Cancel());
-            Assert.IsFalse(game.Cancel());
+            Assert.IsTrue(game.Cancel(0));
+            Assert.IsFalse(game.Cancel(0));
             Assert.IsFalse(game.IsExploring);
             Assert.AreEqual(0, game.ReadyAt);
             Assert.AreEqual(0, game.Completed);
@@ -92,7 +92,7 @@ namespace Tamagoochi.Tests
                 game.Claim(Expeditions.DurationMilliseconds, bag));
             int stones = bag.Count(ItemId.RiverStone);
             Assert.IsTrue(game.Start(Habitat.Grove, Expeditions.DurationMilliseconds));
-            Assert.IsTrue(game.Cancel());
+            Assert.IsTrue(game.Cancel(Expeditions.DurationMilliseconds));
             var restored = Expeditions.Restore(game.Snapshot());
             Assert.AreEqual(1, restored.Completed);
             Assert.AreEqual("River Pearl", restored.LatestDiscovery());
@@ -100,6 +100,29 @@ namespace Tamagoochi.Tests
             Assert.AreEqual(stones, bag.Count(ItemId.RiverStone));
             Assert.AreEqual(ExpeditionClaim.NotExploring,
                 restored.Claim(2 * Expeditions.DurationMilliseconds, bag));
+        }
+
+        [Test]
+        public void ReadyDiscoveryCannotBeLostThroughEarlyReturnOrBasketFullRecovery()
+        {
+            var values = Inventory.Starter().Snapshot();
+            values[(int)ItemId.FlowerPetal] = 99;
+            var bag = Inventory.Restore(values);
+            var game = new Expeditions();
+            Assert.IsTrue(game.Start(Habitat.Meadow, 100));
+            long ready = 100 + Expeditions.DurationMilliseconds;
+            Assert.IsFalse(game.Cancel(ready));
+            Assert.IsFalse(game.Cancel(ready + 1));
+            Assert.IsTrue(game.IsExploring);
+            Assert.AreEqual(ExpeditionClaim.BasketFull, game.Claim(ready, bag));
+            var restored = Expeditions.Restore(game.Snapshot());
+            Assert.IsFalse(restored.Cancel(ready));
+            Assert.AreEqual(Habitat.Meadow, restored.ActiveHabitat);
+            Assert.IsTrue(bag.Take(ItemId.FlowerPetal));
+            Assert.AreEqual(ExpeditionClaim.Claimed, restored.Claim(ready, bag));
+            Assert.AreEqual("Dew Bell", restored.LatestDiscovery());
+            Assert.IsFalse(restored.Cancel(ready));
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => game.Cancel(-1));
         }
 
         [Test]
