@@ -41,6 +41,17 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void AgeDaysIsMonotonicAndBoundedAcrossClockChanges()
+        {
+            var pet = Pet.Create(86400000);
+            Assert.AreEqual(0, pet.AgeDays(long.MinValue));
+            Assert.AreEqual(0, pet.AgeDays(0));
+            Assert.AreEqual(0, pet.AgeDays(86400000));
+            Assert.AreEqual(1, pet.AgeDays(2 * 86400000));
+            Assert.AreEqual(int.MaxValue, pet.AgeDays(long.MaxValue));
+        }
+
+        [Test]
         public void CraftingIsAtomic()
         {
             var bag = Inventory.Starter();

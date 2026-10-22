@@ -96,7 +96,12 @@ namespace Tamagoochi
                 roomItemSlot == "center" ? "right" : "left";
         }
 
-        public int AgeDays(long now) => (int)Math.Max(0, (now - bornAt) / 86400000);
+        public int AgeDays(long now)
+        {
+            if (now <= bornAt) return 0;
+            long days = (now - bornAt) / 86400000;
+            return (int)Math.Min(int.MaxValue, days);
+        }
 
         // Matches the existing TypeScript rules; no running background timer.
         public void Advance(long now)

@@ -81,3 +81,7 @@ The seedling 2D stage now prioritizes authored care-reaction expressions over a 
 ### Crafting clarity and recoverable basket space
 
 The workshop displays current/required ingredient counts and ready, missing-material, or output-storage-full status for each of its five recipes. UI preview and actual crafting use the same pure recipe definitions and atomic capacity checks, so players can identify which recipe spends a full expedition-reward stack without changing balance. The returned ingredient arrays are copied on each lookup so the UI cannot mutate recipes. Unity EditMode tests are authored for all recipes, output limits and save-restored status; Unity Editor/device usability is unverified.
+
+### Clock-safe age display
+
+The companion day counter now returns zero for backward clocks and saturates at the 32-bit display limit for extreme future timestamps, rather than wrapping negative. An EditMode regression test covers both clock directions; actual Unity execution is still required.
