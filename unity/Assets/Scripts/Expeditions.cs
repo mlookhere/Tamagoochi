@@ -50,6 +50,14 @@ namespace Tamagoochi
         // Never expose mutable save records owned by the live expedition state.
         public IReadOnlyList<DiscoveryRecord> Journal => journal.ConvertAll(CopyRecord).AsReadOnly();
 
+        public static ItemId RewardFor(Habitat habitat) => habitat switch
+        {
+            Habitat.Grove => ItemId.WildBerry,
+            Habitat.Meadow => ItemId.FlowerPetal,
+            Habitat.Pond => ItemId.RiverStone,
+            _ => throw new ArgumentOutOfRangeException(nameof(habitat))
+        };
+
         public bool Start(Habitat habitat, long now)
         {
             if (!Enum.IsDefined(typeof(Habitat), habitat))
@@ -83,12 +91,7 @@ namespace Tamagoochi
             if (!active.HasValue) return ExpeditionClaim.NotExploring;
             if (now < readyAt) return ExpeditionClaim.NotReady;
             var habitat = active.Value;
-            var item = habitat switch
-            {
-                Habitat.Grove => ItemId.WildBerry,
-                Habitat.Meadow => ItemId.FlowerPetal,
-                _ => ItemId.RiverStone
-            };
+            var item = RewardFor(habitat);
             // Never consume a finished expedition if its reward cannot be stored.
             if (!inventory.Give(item)) return ExpeditionClaim.BasketFull;
             long previousDiscovery = journal.Count == 0 ? 0 : journal[journal.Count - 1].discoveredAt;

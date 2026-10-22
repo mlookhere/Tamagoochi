@@ -419,6 +419,9 @@ namespace Tamagoochi
                 }
                 else
                 {
+                    var reward = Expeditions.RewardFor(expeditions.ActiveHabitat.Value);
+                    if (inventory.RemainingCapacity(reward) == 0)
+                        Line($"Your {reward} basket is full. Use it in Craft, then come back to claim.");
                     Add("Collect your discovery", () =>
                     {
                         var habitat = expeditions.ActiveHabitat;
@@ -488,7 +491,13 @@ namespace Tamagoochi
             art.style.height = 56;
             art.style.marginRight = 10;
             row.Add(art);
-            row.Add(Button($"Explore the {habitat}", action));
+            var details = new VisualElement();
+            details.style.flexGrow = 1;
+            details.style.flexBasis = 0;
+            details.Add(Button($"Explore the {habitat}", action));
+            var reward = Expeditions.RewardFor(habitat);
+            details.Add(Text($"+1 {reward} · {inventory.RemainingCapacity(reward)} spaces free", 12));
+            row.Add(details);
             page.Add(row);
         }
 

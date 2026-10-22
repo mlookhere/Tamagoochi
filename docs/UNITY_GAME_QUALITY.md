@@ -69,3 +69,7 @@ The six pet stats are now presented as two compact three-column rows of proporti
 ### Manual expedition return
 
 An optional two-step “return home early” control is now authored in Explore, including a clear no-reward warning and a non-destructive “keep exploring” escape. The offline domain resets only the active trip timer; claimed materials, discovery journal, completed count, and memories are retained, with idempotency and no-extra-reward regression tests. This is particularly important for mistaken habitat selections and device-clock changes. As elsewhere, the interaction and EditMode tests remain **unverified on Unity devices and runners**.
+
+### Expedition reward visibility and claim recovery
+
+Habitat choices preview their deterministic material reward and the exact free-space count reported by Inventory. A ready-to-claim trip with a full reward stack points the player to Craft for inventory space; the unclaimed trip remains in the offline snapshot. The claim uses the same reward mapping as the preview. Existing craft and resource caps remain unchanged. Unity EditMode tests cover reward parity for all habitats, atomic capacity checks, full-stack recovery and invalid input. These tests and narrow-screen labeling remain unverified until genuine Unity Editor/device execution.

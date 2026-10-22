@@ -55,6 +55,22 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void RemainingCapacityMatchesAtomicGiveAndRestoredLimits()
+        {
+            var bag = Inventory.Starter();
+            Assert.AreEqual(93, bag.RemainingCapacity(ItemId.WildBerry));
+            Assert.IsFalse(bag.Give(ItemId.WildBerry, 94));
+            Assert.AreEqual(6, bag.Count(ItemId.WildBerry));
+            Assert.IsTrue(bag.Give(ItemId.WildBerry, 93));
+            Assert.AreEqual(0, bag.RemainingCapacity(ItemId.WildBerry));
+            Assert.IsFalse(bag.Give(ItemId.WildBerry));
+            Assert.IsTrue(bag.Take(ItemId.WildBerry));
+            Assert.AreEqual(1, Inventory.Restore(bag.Snapshot()).RemainingCapacity(ItemId.WildBerry));
+            Assert.Throws<System.ArgumentOutOfRangeException>(() =>
+                bag.RemainingCapacity((ItemId)99));
+        }
+
+        [Test]
         public void ForestEchoRewardsOnlyOnCompletedPattern()
         {
             var game = new ForestEcho();

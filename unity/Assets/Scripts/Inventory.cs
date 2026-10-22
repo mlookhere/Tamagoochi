@@ -27,6 +27,12 @@ namespace Tamagoochi
 
         public int Count(ItemId item) => counts[CheckedIndex(item)];
 
+        public int RemainingCapacity(ItemId item)
+        {
+            int index = CheckedIndex(item);
+            return Limits[index] - counts[index];
+        }
+
         public int[] Snapshot() => (int[])counts.Clone();
 
         public static Inventory Restore(int[] values)
@@ -47,7 +53,7 @@ namespace Tamagoochi
         {
             int i = CheckedIndex(item);
             if (quantity <= 0) throw new ArgumentOutOfRangeException(nameof(quantity));
-            if (quantity > Limits[i] - counts[i]) return false;
+            if (quantity > RemainingCapacity(item)) return false;
             counts[i] += quantity;
             return true;
         }

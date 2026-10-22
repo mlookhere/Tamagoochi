@@ -23,6 +23,24 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void HabitatRewardsMatchClaimedMaterialsAndRejectUnknownHabitat()
+        {
+            foreach (Habitat habitat in System.Enum.GetValues(typeof(Habitat)))
+            {
+                var bag = Inventory.Starter();
+                var item = Expeditions.RewardFor(habitat);
+                int before = bag.Count(item);
+                var trip = new Expeditions();
+                Assert.IsTrue(trip.Start(habitat, 0));
+                Assert.AreEqual(ExpeditionClaim.Claimed,
+                    trip.Claim(Expeditions.DurationMilliseconds, bag));
+                Assert.AreEqual(before + 1, bag.Count(item));
+            }
+            Assert.Throws<System.ArgumentOutOfRangeException>(() =>
+                Expeditions.RewardFor((Habitat)99));
+        }
+
+        [Test]
         public void FullBasketDoesNotConsumePendingReward()
         {
             var full = Inventory.Starter().Snapshot();
@@ -33,6 +51,10 @@ namespace Tamagoochi.Tests
             Assert.AreEqual(ExpeditionClaim.BasketFull,
                 game.Claim(Expeditions.DurationMilliseconds, bag));
             Assert.IsTrue(game.IsExploring);
+            Assert.AreEqual(0, game.Completed);
+            Assert.AreEqual(0, game.Journal.Count);
+            Assert.AreEqual(0, bag.RemainingCapacity(Expeditions.RewardFor(Habitat.Meadow)));
+            Assert.DoesNotThrow(() => Expeditions.Restore(game.Snapshot()));
             Assert.IsTrue(bag.Take(ItemId.FlowerPetal));
             Assert.AreEqual(ExpeditionClaim.Claimed,
                 game.Claim(Expeditions.DurationMilliseconds, bag));
