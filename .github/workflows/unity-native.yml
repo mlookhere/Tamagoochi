@@ -28,6 +28,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Check out trusted workflow verifier separately
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: .unity-ci-control
+          persist-credentials: false
+
       - name: Verify trusted ref, project, and activation
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -77,11 +84,12 @@ jobs:
           projectPath: unity
           unityVersion: 6000.0.62f1
           testMode: EditMode
+          cliVersion: v0.1.72
           artifactsPath: unity-test-results
           coverageEnabled: false
 
       - name: Reject missing/failed NUnit reports or Android APK
-        run: python3 ci/verify_unity_native.py --project unity --tests unity-test-results --apk unity/Builds/Tamagoochi.apk
+        run: python3 .unity-ci-control/ci/verify_unity_native.py --project unity --tests unity-test-results --apk unity/Builds/Tamagoochi.apk
 
       - name: Preserve Unity build and test evidence
         if: always()
