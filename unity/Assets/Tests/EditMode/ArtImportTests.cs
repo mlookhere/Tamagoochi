@@ -58,7 +58,14 @@ namespace Tamagoochi.Tests
         [Test]
         public void NativePreflightRejectsMissingOrInvalidOriginalSprites()
         {
-            Assert.DoesNotThrow(() => Tamagoochi.Editor.HomeSceneSetup.VerifyOriginalSprites());
+            // EditModeTests.asmdef cannot reference the predefined Editor assembly.
+            var setup = System.Type.GetType(
+                "Tamagoochi.Editor.HomeSceneSetup, Assembly-CSharp-Editor");
+            Assert.IsNotNull(setup, "Unity Editor preflight must compile");
+            var verify = setup.GetMethod("VerifyOriginalSprites",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            Assert.IsNotNull(verify, "Required-art preflight must stay callable");
+            Assert.DoesNotThrow(() => verify.Invoke(null, null));
         }
 
         [TestCase("companions/seedling-neutral", 256)]
