@@ -12,6 +12,7 @@ namespace Tamagoochi
         private SpriteRenderer shadow;
         private float reactionUntil;
         private string reaction;
+        private string currentPose = "neutral";
         private bool reduceMotion;
         private Vector3 home;
 
@@ -41,9 +42,15 @@ namespace Tamagoochi
             if (companion == null || pet == null || room == null) return;
             string pose = pet.sleeping ? "asleep" : pet.mood < 40 ? "sad" :
                 Time.unscaledTime < reactionUntil ? reaction : "neutral";
-            var desired = LoadSprite("companions/seedling-" + pose);
-            if (desired != null && companion.sprite != desired)
-                companion.sprite = desired;
+            if (pose != currentPose)
+            {
+                var desired = LoadSprite("companions/seedling-" + pose);
+                if (desired != null)
+                {
+                    companion.sprite = desired;
+                    currentPose = pose;
+                }
+            }
             float x = room.CompanionPlacement().slot switch
             {
                 RoomSlot.Window => -0.6f,

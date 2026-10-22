@@ -41,9 +41,9 @@ These are **targets**, not claims of measured performance. Performance, accessib
 | Milestone | Deliverable | Current state |
 | --- | --- | --- |
 | Foundation | Project layout, pure care/inventory rules, three minigames and room interaction | C# port authored; Unity Editor not yet executed |
-| Continuity | Complete care+workshop snapshot, backup recovery, schema validation and old pet-save import | Code authored; editor/device verification pending |
+| Continuity | Complete care+workshop snapshot, backup recovery, schema validation and old pet-save import | Version-3 state, version-2/1 migration and backup recovery tests authored; editor/device verification pending |
 | Signature look | Production creature rigs/sprites, room scene, animations, UI, sound and interaction FX | Pending |
-| Outdoor loop | Step/activity-backed walks, coarse habitats, discoveries and expedition rewards with no-location path | Pending |
+| Outdoor loop | Step/activity-backed walks, coarse habitats, discoveries and expedition rewards with no-location path | No-GPS offline expeditions, three habitats and short discovery journal authored; real steps, habitats and sensor permission gates pending |
 | Emotional depth | Soulprint, 12 authored evolution forms, memory book, NPC encounter continuity | Pending |
 | Social + platform | Opt-in meetings, safe share cards, notifications/widgets, backup sync | Pending |
 | Release | Unity Editor/CI tests, mobile device QA, store builds, accessibility/security/performance signoffs | Pending |
