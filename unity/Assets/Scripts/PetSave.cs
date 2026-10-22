@@ -21,8 +21,11 @@ namespace Tamagoochi
         public static GameSession LoadFromDirectory(string directory, long now)
         {
             string main = Path.Combine(directory, "game.json");
+            // Prefer committed state, then its backup; recover an interrupted
+            // first commit only when neither committed snapshot is valid.
             if (ReadSnapshot(main, out var session) ||
-                ReadSnapshot(main + ".bak", out session))
+                ReadSnapshot(main + ".bak", out session) ||
+                ReadSnapshot(main + ".tmp", out session))
             {
                 session.Pet.Advance(now);
                 return session;
@@ -101,6 +104,8 @@ namespace Tamagoochi
             try
             {
                 if (!File.Exists(path)) return false;
+                // Limit untrusted/corrupted disk input before materializing JSON.
+                if (new FileInfo(path).Length > 1024 * 1024) return false;
                 return GameSession.TryRestore(
                     JsonUtility.FromJson<GameSnapshot>(File.ReadAllText(path)), out session);
             }
