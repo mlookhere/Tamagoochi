@@ -15,13 +15,23 @@ ART = [
     "companions/action-seedling-clean", "companions/action-seedling-play",
     "world/grove", "world/meadow", "world/pond",
 ]
+def _method_case(index: int, name: str) -> str:
+    suite = "Tamagoochi.Tests." + SUITE_FILES[min(index // 10, len(SUITE_FILES) - 1)]
+    return (f'<test-case name="{name}" classname="{suite}" '
+            f'methodname="{name}" fullname="{suite}.{name}" result="Passed"/>')
+
+
 PASS = (f'<test-run result="Passed" total="{MINIMUM_EDITMODE_CASES}" '
         f'passed="{MINIMUM_EDITMODE_CASES}" failed="0" skipped="0" inconclusive="0">'
         '<test-suite type="Assembly">'
-        + ''.join(f'<test-case name="{name}" result="Passed"/>' for name in METHODS)
+        + ''.join(_method_case(i, name) for i, name in enumerate(METHODS))
         + ''.join(f'<test-case name=\'OriginalSpritesImportCorrectly("{asset}",256)\' '
+                  'classname="Tamagoochi.Tests.ArtImportTests" '
+                  'methodname="OriginalSpritesImportCorrectly" '
+                  f'fullname=\'Tamagoochi.Tests.ArtImportTests.OriginalSpritesImportCorrectly("{asset}",256)\' '
                   'result="Passed"/>' for asset in ART)
         + '</test-suite></test-run>')
+
 FAIL = '<test-run result="Failed" total="3" passed="2" failed="1" skipped="0" inconclusive="0"/>'
 
 
@@ -90,6 +100,32 @@ class NativeEvidenceTests(unittest.TestCase):
 
     def test_non_sentinel_authored_test_cannot_be_substituted(self):
         self.xml.write_text(PASS.replace('name="ExtraMethod0"', 'name="not-authored"'))
+        self.assert_rejected()
+
+    def test_test_method_from_wrong_fixture_fails(self):
+        self.xml.write_text(PASS.replace(
+            'classname="Tamagoochi.Tests.ArtImportTests"',
+            'classname="Tamagoochi.Tests.OtherTests"', 1))
+        self.assert_rejected()
+
+    def test_forged_test_fullname_fails(self):
+        self.xml.write_text(PASS.replace(
+            'fullname="Tamagoochi.Tests.ArtImportTests.',
+            'fullname="Tamagoochi.Tests.OtherTests.', 1))
+        self.assert_rejected()
+
+    def test_sprite_case_from_wrong_fixture_fails(self):
+        self.xml.write_text(PASS.replace(
+            'classname="Tamagoochi.Tests.ArtImportTests" '
+            'methodname="OriginalSpritesImportCorrectly"',
+            'classname="Tamagoochi.Tests.OtherTests" '
+            'methodname="OriginalSpritesImportCorrectly"', 1))
+        self.assert_rejected()
+
+    def test_duplicate_authored_method_between_fixtures_fails(self):
+        second = self.project / "Assets" / "Tests" / "EditMode" / "ExpeditionTests.cs"
+        second.write_text(second.read_text().replace(
+            "public void ExtraMethod10()", "public void ExtraMethod0()"))
         self.assert_rejected()
 
     def test_missing_unity_source_suite_fails(self):
