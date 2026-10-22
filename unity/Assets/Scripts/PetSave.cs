@@ -13,29 +13,33 @@ namespace Tamagoochi
 
     public static class GameStore
     {
-        private static string MainPath => Path.Combine(Application.persistentDataPath, "game.json");
-        private static string BackupPath => MainPath + ".bak";
-        private static string LegacyPath => Path.Combine(Application.persistentDataPath, "pet.json");
         public static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        public static GameSession Load()
+        public static GameSession Load() =>
+            LoadFromDirectory(Application.persistentDataPath, Now());
+
+        public static GameSession LoadFromDirectory(string directory, long now)
         {
-            if (ReadSnapshot(MainPath, out var session) ||
-                ReadSnapshot(BackupPath, out session))
+            string main = Path.Combine(directory, "game.json");
+            if (ReadSnapshot(main, out var session) ||
+                ReadSnapshot(main + ".bak", out session))
             {
-                session.Pet.Advance(Now());
+                session.Pet.Advance(now);
                 return session;
             }
 
-            if (ReadLegacy(out var pet))
+            if (ReadLegacy(Path.Combine(directory, "pet.json"), out var pet))
             {
-                pet.Advance(Now());
-                return GameSession.New(Now(), pet);
+                pet.Advance(now);
+                return GameSession.New(now, pet);
             }
-            return GameSession.New(Now());
+            return GameSession.New(now);
         }
 
-        public static void Save(GameSession session)
+        public static void Save(GameSession session) =>
+            SaveToDirectory(session, Application.persistentDataPath);
+
+        public static void SaveToDirectory(GameSession session, string directory)
         {
             if (session == null) throw new ArgumentNullException(nameof(session));
             var snapshot = session.Capture();
@@ -45,11 +49,13 @@ namespace Tamagoochi
                 return;
             }
 
-            var tempPath = MainPath + ".tmp";
+            string main = Path.Combine(directory, "game.json");
+            string backup = main + ".bak";
+            string temp = main + ".tmp";
             try
             {
-                Directory.CreateDirectory(Application.persistentDataPath);
-                using (var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                Directory.CreateDirectory(directory);
+                using (var stream = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (var writer = new StreamWriter(stream))
                 {
                     writer.Write(JsonUtility.ToJson(snapshot));
@@ -57,23 +63,28 @@ namespace Tamagoochi
                     stream.Flush(true);
                 }
 
-                if (!File.Exists(MainPath))
+                if (!File.Exists(main))
                 {
-                    File.Move(tempPath, MainPath);
+                    File.Move(temp, main);
+                }
+                else if (!ReadSnapshot(main, out _))
+                {
+                    // Preserve a good .bak rather than copying corrupted data over it.
+                    File.Delete(main);
+                    File.Move(temp, main);
                 }
                 else
                 {
                     try
                     {
-                        // On supported filesystems this replace is atomic.
-                        File.Replace(tempPath, MainPath, BackupPath);
+                        File.Replace(temp, main, backup);
                     }
                     catch (PlatformNotSupportedException)
                     {
-                        // Recoverable fallback for mobile filesystems without File.Replace.
-                        File.Copy(MainPath, BackupPath, true);
-                        File.Delete(MainPath);
-                        File.Move(tempPath, MainPath);
+                        // Backup stays readable if the platform lacks atomic replace.
+                        File.Copy(main, backup, true);
+                        File.Delete(main);
+                        File.Move(temp, main);
                     }
                 }
             }
@@ -101,13 +112,13 @@ namespace Tamagoochi
             }
         }
 
-        private static bool ReadLegacy(out Pet pet)
+        private static bool ReadLegacy(string path, out Pet pet)
         {
             pet = null;
             try
             {
-                if (!File.Exists(LegacyPath)) return false;
-                var save = JsonUtility.FromJson<LegacyPetSave>(File.ReadAllText(LegacyPath));
+                if (!File.Exists(path)) return false;
+                var save = JsonUtility.FromJson<LegacyPetSave>(File.ReadAllText(path));
                 if (save == null || save.version != 1 || !GameSession.IsValidPet(save.pet))
                     return false;
                 pet = save.pet;
