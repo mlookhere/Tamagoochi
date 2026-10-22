@@ -5,11 +5,14 @@ import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from ci.verify_unity_native import REQUIRED_TESTS, validate
+from ci.verify_unity_native import MINIMUM_EDITMODE_CASES, REQUIRED_TESTS, validate
 
-PASS = ('<test-run result="Passed" total="6" passed="6" failed="0" skipped="0" inconclusive="0">'
+PASS = (f'<test-run result="Passed" total="{MINIMUM_EDITMODE_CASES}" '
+        f'passed="{MINIMUM_EDITMODE_CASES}" failed="0" skipped="0" inconclusive="0">'
         '<test-suite type="Assembly">'
         + ''.join(f'<test-case name="{name}" result="Passed"/>' for name in sorted(REQUIRED_TESTS))
+        + ''.join(f'<test-case name="additional-{i}" result="Passed"/>'
+                  for i in range(MINIMUM_EDITMODE_CASES - len(REQUIRED_TESTS)))
         + '</test-suite></test-run>')
 FAIL = '<test-run result="Failed" total="3" passed="2" failed="1" skipped="0" inconclusive="0"/>'
 
@@ -45,7 +48,7 @@ class NativeEvidenceTests(unittest.TestCase):
         self.assert_rejected()
 
     def test_zero_tests_fails(self):
-        self.xml.write_text(PASS.replace('total="6" passed="6"', 'total="0" passed="0"'))
+        self.xml.write_text(PASS.replace('total="73" passed="73"', 'total="0" passed="0"'))
         self.assert_rejected()
 
     def test_root_only_passing_counters_fail(self):
@@ -60,6 +63,14 @@ class NativeEvidenceTests(unittest.TestCase):
                 self.xml.write_text(xml)
                 self.assert_rejected()
 
+    def test_only_six_sentinels_cannot_pass_minimum_coverage(self):
+        cases = ''.join(f'<test-case name="{name}" result="Passed"/>'
+                        for name in sorted(REQUIRED_TESTS))
+        self.xml.write_text('<test-run result="Passed" total="6" passed="6" '
+                            'failed="0" skipped="0" inconclusive="0">'
+                            f'{cases}</test-run>')
+        self.assert_rejected()
+
     def test_filtered_suite_is_rejected_even_if_root_counts_pass(self):
         excluded = sorted(REQUIRED_TESTS)[0]
         missing = f'<test-case name="{excluded}" result="Passed"/>'
@@ -67,7 +78,7 @@ class NativeEvidenceTests(unittest.TestCase):
         self.assert_rejected()
 
     def test_failed_and_partial_tests_fail(self):
-        for xml in [FAIL, PASS.replace('passed="6"', 'passed="5"'),
+        for xml in [FAIL, PASS.replace('passed="73"', 'passed="72"'),
                     PASS.replace('result="Passed"', 'result="Skipped"'),
                     PASS.replace('skipped="0"', 'skipped="1"')]:
             with self.subTest(xml=xml):
@@ -85,7 +96,7 @@ class NativeEvidenceTests(unittest.TestCase):
     def test_wrong_root_or_missing_nunit_counters_fail(self):
         for xml in ['<testsuite tests="3"/>',
                     PASS.replace(' failed="0"', ''),
-                    PASS.replace(' passed="6"', '')]:
+                    PASS.replace(' passed="73"', '')]:
             with self.subTest(xml=xml):
                 self.xml.write_text(xml)
                 self.assert_rejected()

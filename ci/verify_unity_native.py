@@ -7,6 +7,7 @@ import zipfile
 from pathlib import Path
 
 EDITOR_VERSION = "6000.0.62f1"
+MINIMUM_EDITMODE_CASES = 73  # 62 [Test] + 11 [TestCase] cases in the six migration suites.
 REQUIRED_TESTS = frozenset({
     "GeneratedUiFilesLiveInsideTheSelectedUnityProject",
     "ExpeditionFinishesAcrossOfflineTimeWithoutBackgroundTimers",
@@ -27,7 +28,7 @@ def _passing_nunit_report(path: Path) -> bool:
         raise ValueError(f"Unity EditMode tests did not fully pass: {path}")
     total = int(attrs.get("total", "0"))
     passed = int(attrs.get("passed", "-1"))
-    if total <= 0 or passed != total:
+    if total < MINIMUM_EDITMODE_CASES or passed != total:
         raise ValueError(f"Unity EditMode test count mismatch: {path}")
     cases = root.findall(".//test-case")
     if len(cases) != total or any(case.get("result") != "Passed" for case in cases):
