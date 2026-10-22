@@ -41,6 +41,7 @@ namespace Tamagoochi
         private Label title;
         private Label notice;
         private long shownMinute = -1;
+        private int contentRefreshVersion;
         private string message = "Welcome home";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -186,6 +187,7 @@ namespace Tamagoochi
         {
             if (page == null || session == null) return;
             var previousScroll = contentScroll.scrollOffset;
+            int refreshVersion = ++contentRefreshVersion;
             title.text = $"{pet.name} · Day {pet.AgeDays(GameStore.Now())}";
             for (int i = 0; i < navigationButtons.Length; i++)
                 navigationButtons[i].style.backgroundColor = i == tab
@@ -203,7 +205,11 @@ namespace Tamagoochi
             }
             notice.text = message;
             // Rebuilding cards should not jump the player's reading position.
-            contentScroll.schedule.Execute(() => contentScroll.scrollOffset = previousScroll);
+            contentScroll.schedule.Execute(() =>
+            {
+                if (refreshVersion == contentRefreshVersion)
+                    contentScroll.scrollOffset = previousScroll;
+            });
         }
 
         private void Care()
