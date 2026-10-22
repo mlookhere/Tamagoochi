@@ -32,7 +32,8 @@ Use the pinned Unity 6 editor and installed Android/iOS build modules. The scene
 
 ```bash
 Unity -batchmode -nographics -projectPath unity -quit -executeMethod Tamagoochi.Editor.HomeSceneSetup.VerifyEditorSetup -logFile unity-editor.log
-Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults unity-tests.xml -quit -logFile unity-tests.log
+Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults unity-tests.xml -logFile unity-tests.log
+python3 -c 'import xml.etree.ElementTree as ET; r=ET.parse("unity-tests.xml").getroot(); a=r.attrib; assert r.tag=="test-run" and a.get("result")=="Passed" and int(a.get("total",0))>0 and int(a.get("passed",-1))==int(a["total"]) and int(a.get("failed",-1))==0'
 Unity -batchmode -nographics -projectPath unity -quit -executeMethod Tamagoochi.Editor.HomeSceneSetup.BuildAndroidDevelopment -logFile unity-android.log
 ```
 
