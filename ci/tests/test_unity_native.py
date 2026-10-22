@@ -124,8 +124,10 @@ class NativeEvidenceTests(unittest.TestCase):
 
     def test_duplicate_authored_method_between_fixtures_fails(self):
         second = self.project / "Assets" / "Tests" / "EditMode" / "ExpeditionTests.cs"
-        second.write_text(second.read_text().replace(
-            "public void ExtraMethod10()", "public void ExtraMethod0()"))
+        source = second.read_text()
+        prior = f"public void {METHODS[10]}()"
+        self.assertIn(prior, source)
+        second.write_text(source.replace(prior, f"public void {METHODS[0]}()"))
         self.assert_rejected()
 
     def test_missing_unity_source_suite_fails(self):
