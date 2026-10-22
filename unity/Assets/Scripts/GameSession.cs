@@ -50,8 +50,8 @@ namespace Tamagoochi
         }
 
         public static GameSession New(long now, Pet existingPet = null) =>
-            new(existingPet ?? Pet.Create(now), Inventory.Starter(), new Room(),
-                new WorkshopBond(), new ForestEcho(), new StoneSkip(), new MeadowPairs());
+            new(existingPet ?? Tamagoochi.Pet.Create(now), Tamagoochi.Inventory.Starter(), new Tamagoochi.Room(),
+                new Tamagoochi.WorkshopBond(), new Tamagoochi.ForestEcho(), new Tamagoochi.StoneSkip(), new Tamagoochi.MeadowPairs());
 
         public GameSnapshot Capture() => new()
         {
@@ -97,14 +97,14 @@ namespace Tamagoochi
                 return false;
             try
             {
-                var inventory = Inventory.Restore(snapshot.items);
-                var room = Room.Restore(snapshot.room);
-                var bond = WorkshopBond.Restore(snapshot.completed, snapshot.bond,
+                var inventory = Tamagoochi.Inventory.Restore(snapshot.items);
+                var room = Tamagoochi.Room.Restore(snapshot.room);
+                var bond = Tamagoochi.WorkshopBond.Restore(snapshot.completed, snapshot.bond,
                     snapshot.curiosity, snapshot.courage, snapshot.focus, snapshot.snackShared);
-                var echo = ForestEcho.Restore(snapshot.echoRound, snapshot.echoProgress);
-                var skip = StoneSkip.Restore(snapshot.skipRound, snapshot.skipDistance,
+                var echo = Tamagoochi.ForestEcho.Restore(snapshot.echoRound, snapshot.echoProgress);
+                var skip = Tamagoochi.StoneSkip.Restore(snapshot.skipRound, snapshot.skipDistance,
                     snapshot.skipHops);
-                var pairs = MeadowPairs.Restore(snapshot.pairsRound, snapshot.pairsMatched,
+                var pairs = Tamagoochi.MeadowPairs.Restore(snapshot.pairsRound, snapshot.pairsMatched,
                     snapshot.pairsRevealed);
                 session = new GameSession(snapshot.pet, inventory, room, bond, echo, skip, pairs);
                 return true;

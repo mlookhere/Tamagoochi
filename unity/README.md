@@ -1,28 +1,23 @@
 # Tamagoochi — Unity 6 conversion
 
-The Unity project root is **unity/**, not the Git repository root. Editor version: **6000.0.62f1** (pinned so builds are reproducible). The historical Expo implementation remains as the source of truth for rules not yet migrated.
+Open **unity/** (not the repository root) in Unity Hub. Pinned editor: **Unity 6 6000.0.62f1**.
 
-## Open and play
+## First run
 
-1. Add `unity/` to Unity Hub and open it with the pinned Unity 6 editor.
-2. From the Unity menu select **Tamagoochi → Create or Open Home Scene**. This generates `Assets/Scenes/Home.unity` and registers it in the active Build Profile/Build Settings scene list. Commit the generated scene after validating it in the editor.
-3. Press Play. Use the Care, Workshop, Games and Room tabs.
-4. Run EditMode tests through **Window → General → Test Runner**. Unity's editor compilation and player builds **have not been run** in this repository's existing CI.
+1. Open the project, let the Unity Package Manager import packages, and fix any project-specific compilation errors before committing a scene.
+2. Select **Tamagoochi → Create or Open Home Scene** to generate `Assets/Scenes/Home.unity` and register it in the enabled scene list.
+3. Press Play. The current editor **prototype** provides Care, Workshop, Games and Room. All three original minigames are ported.
+4. Run NUnit EditMode tests from **Window → General → Test Runner**. These tests are committed but **have not been executed in Unity**. No Unity player build has yet been verified.
 
-## Ported gameplay
+## Current capabilities
 
-- Pet care, sleep, age and deterministic offline progression (24-hour capped need decay), matching the existing Item 3 rules.
-- Nine bounded inventory items, five atomic craft recipes, three room decoration slots, transfer-safe placement/pickup.
-- Companion reacts to favorite/wary/neutral objects; favorite preference takes priority.
-- Three original minigames: Forest Echo, Stone Skip, Meadow Pairs. Replays are optional and penalty-free.
-- Workshop bond ledger: first completion of each minigame gives +8 bond and the associated personality trait; sharing a snack costs one item and gives a +4 bonus only once.
-- First-pass pet-only local save, an editor scene setup command, and NUnit editor tests.
+- Non-punitive offline care simulation, age, sleep, bounded inventory, five recipes and safe room placement.
+- Three deterministic minigames, pet room affinities, optional one-time bond rewards and snack sharing.
+- A version-2 complete care/workshop save containing inventory, room, bond ledger and all minigame progress; validation rejects inconsistent state. The previous save is retained as a backup on replacement. Version-1 pet-only saves can be imported as a fresh workshop.
+- Unity scene setup menu and focused state parity tests.
 
-## Remaining before replacing Expo
+## Production gaps
 
-- This is a **functional migration harness**, not the finished art-directed Unity game. The interface uses IMGUI and there are no finished scenes, character assets, touch accessibility tests, or Android/iOS build proofs yet.
-- The saved file currently persists the **pet only**, not inventory, rooms, minigame state, or workshop bond. Do not treat it as a final save or migration path.
-- Robust versioned save migrations, backup/corruption recovery, native UI, visuals, evolution, memories, exploration, social sharing, platform services, sound and release gates remain pending.
-- Existing Expo draft PRs #20, #23 and #24 are untouched. Do not merge this Unity draft until engine-native verification and gameplay parity are proven.
+The rendered user interface is temporary IMGUI. Finished character/environment art, motion, mobile-native input/UI, sound, outdoor loop, accessibility, profiling and Unity-native CI are **not implemented or verified**. See [Unity quality bar](../docs/UNITY_GAME_QUALITY.md). The Expo PRs remain unmerged source references.
 
-Track work in [Issue #31](https://github.com/mlookhere/Tamagoochi/issues/31).
+**Do not merge the migration on Expo-only checks.** Unity editor/test runner, game save/device recovery tests, Android/iOS builds and actual device QA are separate requirements.
