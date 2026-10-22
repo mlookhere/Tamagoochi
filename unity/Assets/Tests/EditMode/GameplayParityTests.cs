@@ -9,8 +9,9 @@ namespace Tamagoochi.Tests
         {
             var game = new StoneSkip();
             Assert.AreEqual(6, game.Target);
-            Assert.AreEqual(SkipResult.Miss, game.Preview(1));
+            Assert.AreEqual(SkipResult.Progress, game.Preview(1));
             Assert.AreEqual(0, game.Hops);
+            Assert.AreEqual(SkipResult.Progress, game.Choose(1));
             Assert.AreEqual(SkipResult.Miss, game.Choose(1));
             Assert.AreEqual(0, game.Distance);
             Assert.AreEqual(SkipResult.Progress, game.Choose(2));
