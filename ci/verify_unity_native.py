@@ -14,7 +14,7 @@ SUITE_FILES = (
     "GameStoreTests", "GameplayParityTests", "PetAndInventoryTests",
 )
 DIRECT_TEST = re.compile(r"(?m)^[ \t]*\[Test\][ \t]*\r?\n[ \t]*public void ([A-Za-z]\w*)\(")
-ART_CASE = re.compile(r'(?m)^[ \t]*\[TestCase\("([^"]+)"')
+ART_CASE = re.compile(r'(?m)^[ \t]*\[TestCase\("([^"]+)",\s*(\d+)\)\]')
 REQUIRED_TESTS = frozenset({
     "GeneratedUiFilesLiveInsideTheSelectedUnityProject",
     "ExpeditionFinishesAcrossOfflineTimeWithoutBackgroundTimers",
@@ -56,10 +56,12 @@ def _matches_authored_suites(cases: list, methods: dict, assets: list) -> bool:
     if any((suite, method, f"{suite}.{method}") not in actual
            for method, suite in methods.items()):
         return False
+    suite = "Tamagoochi.Tests.ArtImportTests.OriginalSpritesImportCorrectly"
     return all(sum(case.get("classname") == "Tamagoochi.Tests.ArtImportTests" and
                    case.get("methodname") == "OriginalSpritesImportCorrectly" and
-                   asset in (case.get("name") or "")
-                   for case in cases) == 1 for asset in assets)
+                   case.get("name") == f'OriginalSpritesImportCorrectly("{asset}",{size})' and
+                   case.get("fullname") == f'{suite}("{asset}",{size})'
+                   for case in cases) == 1 for asset, size in assets)
 
 
 def _passing_nunit_report(path: Path, methods: set, art: list) -> bool:
