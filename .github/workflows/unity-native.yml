@@ -1,0 +1,80 @@
+name: Unity native validation (licensed; manually gated)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unity-native-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  unity-native:
+    name: Unity EditMode and Android evidence
+    runs-on: ubuntu-latest
+    environment: unity-native
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify trusted ref, project, and activation
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$GITHUB_REF" in
+            refs/heads/work/31-unity6-migration|refs/heads/dev) ;;
+            *) echo "Native validation requires a reviewed migration or integration ref" >&2; exit 1 ;;
+          esac
+          grep -qx 'm_EditorVersion: 6000.0.62f1' unity/ProjectSettings/ProjectVersion.txt
+          if [[ -z "$UNITY_LICENSE" || -z "$UNITY_EMAIL" || -z "$UNITY_PASSWORD" ]]; then
+            echo "Unity activation unavailable: configure protected unity-native environment secrets" >&2
+            exit 1
+          fi
+
+      - name: Build and verify Android player via pinned Unity
+        uses: game-ci/unity-builder@4423ee75828dff56037d1d1cfdac6b68e3a6ba00 # v4.8.2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity
+          unityVersion: 6000.0.62f1
+          targetPlatform: Android
+          buildMethod: Tamagoochi.Editor.HomeSceneSetup.BuildAndroidDevelopment
+          buildsPath: unity/Builds
+
+      - name: Run actual Unity EditMode tests
+        uses: game-ci/unity-test-runner@32e57712352b500e17974b245a6dce9e11a73213 # v4.4.0
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity
+          unityVersion: 6000.0.62f1
+          testMode: EditMode
+          artifactsPath: unity-test-results
+          coverageEnabled: false
+
+      - name: Reject missing/failed NUnit reports or Android APK
+        run: python3 ci/verify_unity_native.py --project unity --tests unity-test-results --apk unity/Builds/Tamagoochi.apk
+
+      - name: Preserve Unity build and test evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: unity-native-${{ github.run_id }}
+          path: |
+            unity-test-results/
+            unity/Builds/
+          if-no-files-found: warn
+          retention-days: 14
