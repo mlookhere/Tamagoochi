@@ -217,6 +217,9 @@ namespace Tamagoochi.Tests
             data.completed = 1;
             data.journal = new[] { new DiscoveryRecord { habitat = 99 } };
             Assert.Throws<System.ArgumentException>(() => Expeditions.Restore(data));
+            data = new Expeditions().Snapshot();
+            data.completed = Expeditions.MaxCompleted;
+            Assert.IsFalse(Expeditions.Restore(data).Start(Habitat.Grove, 0));
         }
     }
 }

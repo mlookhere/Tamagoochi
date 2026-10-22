@@ -30,6 +30,7 @@ namespace Tamagoochi
     {
         public const long DurationMilliseconds = 10 * 60 * 1000;
         public const int JournalLimit = 24;
+        public const int MaxCompleted = 1000000;
         private static readonly string[][] Finds =
         {
             new[] { "Singing Leaf", "Amber Bark", "Glimmer Seed" },
@@ -64,7 +65,7 @@ namespace Tamagoochi
                 throw new ArgumentOutOfRangeException(nameof(habitat));
             if (now < 0 || now > long.MaxValue - DurationMilliseconds)
                 throw new ArgumentOutOfRangeException(nameof(now));
-            if (IsExploring) return false;
+            if (IsExploring || completed >= MaxCompleted) return false;
             active = habitat;
             startedAt = now;
             readyAt = now + DurationMilliseconds;
@@ -140,7 +141,7 @@ namespace Tamagoochi
 
         public static Expeditions Restore(ExpeditionSave save)
         {
-            if (save == null || save.completed < 0 || save.completed > 1000000 ||
+            if (save == null || save.completed < 0 || save.completed > MaxCompleted ||
                 save.journal == null || save.journal.Length > JournalLimit ||
                 save.completed < save.journal.Length)
                 throw new ArgumentException("Invalid expedition history");
