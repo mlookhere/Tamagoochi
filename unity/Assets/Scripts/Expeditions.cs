@@ -148,7 +148,7 @@ namespace Tamagoochi
             bool exploring = save.activeHabitat >= 0 && save.activeHabitat <= 2;
             if (!exploring && save.activeHabitat != -1)
                 throw new ArgumentException("Invalid expedition habitat");
-            if (exploring && (save.startedAt < 0 ||
+            if (exploring && (save.completed == MaxCompleted || save.startedAt < 0 ||
                 save.readyAt < save.startedAt ||
                 save.readyAt - save.startedAt != DurationMilliseconds))
                 throw new ArgumentException("Invalid expedition timer");
