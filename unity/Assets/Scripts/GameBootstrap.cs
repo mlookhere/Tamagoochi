@@ -32,8 +32,6 @@ namespace Tamagoochi
         private int gameTab;
         private bool reducedMotion;
         private UIDocument document;
-        private PanelSettings panel;
-        private ThemeStyleSheet theme;
         private VisualElement header;
         private VisualElement sheet;
         private VisualElement page;
@@ -93,14 +91,12 @@ namespace Tamagoochi
         {
             document = GetComponent<UIDocument>() ?? gameObject.AddComponent<UIDocument>();
             if (document.panelSettings == null)
+                document.panelSettings = Resources.Load<PanelSettings>("TamagoochiPanel");
+            if (document.panelSettings == null || document.panelSettings.themeStyleSheet == null)
             {
-                // Fallback for temporary scenes. The authored Home scene uses an Editor asset.
-                panel = ScriptableObject.CreateInstance<PanelSettings>();
-                panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
-                panel.referenceResolution = new Vector2Int(430, 932);
-                theme = ScriptableObject.CreateInstance<ThemeStyleSheet>();
-                panel.themeStyleSheet = theme;
-                document.panelSettings = panel;
+                Debug.LogError("Tamagoochi UI theme/panel missing. Run Tamagoochi > Create or Open Home Scene in Unity Editor.");
+                enabled = false;
+                return;
             }
             VisualElement root = document.rootVisualElement;
             root.style.flexGrow = 1;
@@ -162,12 +158,6 @@ namespace Tamagoochi
             header.style.left = 14 + safe.xMin * factor;
             header.style.right = 14 + (Screen.width - safe.xMax) * factor;
             sheet.style.bottom = safe.yMin * factor;
-        }
-
-        private void OnDestroy()
-        {
-            if (panel != null) Destroy(panel);
-            if (theme != null) Destroy(theme);
         }
 
         private void Refresh()

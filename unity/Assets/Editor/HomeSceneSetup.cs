@@ -12,7 +12,9 @@ namespace Tamagoochi.Editor
     public static class HomeSceneSetup
     {
         private const string ScenePath = "Assets/Scenes/Home.unity";
-        private const string PanelPath = "Assets/TamagoochiPanel.asset";
+        private const string PanelPath = "Assets/Resources/TamagoochiPanel.asset";
+        private const string LegacyPanelPath = "Assets/TamagoochiPanel.asset";
+        private const string ThemePath = "Assets/Resources/TamagoochiTheme.tss";
 
         [MenuItem("Tamagoochi/Create or Open Home Scene")]
         public static void CreateOrOpen()
@@ -37,16 +39,33 @@ namespace Tamagoochi.Editor
 
         private static PanelSettings EnsurePanel()
         {
-            var existing = AssetDatabase.LoadAssetAtPath<PanelSettings>(PanelPath);
-            if (existing != null) return existing;
+            Directory.CreateDirectory("Assets/Resources");
+            if (!File.Exists(ThemePath))
+                File.WriteAllText(ThemePath, "@import url(\"unity-theme://default\");\\n".Replace("\\n", "\n"));
+            AssetDatabase.ImportAsset(ThemePath, ImportAssetOptions.ForceSynchronousImport);
+            var theme = AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>(ThemePath);
+            if (theme == null)
+                throw new InvalidOperationException("Unity default UI Toolkit runtime theme could not import");
 
-            var settings = ScriptableObject.CreateInstance<PanelSettings>();
+            var settings = AssetDatabase.LoadAssetAtPath<PanelSettings>(PanelPath);
+            if (settings == null)
+            {
+                if (File.Exists(LegacyPanelPath))
+                {
+                    string error = AssetDatabase.MoveAsset(LegacyPanelPath, PanelPath);
+                    if (!string.IsNullOrEmpty(error))
+                        throw new InvalidOperationException("Unable to migrate old UI panel: " + error);
+                    settings = AssetDatabase.LoadAssetAtPath<PanelSettings>(PanelPath);
+                }
+                if (settings == null)
+                {
+                    settings = ScriptableObject.CreateInstance<PanelSettings>();
+                    AssetDatabase.CreateAsset(settings, PanelPath);
+                }
+            }
+
             settings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
             settings.referenceResolution = new Vector2Int(430, 932);
-            AssetDatabase.CreateAsset(settings, PanelPath);
-            var theme = ScriptableObject.CreateInstance<ThemeStyleSheet>();
-            theme.name = "TamagoochiTheme";
-            AssetDatabase.AddObjectToAsset(theme, settings);
             settings.themeStyleSheet = theme;
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
@@ -60,7 +79,9 @@ namespace Tamagoochi.Editor
             var document = UnityEngine.Object.FindFirstObjectByType<UIDocument>();
             if (document == null || document.panelSettings == null ||
                 EditorBuildSettings.scenes.Length != 1 ||
-                !EditorBuildSettings.scenes[0].enabled || !File.Exists(ScenePath))
+                !EditorBuildSettings.scenes[0].enabled || !File.Exists(ScenePath) ||
+                document.panelSettings.themeStyleSheet == null ||
+                AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>(ThemePath) == null)
                 throw new InvalidOperationException("Unity Home scene or UI panel verification failed");
             Debug.Log("Unity Home scene and UI panel verification succeeded.");
         }

@@ -1,11 +1,26 @@
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Tamagoochi.Tests
 {
     public sealed class ArtImportTests
     {
+        [Test]
+        public void RuntimePanelHasImportedDefaultTheme()
+        {
+            // Native validation runs HomeSceneSetup.VerifyEditorSetup before EditMode tests.
+            var panel = AssetDatabase.LoadAssetAtPath<PanelSettings>(
+                "Assets/Resources/TamagoochiPanel.asset");
+            var theme = AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>(
+                "Assets/Resources/TamagoochiTheme.tss");
+            Assert.IsNotNull(panel, "Run the Unity scene setup batchmode gate first");
+            Assert.IsNotNull(theme, "Default runtime theme must import correctly");
+            Assert.AreSame(theme, panel.themeStyleSheet);
+            Assert.AreSame(panel, Resources.Load<PanelSettings>("TamagoochiPanel"));
+        }
+
         [TestCase("companions/seedling-neutral", 256)]
         [TestCase("companions/seedling-joyful", 256)]
         [TestCase("companions/seedling-sad", 256)]
