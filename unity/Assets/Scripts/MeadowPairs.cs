@@ -23,6 +23,20 @@ namespace Tamagoochi
         public IReadOnlyList<int> Revealed => revealed.AsReadOnly();
         public EchoSymbol[] Board => (EchoSymbol[])Boards[Round % Boards.Length].Clone();
 
+        public int[] MatchedSnapshot() => matched.ToArray();
+        public int[] RevealedSnapshot() => revealed.ToArray();
+
+        public static MeadowPairs Restore(int round, int[] matches, int[] faces)
+        {
+            if (round < 0 || round > 1000000 || matches == null || faces == null)
+                throw new ArgumentException("Invalid Meadow Pairs state");
+            var game = new MeadowPairs { Round = round };
+            game.matched.AddRange(matches);
+            game.revealed.AddRange(faces);
+            game.Validate();
+            return game;
+        }
+
         public PairResult Choose(int card)
         {
             if (card < 0 || card >= 6) throw new ArgumentOutOfRangeException(nameof(card));

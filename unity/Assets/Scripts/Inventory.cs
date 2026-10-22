@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace Tamagoochi
 {
@@ -27,6 +26,22 @@ namespace Tamagoochi
         }
 
         public int Count(ItemId item) => counts[CheckedIndex(item)];
+
+        public int[] Snapshot() => (int[])counts.Clone();
+
+        public static Inventory Restore(int[] values)
+        {
+            if (values == null || values.Length != Limits.Length)
+                throw new ArgumentException("Invalid inventory dimensions");
+            var bag = new Inventory();
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (values[i] < 0 || values[i] > Limits[i])
+                    throw new ArgumentException("Invalid inventory count");
+                bag.counts[i] = values[i];
+            }
+            return bag;
+        }
 
         public bool Give(ItemId item, int quantity = 1)
         {

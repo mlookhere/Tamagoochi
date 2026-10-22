@@ -13,6 +13,20 @@ namespace Tamagoochi
         public int Hops { get; private set; }
         public int Target => Targets[Round % Targets.Length];
 
+        public static StoneSkip Restore(int round, int distance, int hops)
+        {
+            if (round < 0 || round > 1000000 || hops < 0 || hops > 2)
+                throw new ArgumentException("Invalid Stone Skip progress");
+            int target = Targets[round % Targets.Length];
+            int remainingHops = 3 - hops;
+            if ((hops == 0 && distance != 0) ||
+                (hops > 0 && (distance < hops || distance > hops * 3 ||
+                 target - distance < remainingHops ||
+                 target - distance > remainingHops * 3)))
+                throw new ArgumentException("Unreachable Stone Skip progress");
+            return new StoneSkip { Round = round, Distance = distance, Hops = hops };
+        }
+
         public SkipResult Preview(int hop) => Evaluate(hop, false);
 
         public SkipResult Choose(int hop) => Evaluate(hop, true);

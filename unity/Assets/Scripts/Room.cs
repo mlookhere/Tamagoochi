@@ -10,6 +10,29 @@ namespace Tamagoochi
         private readonly ItemId?[] slots = new ItemId?[3];
         public ItemId? At(RoomSlot slot) => slots[CheckedSlot(slot)];
 
+        public int[] Snapshot()
+        {
+            var result = new int[slots.Length];
+            for (int i = 0; i < result.Length; i++)
+                result[i] = slots[i].HasValue ? (int)slots[i].Value : -1;
+            return result;
+        }
+
+        public static Room Restore(int[] values)
+        {
+            if (values == null || values.Length != 3)
+                throw new ArgumentException("Invalid room dimensions");
+            var room = new Room();
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (values[i] == -1) continue;
+                var item = (ItemId)values[i];
+                if (!IsRoomItem(item)) throw new ArgumentException("Invalid room decoration");
+                room.slots[i] = item;
+            }
+            return room;
+        }
+
         public bool Place(Inventory inventory, RoomSlot slot, ItemId item)
         {
             int index = CheckedSlot(slot);

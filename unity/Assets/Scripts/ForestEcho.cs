@@ -19,6 +19,13 @@ namespace Tamagoochi
         public int Progress { get; private set; }
         public EchoSymbol[] Pattern => (EchoSymbol[])Patterns[Round % Patterns.Length].Clone();
 
+        public static ForestEcho Restore(int round, int progress)
+        {
+            if (round < 0 || round > 1000000 || progress < 0 || progress >= 3)
+                throw new ArgumentException("Invalid Forest Echo progress");
+            return new ForestEcho { Round = round, Progress = progress };
+        }
+
         public EchoResult Choose(EchoSymbol symbol)
         {
             if (!Enum.IsDefined(typeof(EchoSymbol), symbol))
