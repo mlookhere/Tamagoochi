@@ -32,6 +32,7 @@ namespace Tamagoochi
         private int gameTab;
         private bool reducedMotion;
         private bool showAllDiscoveries;
+        private bool confirmExpeditionReturn;
         private UIDocument document;
         private VisualElement header;
         private VisualElement sheet;
@@ -401,7 +402,10 @@ namespace Tamagoochi
                     HabitatAction(habitat, () =>
                     {
                         if (expeditions.Start(target, GameStore.Now()))
+                        {
+                            confirmExpeditionReturn = false;
                             Commit($"{pet.name} is exploring the {target}!");
+                        }
                     });
                 }
             }
@@ -421,6 +425,7 @@ namespace Tamagoochi
                         var result = expeditions.Claim(GameStore.Now(), inventory);
                         if (result == ExpeditionClaim.Claimed)
                         {
+                            confirmExpeditionReturn = false;
                             stage.React("joyful");
                             Remember(habitat switch
                             {
@@ -435,6 +440,31 @@ namespace Tamagoochi
                             ExpeditionClaim.BasketFull => "Basket full. Your discovery will wait.",
                             _ => "Still exploring."
                         });
+                    });
+                }
+                if (confirmExpeditionReturn)
+                {
+                    Line("Returning early ends this trip without a discovery. Your earlier finds are safe.");
+                    Add("Keep exploring", () =>
+                    {
+                        confirmExpeditionReturn = false;
+                        Refresh();
+                    });
+                    Add("Confirm return without reward", () =>
+                    {
+                        if (expeditions.Cancel())
+                        {
+                            confirmExpeditionReturn = false;
+                            Commit($"{pet.name} is home again. You can explore anytime.");
+                        }
+                    });
+                }
+                else
+                {
+                    Add("Return home early", () =>
+                    {
+                        confirmExpeditionReturn = true;
+                        Refresh();
                     });
                 }
             }

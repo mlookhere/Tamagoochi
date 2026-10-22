@@ -63,6 +63,17 @@ namespace Tamagoochi
             return true;
         }
 
+        // Explicitly end an unfinished trip without claiming materials or a find.
+        // The accumulated journal, memories and completed-trip count survive.
+        public bool Cancel()
+        {
+            if (!active.HasValue) return false;
+            active = null;
+            startedAt = 0;
+            readyAt = 0;
+            return true;
+        }
+
         public long Remaining(long now) =>
             IsExploring ? Math.Max(0, readyAt - Math.Max(0, now)) : 0;
 

@@ -40,6 +40,47 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void EarlyReturnIsExplicitIdempotentAndNeverGrantsRewards()
+        {
+            var game = new Expeditions();
+            var bag = Inventory.Starter();
+            int original = bag.Count(ItemId.WildBerry);
+            Assert.IsFalse(game.Cancel());
+            Assert.IsTrue(game.Start(Habitat.Grove, 0));
+            Assert.IsTrue(game.Cancel());
+            Assert.IsFalse(game.Cancel());
+            Assert.IsFalse(game.IsExploring);
+            Assert.AreEqual(0, game.ReadyAt);
+            Assert.AreEqual(0, game.Completed);
+            Assert.AreEqual(0, game.Journal.Count);
+            Assert.AreEqual(original, bag.Count(ItemId.WildBerry));
+            Assert.AreEqual(ExpeditionClaim.NotExploring,
+                game.Claim(Expeditions.DurationMilliseconds, bag));
+            Assert.IsTrue(game.Start(Habitat.Meadow, 0));
+            Assert.DoesNotThrow(() => Expeditions.Restore(game.Snapshot()));
+        }
+
+        [Test]
+        public void EarlyReturnAfterCompletedTripPreservesJournalAndClaimSafety()
+        {
+            var game = new Expeditions();
+            var bag = Inventory.Starter();
+            Assert.IsTrue(game.Start(Habitat.Pond, 0));
+            Assert.AreEqual(ExpeditionClaim.Claimed,
+                game.Claim(Expeditions.DurationMilliseconds, bag));
+            int stones = bag.Count(ItemId.RiverStone);
+            Assert.IsTrue(game.Start(Habitat.Grove, Expeditions.DurationMilliseconds));
+            Assert.IsTrue(game.Cancel());
+            var restored = Expeditions.Restore(game.Snapshot());
+            Assert.AreEqual(1, restored.Completed);
+            Assert.AreEqual("River Pearl", restored.LatestDiscovery());
+            Assert.AreEqual(1, restored.Journal.Count);
+            Assert.AreEqual(stones, bag.Count(ItemId.RiverStone));
+            Assert.AreEqual(ExpeditionClaim.NotExploring,
+                restored.Claim(2 * Expeditions.DurationMilliseconds, bag));
+        }
+
+        [Test]
         public void RoundTripPreservesTimerAndJournal()
         {
             var game = new Expeditions();

@@ -65,3 +65,7 @@ The retained-mode Unity UI now uses two rows of three tabs rather than six compr
 ### Care readability slice
 
 The six pet stats are now presented as two compact three-column rows of proportional meters with always-visible numeric labels, retaining exact values without relying on color alone. This is **authored retained-mode UI only**: inspect the bars for overflow at 320-point portrait widths, large accessibility text, and non-default font locales in Unity Editor and on Android/iOS before declaring acceptance. Care actions remain directly beneath the stat rows; avoid hiding interactions behind lengthy progression descriptions.
+
+### Manual expedition return
+
+An optional two-step “return home early” control is now authored in Explore, including a clear no-reward warning and a non-destructive “keep exploring” escape. The offline domain resets only the active trip timer; claimed materials, discovery journal, completed count, and memories are retained, with idempotency and no-extra-reward regression tests. This is particularly important for mistaken habitat selections and device-clock changes. As elsewhere, the interaction and EditMode tests remain **unverified on Unity devices and runners**.
