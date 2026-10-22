@@ -44,8 +44,12 @@ These are **targets**, not claims of measured performance. Performance, accessib
 | Continuity | Complete care+workshop snapshot, backup recovery, schema validation and old pet-save import | Version-3 state, version-2/1 migration and backup recovery tests authored; editor/device verification pending |
 | Signature look | Production creature rigs/sprites, room scene, animations, UI, sound and interaction FX | Pending |
 | Outdoor loop | Step/activity-backed walks, coarse habitats, discoveries and expedition rewards with no-location path | No-GPS offline expeditions, three habitats and short discovery journal authored; real steps, habitats and sensor permission gates pending |
-| Emotional depth | Soulprint, 12 authored evolution forms, memory book, NPC encounter continuity | Early reversible Soulprint nature derived from care, games and expedition history; 12 forms, memories, NPC continuity still pending |
+| Emotional depth | Soulprint, 12 authored evolution forms, memory book, NPC encounter continuity | Reversible Soulprint and v4 structured 13-firsts Book UI authored; evolution forms and relationships pending; Unity tests unexecuted |
 | Social + platform | Opt-in meetings, safe share cards, notifications/widgets, backup sync | Pending |
 | Release | Unity Editor/CI tests, mobile device QA, store builds, accessibility/security/performance signoffs | Pending |
 
 Keep historical Expo source PRs #20, #23 and #24 intact as feature parity references. Active work: [Issue #31](https://github.com/mlookhere/Tamagoochi/issues/31), [draft PR #32](https://github.com/mlookhere/Tamagoochi/pull/32). Never conflate historical Expo green checks with Unity compile/build success.
+
+### Structured memories (save v4)
+
+First care/play/clean/comfort, first successful craft/snack/room placement, three initial minigame wins and first discoveries in each habitat create unique local-only moments. Duplicate moments are rejected; records are bounded, validated, saved with the full session and safely migrated from v2/v3 with no fabricated historical dates. This is an initial **Firsts** book, not yet the full moments/evolution/relationships system. Unity Editor and device verification are still outstanding.

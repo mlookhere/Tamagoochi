@@ -219,6 +219,22 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void EveryMemoryKindCanBeCollectedOnceOnly()
+        {
+            var book = new MemoryBook();
+            foreach (MemoryKind kind in System.Enum.GetValues(typeof(MemoryKind)))
+            {
+                Assert.IsTrue(book.Record(kind, 100));
+                Assert.IsFalse(book.Record(kind, 100));
+                Assert.IsNotEmpty(MemoryBook.Title(kind));
+            }
+            Assert.AreEqual(MemoryBook.Limit, book.Entries.Count);
+            Assert.DoesNotThrow(() => MemoryBook.Restore(book.Snapshot()));
+            Assert.Throws<System.ArgumentOutOfRangeException>(() =>
+                book.Record((MemoryKind)99, 100));
+        }
+
+        [Test]
         public void RestoredRewardsRemainOneTimeOnly()
         {
             var session = GameSession.New(0);

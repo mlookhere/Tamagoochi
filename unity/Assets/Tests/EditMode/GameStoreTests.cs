@@ -85,6 +85,49 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void MemoryBookPersistsOnDiskWithoutDuplicateFirsts()
+        {
+            var session = GameSession.New(0);
+            Assert.IsTrue(session.Memories.Record(MemoryKind.FirstPlay, 100));
+            GameStore.SaveToDirectory(session, directory);
+
+            var loaded = GameStore.LoadFromDirectory(directory, 0);
+            Assert.AreEqual(1, loaded.Memories.Entries.Count);
+            Assert.IsFalse(loaded.Memories.Record(MemoryKind.FirstPlay, 200));
+            Assert.IsTrue(loaded.Memories.Record(MemoryKind.FirstGrove, 300));
+            GameStore.SaveToDirectory(loaded, directory);
+
+            var reloaded = GameStore.LoadFromDirectory(directory, 0);
+            Assert.AreEqual(2, reloaded.Memories.Entries.Count);
+            Assert.AreEqual(100, reloaded.Memories.Entries[0].occurredAt);
+            Assert.AreEqual(300, reloaded.Memories.Entries[1].occurredAt);
+            Assert.IsTrue(File.Exists(Path.Combine(directory, "game.json.bak")));
+        }
+
+        [Test]
+        public void Version3FileMigratesToEmptyMemoriesAndSavesAsV4()
+        {
+            var old = GameSession.New(0);
+            old.Expeditions.Start(Habitat.Meadow, 200);
+            var snapshot = old.Capture();
+            snapshot.version = 3;
+            snapshot.memories = null;
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, "game.json"),
+                JsonUtility.ToJson(snapshot));
+
+            var loaded = GameStore.LoadFromDirectory(directory, 0);
+            Assert.AreEqual(0, loaded.Memories.Entries.Count);
+            Assert.AreEqual(Habitat.Meadow, loaded.Expeditions.ActiveHabitat);
+            GameStore.SaveToDirectory(loaded, directory);
+            var saved = JsonUtility.FromJson<GameSnapshot>(
+                File.ReadAllText(Path.Combine(directory, "game.json")));
+            Assert.AreEqual(4, saved.version);
+            Assert.IsNotNull(saved.memories);
+            Assert.AreEqual(0, saved.memories.Length);
+        }
+
+        [Test]
         public void PetOnlyV1FileIsMigratedWithoutResettingPet()
         {
             Directory.CreateDirectory(directory);
