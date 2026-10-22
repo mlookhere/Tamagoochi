@@ -44,6 +44,8 @@ namespace Tamagoochi
         {
             session = GameStore.Load();
             stage = GetComponent<CompanionStage>() ?? gameObject.AddComponent<CompanionStage>();
+            reducedMotion = PlayerPrefs.GetInt("tamagoochi.reduceMotion", 0) == 1;
+            stage.SetReducedMotion(reducedMotion);
         }
 
         private void OnApplicationPause(bool paused)
@@ -115,6 +117,8 @@ namespace Tamagoochi
             {
                 reducedMotion = motionPreference;
                 stage.SetReducedMotion(reducedMotion);
+                PlayerPrefs.SetInt("tamagoochi.reduceMotion", reducedMotion ? 1 : 0);
+                PlayerPrefs.Save();
             }
             if (GUILayout.Button("Feed")) { pet.Feed(); stage.React("eat"); message = "Yum!"; }
             if (GUILayout.Button("Play")) { pet.Play(); stage.React("play"); message = "Let's play!"; }
