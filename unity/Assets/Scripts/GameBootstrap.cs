@@ -36,6 +36,8 @@ namespace Tamagoochi
         private VisualElement header;
         private VisualElement sheet;
         private VisualElement page;
+        private ScrollView contentScroll;
+        private Button[] navigationButtons;
         private Label title;
         private Label notice;
         private long shownMinute = -1;
@@ -131,15 +133,17 @@ namespace Tamagoochi
             navigation.style.flexDirection = FlexDirection.Row;
             sheet.Add(navigation);
             string[] tabs = { "Care", "Craft", "Games", "Room", "Explore" };
+            navigationButtons = new Button[tabs.Length];
             for (int i = 0; i < tabs.Length; i++)
             {
                 int target = i;
-                navigation.Add(Button(tabs[i], () => { tab = target; Refresh(); }, true));
+                navigationButtons[i] = Button(tabs[i], () => SelectTab(target), true);
+                navigation.Add(navigationButtons[i]);
             }
-            var scrollView = new ScrollView();
-            scrollView.style.flexGrow = 1;
-            sheet.Add(scrollView);
-            page = scrollView.contentContainer;
+            contentScroll = new ScrollView();
+            contentScroll.style.flexGrow = 1;
+            sheet.Add(contentScroll);
+            page = contentScroll.contentContainer;
             notice = Text(message, 13);
             notice.style.paddingTop = 10;
             notice.style.paddingBottom = 12;
@@ -161,10 +165,23 @@ namespace Tamagoochi
             sheet.style.bottom = safe.yMin * factor;
         }
 
+        private void SelectTab(int next)
+        {
+            if (tab == next) return;
+            tab = next;
+            contentScroll.scrollOffset = Vector2.zero;
+            Refresh();
+        }
+
         private void Refresh()
         {
             if (page == null || session == null) return;
+            var previousScroll = contentScroll.scrollOffset;
             title.text = $"{pet.name} · Day {pet.AgeDays(GameStore.Now())}";
+            for (int i = 0; i < navigationButtons.Length; i++)
+                navigationButtons[i].style.backgroundColor = i == tab
+                    ? new Color(0.52f, 0.76f, 0.49f)
+                    : new Color(0.82f, 0.91f, 0.78f);
             page.Clear();
             switch (tab)
             {
@@ -175,6 +192,8 @@ namespace Tamagoochi
                 case 4: Explore(); break;
             }
             notice.text = message;
+            // Rebuilding cards should not jump the player's reading position.
+            contentScroll.schedule.Execute(() => contentScroll.scrollOffset = previousScroll);
         }
 
         private void Care()
@@ -324,38 +343,64 @@ namespace Tamagoochi
             Heading("A world of small wonders");
             Line("Offline adventures. No location or step permissions required.");
             Line($"Finds {expeditions.Completed} · {expeditions.LatestDiscovery()}");
-            ShowFieldJournal();
             if (!expeditions.IsExploring)
             {
+                Heading("Choose a habitat");
                 foreach (Habitat habitat in Enum.GetValues(typeof(Habitat)))
                 {
                     Habitat target = habitat;
-                    Add($"Explore the {habitat}", () =>
+                    HabitatAction(habitat, () =>
                     {
                         if (expeditions.Start(target, GameStore.Now()))
                             Commit($"Mochi is exploring the {target}!");
                     });
                 }
-                return;
             }
-            long remaining = expeditions.Remaining(GameStore.Now());
-            Line($"Exploring {expeditions.ActiveHabitat}...");
-            if (remaining > 0)
+            else
             {
-                Line($"Ready in {(remaining + 59999) / 60000} minute(s). You can close the game.");
-                return;
-            }
-            Add("Collect your discovery", () =>
-            {
-                var result = expeditions.Claim(GameStore.Now(), inventory);
-                if (result == ExpeditionClaim.Claimed) stage.React("joyful");
-                Commit(result switch
+                long remaining = expeditions.Remaining(GameStore.Now());
+                Heading($"Exploring {expeditions.ActiveHabitat}");
+                if (remaining > 0)
                 {
-                    ExpeditionClaim.Claimed => $"Found {expeditions.LatestDiscovery()}!",
-                    ExpeditionClaim.BasketFull => "Basket full. Your discovery will wait.",
-                    _ => "Still exploring."
-                });
-            });
+                    Line($"Ready in {(remaining + 59999) / 60000} minute(s). You can close the game.");
+                }
+                else
+                {
+                    Add("Collect your discovery", () =>
+                    {
+                        var result = expeditions.Claim(GameStore.Now(), inventory);
+                        if (result == ExpeditionClaim.Claimed) stage.React("joyful");
+                        Commit(result switch
+                        {
+                            ExpeditionClaim.Claimed => $"Found {expeditions.LatestDiscovery()}!",
+                            ExpeditionClaim.BasketFull => "Basket full. Your discovery will wait.",
+                            _ => "Still exploring."
+                        });
+                    });
+                }
+            }
+            ShowFieldJournal();
+        }
+
+        private void HabitatAction(Habitat habitat, Action action)
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.marginBottom = 7;
+
+            var art = new Image
+            {
+                sprite = Resources.Load<Sprite>("Art/world/" + habitat.ToString().ToLowerInvariant()),
+                scaleMode = ScaleMode.ScaleToFit,
+                pickingMode = PickingMode.Ignore
+            };
+            art.style.width = 56;
+            art.style.height = 56;
+            art.style.marginRight = 10;
+            row.Add(art);
+            row.Add(Button($"Explore the {habitat}", action));
+            page.Add(row);
         }
 
         private void ShowFieldJournal()
