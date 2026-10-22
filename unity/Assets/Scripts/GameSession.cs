@@ -159,7 +159,7 @@ namespace Tamagoochi
         }
 
         public static GameSession New(long now, Pet existingPet = null) =>
-            new(existingPet ?? Tamagoochi.Pet.Create(now), Tamagoochi.Inventory.Starter(), new Tamagoochi.Room(),
+            new(existingPet?.Copy() ?? Tamagoochi.Pet.Create(now), Tamagoochi.Inventory.Starter(), new Tamagoochi.Room(),
                 new Tamagoochi.WorkshopBond(), new Tamagoochi.ForestEcho(), new Tamagoochi.StoneSkip(),
                 new Tamagoochi.MeadowPairs(), new Tamagoochi.Expeditions(), new MemoryBook());
 
@@ -190,6 +190,7 @@ namespace Tamagoochi
         {
             if (pet == null || string.IsNullOrWhiteSpace(pet.name) || pet.name.Length > 48 ||
                 pet.bornAt < 0 || pet.lastSimulatedAt < pet.bornAt ||
+                HasControlCharacters(pet.name) ||
                 (pet.roomItemSlot != "left" && pet.roomItemSlot != "center" &&
                  pet.roomItemSlot != "right")) return false;
             return ValidStat(pet.hunger) && ValidStat(pet.happiness) &&
@@ -197,6 +198,13 @@ namespace Tamagoochi
                 ValidStat(pet.mood) && ValidStat(pet.bond) &&
                 ValidStat(pet.health) && ValidStat(pet.curiosity) &&
                 ValidStat(pet.gentleness);
+        }
+
+        private static bool HasControlCharacters(string value)
+        {
+            foreach (char character in value)
+                if (char.IsControl(character)) return true;
+            return false;
         }
 
         private static bool ValidStat(float value) =>

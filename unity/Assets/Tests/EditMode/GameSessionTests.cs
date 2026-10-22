@@ -63,6 +63,31 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void ImportedPetIsCopiedBeforeEnteringNewSession()
+        {
+            var imported = Pet.Create(1000);
+            Assert.IsTrue(imported.TryRename("Fern"));
+            var session = GameSession.New(1000, imported);
+            imported.Feed();
+            imported.TryRename("Other");
+            Assert.AreEqual(82, session.Pet.hunger);
+            Assert.AreEqual("Fern", session.Pet.name);
+            session.Pet.Play();
+            Assert.AreEqual(76, imported.happiness);
+        }
+
+        [Test]
+        public void LoadedControlCharacterNameIsRejectedWithoutAffectingValidNames()
+        {
+            var snapshot = GameSession.New(1000).Capture();
+            snapshot.pet.name = "Bad\nName";
+            Assert.IsFalse(GameSession.TryRestore(snapshot, out _));
+            snapshot.pet.name = "모치";
+            Assert.IsTrue(GameSession.TryRestore(snapshot, out var restored));
+            Assert.AreEqual("모치", restored.Pet.name);
+        }
+
+        [Test]
         public void CorruptedInventoryIsRejectedWithoutHalfRestoring()
         {
             var snapshot = GameSession.New(0).Capture();
