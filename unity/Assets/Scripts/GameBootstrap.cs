@@ -16,13 +16,14 @@ namespace Tamagoochi
             ItemId.LeafToy, ItemId.MossCushion, ItemId.StarKeepsake, ItemId.FlowerCrown
         };
 
-        private Pet pet;
-        private Inventory inventory;
-        private Room room;
-        private WorkshopBond bond;
-        private ForestEcho echo;
-        private StoneSkip skip;
-        private MeadowPairs pairs;
+        private GameSession session;
+        private Pet pet => session.Pet;
+        private Inventory inventory => session.Inventory;
+        private Room room => session.Room;
+        private WorkshopBond bond => session.Bond;
+        private ForestEcho echo => session.Echo;
+        private StoneSkip skip => session.Skip;
+        private MeadowPairs pairs => session.Pairs;
         private ItemId? selectedDecoration;
         private int tab;
         private int gameTab;
@@ -38,27 +39,27 @@ namespace Tamagoochi
 
         private void Awake()
         {
-            pet = PetStore.Load();
-            inventory = Inventory.Starter();
-            room = new Room();
-            bond = new WorkshopBond();
-            echo = new ForestEcho();
-            skip = new StoneSkip();
-            pairs = new MeadowPairs();
+            session = GameStore.Load();
         }
 
         private void OnApplicationPause(bool paused)
         {
-            if (paused) PetStore.Save(pet);
-            else pet.Advance(PetStore.Now());
+            if (session == null) return;
+            if (paused) GameStore.Save(session);
+            else pet.Advance(GameStore.Now());
         }
 
         private void OnApplicationFocus(bool focused)
         {
-            if (focused && pet != null) pet.Advance(PetStore.Now());
+            if (session == null) return;
+            if (focused) pet.Advance(GameStore.Now());
+            else GameStore.Save(session);
         }
 
-        private void OnApplicationQuit() => PetStore.Save(pet);
+        private void OnApplicationQuit()
+        {
+            if (session != null) GameStore.Save(session);
+        }
 
         private void OnGUI()
         {
@@ -69,7 +70,7 @@ namespace Tamagoochi
             float width = Screen.width / scale;
             float height = Screen.height / scale;
             GUILayout.BeginArea(new Rect(12, 12, width - 24, height - 24), GUI.skin.box);
-            GUILayout.Label($"TAMAGOOCHI  •  {pet.name}  •  Day {pet.AgeDays(PetStore.Now())}");
+            GUILayout.Label($"TAMAGOOCHI  •  {pet.name}  •  Day {pet.AgeDays(GameStore.Now())}");
             GUILayout.Label($"Pet bond {pet.bond:0}   |   Workshop bond {bond.Bond}");
             int next = GUILayout.SelectionGrid(tab, new[] { "Care", "Workshop", "Games", "Room" }, 4);
             if (next != tab) { tab = next; scroll = Vector2.zero; }
