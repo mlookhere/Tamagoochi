@@ -13,6 +13,8 @@ namespace Tamagoochi
 
     public static class GameStore
     {
+        private const long MaxSaveBytes = 1024 * 1024;
+
         public static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         public static GameSession Load() =>
@@ -103,9 +105,7 @@ namespace Tamagoochi
             session = null;
             try
             {
-                if (!File.Exists(path)) return false;
-                // Limit untrusted/corrupted disk input before materializing JSON.
-                if (new FileInfo(path).Length > 1024 * 1024) return false;
+                if (!IsReadableSaveFile(path)) return false;
                 return GameSession.TryRestore(
                     JsonUtility.FromJson<GameSnapshot>(File.ReadAllText(path)), out session);
             }
@@ -117,12 +117,20 @@ namespace Tamagoochi
             }
         }
 
+        private static bool IsReadableSaveFile(string path)
+        {
+            if (!File.Exists(path)) return false;
+            // Apply the same bound to current, backup, temporary AND legacy data.
+            long size = new FileInfo(path).Length;
+            return size > 0 && size <= MaxSaveBytes;
+        }
+
         private static bool ReadLegacy(string path, out Pet pet)
         {
             pet = null;
             try
             {
-                if (!File.Exists(path)) return false;
+                if (!IsReadableSaveFile(path)) return false;
                 var save = JsonUtility.FromJson<LegacyPetSave>(File.ReadAllText(path));
                 if (save == null || save.version != 1 || !GameSession.IsValidPet(save.pet))
                     return false;

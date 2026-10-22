@@ -139,6 +139,43 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void OversizedLegacySaveIsSkippedWithoutReadingOrAllocatingIt()
+        {
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, "pet.json"),
+                new string('X', 1024 * 1024 + 1));
+            var session = GameStore.LoadFromDirectory(directory, 1000);
+            Assert.AreEqual("Mochi", session.Pet.name);
+            Assert.AreEqual(82, session.Pet.hunger);
+            Assert.AreEqual(4, session.Capture().version);
+        }
+
+        [Test]
+        public void MalformedOrEmptyLegacySaveFallsBackSafely()
+        {
+            Directory.CreateDirectory(directory);
+            string legacy = Path.Combine(directory, "pet.json");
+            foreach (string payload in new[] { "", "{malformed" })
+            {
+                File.WriteAllText(legacy, payload);
+                var session = GameStore.LoadFromDirectory(directory, 1000);
+                Assert.AreEqual(82, session.Pet.hunger);
+            }
+        }
+
+        [Test]
+        public void ValidCommittedGameAlwaysOutranksOversizedLegacySave()
+        {
+            var session = GameSession.New(1000);
+            session.Pet.Feed();
+            GameStore.SaveToDirectory(session, directory);
+            File.WriteAllText(Path.Combine(directory, "pet.json"),
+                new string('X', 1024 * 1024 + 1));
+            var restored = GameStore.LoadFromDirectory(directory, 1000);
+            Assert.AreEqual(100, restored.Pet.hunger);
+        }
+
+        [Test]
         public void PetOnlyV1FileIsMigratedWithoutResettingPet()
         {
             Directory.CreateDirectory(directory);
