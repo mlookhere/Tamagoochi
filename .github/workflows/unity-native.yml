@@ -38,6 +38,7 @@ jobs:
       - name: Verify trusted ref, project, and activation
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           MIGRATION_SHA: ${{ inputs.migration_sha }}
@@ -56,8 +57,10 @@ jobs:
             exit 1
           }
           grep -qx 'm_EditorVersion: 6000.0.62f1' unity/ProjectSettings/ProjectVersion.txt
-          if [[ -z "$UNITY_LICENSE" || -z "$UNITY_EMAIL" || -z "$UNITY_PASSWORD" ]]; then
-            echo "Unity activation unavailable: configure protected unity-native environment secrets" >&2
+          if [[ -z "$UNITY_EMAIL" || -z "$UNITY_PASSWORD" ]] ||
+             [[ -z "$UNITY_LICENSE" && -z "$UNITY_SERIAL" ]] ||
+             [[ -n "$UNITY_LICENSE" && -n "$UNITY_SERIAL" ]]; then
+            echo "Unity activation requires email/password and exactly one of license or serial" >&2
             exit 1
           fi
 
@@ -65,6 +68,7 @@ jobs:
         uses: game-ci/unity-builder@4423ee75828dff56037d1d1cfdac6b68e3a6ba00 # v4.8.2
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
@@ -78,6 +82,7 @@ jobs:
         uses: game-ci/unity-test-runner@32e57712352b500e17974b245a6dce9e11a73213 # v4.4.0
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
