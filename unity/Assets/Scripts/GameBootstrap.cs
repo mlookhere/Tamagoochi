@@ -29,6 +29,7 @@ namespace Tamagoochi
         private ItemId? selectedDecoration;
         private int tab;
         private int gameTab;
+        private bool reducedMotion;
         private Vector2 scroll;
         private string message = "Welcome home";
 
@@ -71,16 +72,20 @@ namespace Tamagoochi
 
         private void OnGUI()
         {
-            float scale = Mathf.Clamp(Screen.width / 430f, 0.85f, 2f);
+            // Unity's safe area is bottom-origin; IMGUI uses top-origin.
+            Rect safe = Screen.safeArea;
+            float scale = Mathf.Clamp(safe.width / 430f, 0.85f, 2f);
             GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1));
             GUI.skin.button.fixedHeight = 42;
             GUI.skin.label.wordWrap = true;
-            float width = Screen.width / scale;
-            float height = Screen.height / scale;
-            GUI.Label(new Rect(18, 14, width - 36, 26),
+            float left = safe.x / scale;
+            float top = (Screen.height - safe.yMax) / scale;
+            float width = safe.width / scale;
+            float height = safe.height / scale;
+            GUI.Label(new Rect(left + 18, top + 14, width - 36, 26),
                 $"TAMAGOOCHI  •  {pet.name}  •  Day {pet.AgeDays(GameStore.Now())}");
-            float stageHeight = Mathf.Clamp(height * 0.48f, 200f, 440f);
-            GUILayout.BeginArea(new Rect(12, stageHeight, width - 24,
+            float stageHeight = Mathf.Clamp(height * 0.44f, 155f, 440f);
+            GUILayout.BeginArea(new Rect(left + 12, top + stageHeight, width - 24,
                 Mathf.Max(120, height - stageHeight - 12)), GUI.skin.box);
             GUILayout.Label($"Pet bond {pet.bond:0}   |   Workshop bond {bond.Bond}");
             int next = GUILayout.SelectionGrid(tab, new[] { "Care", "Workshop", "Games", "Room", "Explore" }, 5);
@@ -105,9 +110,15 @@ namespace Tamagoochi
             GUILayout.Label($"Hunger {pet.hunger:0}   Happiness {pet.happiness:0}   Energy {pet.energy:0}");
             GUILayout.Label($"Cleanliness {pet.cleanliness:0}   Mood {pet.mood:0}   Health {pet.health:0}");
             GUILayout.Label(pet.sleeping ? "Mochi is resting" : "Mochi is awake");
-            if (GUILayout.Button("Feed")) { pet.Feed(); stage.React("joyful"); message = "Yum!"; }
-            if (GUILayout.Button("Play")) { pet.Play(); stage.React("joyful"); message = "Let's play!"; }
-            if (GUILayout.Button("Clean")) { pet.Clean(); stage.React("joyful"); message = "Fresh and happy"; }
+            bool motionPreference = GUILayout.Toggle(reducedMotion, "Reduce motion");
+            if (motionPreference != reducedMotion)
+            {
+                reducedMotion = motionPreference;
+                stage.SetReducedMotion(reducedMotion);
+            }
+            if (GUILayout.Button("Feed")) { pet.Feed(); stage.React("eat"); message = "Yum!"; }
+            if (GUILayout.Button("Play")) { pet.Play(); stage.React("play"); message = "Let's play!"; }
+            if (GUILayout.Button("Clean")) { pet.Clean(); stage.React("clean"); message = "Fresh and happy"; }
             if (GUILayout.Button("Comfort")) { pet.Comfort(); stage.React("joyful"); message = "Feeling loved"; }
             if (GUILayout.Button(pet.sleeping ? "Wake" : "Sleep"))
             {

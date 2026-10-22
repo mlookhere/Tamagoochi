@@ -44,7 +44,12 @@ namespace Tamagoochi
                 Time.unscaledTime < reactionUntil ? reaction : "neutral";
             if (pose != currentPose)
             {
-                var desired = LoadSprite("companions/seedling-" + pose);
+                string art = pose switch
+                {
+                    "eat" or "clean" or "play" => "companions/action-seedling-" + pose,
+                    _ => "companions/seedling-" + pose
+                };
+                var desired = LoadSprite(art);
                 if (desired != null)
                 {
                     companion.sprite = desired;
