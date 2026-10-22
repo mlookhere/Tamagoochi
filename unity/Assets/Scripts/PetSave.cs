@@ -94,7 +94,7 @@ namespace Tamagoochi
                 }
             }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException ||
-                                          error is NotSupportedException)
+                                          error is NotSupportedException || error is UnityException)
             {
                 Debug.LogWarning($"Game save could not be committed: {error.Message}");
             }
