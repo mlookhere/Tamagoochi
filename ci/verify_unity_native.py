@@ -21,6 +21,9 @@ def _passing_nunit_report(path: Path) -> bool:
     passed = int(attrs.get("passed", "-1"))
     if total <= 0 or passed != total:
         raise ValueError(f"Unity EditMode test count mismatch: {path}")
+    cases = root.findall(".//test-case")
+    if len(cases) != total or any(case.get("result") != "Passed" for case in cases):
+        raise ValueError(f"Unity EditMode test-case results missing or inconsistent: {path}")
     return True
 
 

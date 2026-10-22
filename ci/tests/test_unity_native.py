@@ -7,7 +7,12 @@ from pathlib import Path
 
 from ci.verify_unity_native import validate
 
-PASS = '<test-run result="Passed" total="3" passed="3" failed="0" skipped="0" inconclusive="0"/>'
+PASS = ('<test-run result="Passed" total="3" passed="3" failed="0" skipped="0" inconclusive="0">'
+        '<test-suite type="Assembly">'
+        '<test-case name="alpha" result="Passed"/>'
+        '<test-case name="beta" result="Passed"/>'
+        '<test-case name="gamma" result="Passed"/>'
+        '</test-suite></test-run>')
 FAIL = '<test-run result="Failed" total="3" passed="2" failed="1" skipped="0" inconclusive="0"/>'
 
 
@@ -44,6 +49,17 @@ class NativeEvidenceTests(unittest.TestCase):
     def test_zero_tests_fails(self):
         self.xml.write_text(PASS.replace('total="3" passed="3"', 'total="0" passed="0"'))
         self.assert_rejected()
+
+    def test_root_only_passing_counters_fail(self):
+        self.xml.write_text(PASS.split('<test-suite')[0] + '</test-run>')
+        self.assert_rejected()
+
+    def test_missing_or_failed_case_fails(self):
+        for xml in [PASS.replace('<test-case name="alpha" result="Passed"/>', ''),
+                    PASS.replace('name="alpha" result="Passed"', 'name="alpha" result="Failed"')]:
+            with self.subTest(xml=xml):
+                self.xml.write_text(xml)
+                self.assert_rejected()
 
     def test_failed_and_partial_tests_fail(self):
         for xml in [FAIL, PASS.replace('passed="3"', 'passed="2"'),
