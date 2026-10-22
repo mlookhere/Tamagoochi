@@ -7,7 +7,7 @@ namespace Tamagoochi
     [Serializable]
     public sealed class GameSnapshot
     {
-        public int version = 2;
+        public int version = 3;
         public Pet pet;
         public int[] items;
         public int[] room;
@@ -25,6 +25,7 @@ namespace Tamagoochi
         public int pairsRound;
         public int[] pairsMatched;
         public int[] pairsRevealed;
+        public ExpeditionSave expeditions;
     }
 
     public sealed class GameSession
@@ -36,9 +37,10 @@ namespace Tamagoochi
         public ForestEcho Echo { get; }
         public StoneSkip Skip { get; }
         public MeadowPairs Pairs { get; }
+        public Expeditions Expeditions { get; }
 
         private GameSession(Pet pet, Inventory inventory, Room room, WorkshopBond bond,
-            ForestEcho echo, StoneSkip skip, MeadowPairs pairs)
+            ForestEcho echo, StoneSkip skip, MeadowPairs pairs, Expeditions expeditions)
         {
             Pet = pet;
             Inventory = inventory;
@@ -47,11 +49,13 @@ namespace Tamagoochi
             Echo = echo;
             Skip = skip;
             Pairs = pairs;
+            Expeditions = expeditions;
         }
 
         public static GameSession New(long now, Pet existingPet = null) =>
             new(existingPet ?? Tamagoochi.Pet.Create(now), Tamagoochi.Inventory.Starter(), new Tamagoochi.Room(),
-                new Tamagoochi.WorkshopBond(), new Tamagoochi.ForestEcho(), new Tamagoochi.StoneSkip(), new Tamagoochi.MeadowPairs());
+                new Tamagoochi.WorkshopBond(), new Tamagoochi.ForestEcho(), new Tamagoochi.StoneSkip(),
+                new Tamagoochi.MeadowPairs(), new Tamagoochi.Expeditions());
 
         public GameSnapshot Capture() => new()
         {
@@ -71,7 +75,8 @@ namespace Tamagoochi
             skipHops = Skip.Hops,
             pairsRound = Pairs.Round,
             pairsMatched = Pairs.MatchedSnapshot(),
-            pairsRevealed = Pairs.RevealedSnapshot()
+            pairsRevealed = Pairs.RevealedSnapshot(),
+            expeditions = Expeditions.Snapshot()
         };
 
         public static bool IsValidPet(Pet pet)
@@ -93,7 +98,8 @@ namespace Tamagoochi
         public static bool TryRestore(GameSnapshot snapshot, out GameSession session)
         {
             session = null;
-            if (snapshot == null || snapshot.version != 2 || !IsValidPet(snapshot.pet))
+            if (snapshot == null || (snapshot.version != 2 && snapshot.version != 3) ||
+                !IsValidPet(snapshot.pet))
                 return false;
             try
             {
@@ -106,7 +112,11 @@ namespace Tamagoochi
                     snapshot.skipHops);
                 var pairs = Tamagoochi.MeadowPairs.Restore(snapshot.pairsRound, snapshot.pairsMatched,
                     snapshot.pairsRevealed);
-                session = new GameSession(snapshot.pet, inventory, room, bond, echo, skip, pairs);
+                // v2 saves predate expeditions. Preserve their workshop exactly.
+                var expeditions = snapshot.version == 2 ? new Tamagoochi.Expeditions() :
+                    Tamagoochi.Expeditions.Restore(snapshot.expeditions);
+                session = new GameSession(snapshot.pet, inventory, room, bond,
+                    echo, skip, pairs, expeditions);
                 return true;
             }
             catch (Exception error) when (error is ArgumentException ||

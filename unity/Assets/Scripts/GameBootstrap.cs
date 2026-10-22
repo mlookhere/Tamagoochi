@@ -25,6 +25,7 @@ namespace Tamagoochi
         private ForestEcho echo => session.Echo;
         private StoneSkip skip => session.Skip;
         private MeadowPairs pairs => session.Pairs;
+        private Expeditions expeditions => session.Expeditions;
         private ItemId? selectedDecoration;
         private int tab;
         private int gameTab;
@@ -82,7 +83,7 @@ namespace Tamagoochi
             GUILayout.BeginArea(new Rect(12, stageHeight, width - 24,
                 Mathf.Max(120, height - stageHeight - 12)), GUI.skin.box);
             GUILayout.Label($"Pet bond {pet.bond:0}   |   Workshop bond {bond.Bond}");
-            int next = GUILayout.SelectionGrid(tab, new[] { "Care", "Workshop", "Games", "Room" }, 4);
+            int next = GUILayout.SelectionGrid(tab, new[] { "Care", "Workshop", "Games", "Room", "Explore" }, 5);
             if (next != tab) { tab = next; scroll = Vector2.zero; }
             scroll = GUILayout.BeginScrollView(scroll);
             switch (tab)
@@ -91,6 +92,7 @@ namespace Tamagoochi
                 case 1: DrawWorkshop(); break;
                 case 2: DrawGames(); break;
                 case 3: DrawRoom(); break;
+                case 4: DrawExplore(); break;
             }
             GUILayout.Space(12);
             GUILayout.Label(message);
@@ -226,6 +228,51 @@ namespace Tamagoochi
                     message = placed ? room.MoodDescription() : "Craft this item before placing it.";
                 }
                 else message = "Select a decoration first.";
+            }
+        }
+
+
+        private void DrawExplore()
+        {
+            GUILayout.Label("Explore nearby imagined habitats with Mochi.");
+            GUILayout.Label("These gentle expeditions work without location access or step tracking.");
+            GUILayout.Label($"Discoveries found: {expeditions.Completed}");
+            GUILayout.Label($"Latest keepsake: {expeditions.LatestDiscovery()}");
+            if (!expeditions.IsExploring)
+            {
+                foreach (Habitat habitat in Enum.GetValues(typeof(Habitat)))
+                {
+                    if (!GUILayout.Button($"Explore the {habitat}")) continue;
+                    if (expeditions.Start(habitat, GameStore.Now()))
+                    {
+                        message = $"Mochi set off into the {habitat}. Come back to discover something!";
+                        GameStore.Save(session);
+                    }
+                }
+                return;
+            }
+
+            var remaining = expeditions.Remaining(GameStore.Now());
+            GUILayout.Label($"Exploring {expeditions.ActiveHabitat}...");
+            if (remaining > 0)
+            {
+                GUILayout.Label($"Ready in about {(remaining + 59999) / 60000} minute(s).");
+                return;
+            }
+            GUILayout.Label("Your companion has found something.");
+            if (!GUILayout.Button("Collect discovery")) return;
+            var result = expeditions.Claim(GameStore.Now(), inventory);
+            message = result switch
+            {
+                ExpeditionClaim.Claimed => $"Discovered {expeditions.LatestDiscovery()}! A material was added to your basket.",
+                ExpeditionClaim.BasketFull => "Your material basket is full. The discovery will wait.",
+                ExpeditionClaim.NotReady => "Still exploring. Come back shortly.",
+                _ => "Choose a new expedition."
+            };
+            if (result == ExpeditionClaim.Claimed)
+            {
+                stage.React("joyful");
+                GameStore.Save(session);
             }
         }
 

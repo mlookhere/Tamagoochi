@@ -59,6 +59,46 @@ namespace Tamagoochi.Tests
             Assert.IsFalse(GameSession.TryRestore(snapshot, out _));
         }
 
+
+        [Test]
+        public void V2SaveMigratesWithoutLosingCareAndWorkshop()
+        {
+            var original = GameSession.New(1000);
+            original.Inventory.Craft(ItemId.LeafToy);
+            original.Bond.Complete(MiniGame.Echo);
+            var old = original.Capture();
+            old.version = 2;
+            old.expeditions = null;
+            Assert.IsTrue(GameSession.TryRestore(old, out var restored));
+            Assert.AreEqual(1, restored.Inventory.Count(ItemId.LeafToy));
+            Assert.AreEqual(48, restored.Bond.Bond);
+            Assert.AreEqual(0, restored.Expeditions.Completed);
+            Assert.AreEqual(3, restored.Capture().version);
+        }
+
+        [Test]
+        public void ExpeditionRoundTripsThroughGameSave()
+        {
+            var original = GameSession.New(0);
+            original.Expeditions.Start(Habitat.Grove, 100);
+            var json = JsonUtility.ToJson(original.Capture());
+            Assert.IsTrue(GameSession.TryRestore(JsonUtility.FromJson<GameSnapshot>(json), out var restored));
+            Assert.AreEqual(Habitat.Grove, restored.Expeditions.ActiveHabitat);
+            Assert.AreEqual(100 + Expeditions.DurationMilliseconds, restored.Expeditions.ReadyAt);
+            Assert.AreEqual(ExpeditionClaim.Claimed,
+                restored.Expeditions.Claim(restored.Expeditions.ReadyAt, restored.Inventory));
+            Assert.AreEqual(1, restored.Expeditions.Completed);
+        }
+
+        [Test]
+        public void MalformedExpeditionCannotCorruptRestoredSession()
+        {
+            var snapshot = GameSession.New(0).Capture();
+            snapshot.expeditions.activeHabitat = 7;
+            Assert.IsFalse(GameSession.TryRestore(snapshot, out var restored));
+            Assert.IsNull(restored);
+        }
+
         [Test]
         public void RestoredRewardsRemainOneTimeOnly()
         {
