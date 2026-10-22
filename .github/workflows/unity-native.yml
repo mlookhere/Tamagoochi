@@ -85,6 +85,7 @@ jobs:
           unityVersion: 6000.0.62f1
           testMode: EditMode
           cliVersion: v0.1.72
+          githubToken: '' # No checks:write; fail-closed NUnit/APK evidence is authoritative.
           artifactsPath: unity-test-results
           coverageEnabled: false
 
