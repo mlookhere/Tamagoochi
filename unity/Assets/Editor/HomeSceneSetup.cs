@@ -20,7 +20,7 @@ namespace Tamagoochi.Editor
         public static void CreateOrOpen()
         {
             PanelSettings settings = EnsurePanel();
-            Scene scene = File.Exists(ScenePath)
+            Scene scene = File.Exists(ProjectFile(ScenePath))
                 ? EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single)
                 : EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -31,17 +31,22 @@ namespace Tamagoochi.Editor
                 gameplay.gameObject.AddComponent<UIDocument>();
             if (document.panelSettings != settings) document.panelSettings = settings;
 
-            Directory.CreateDirectory("Assets/Scenes");
+            Directory.CreateDirectory(Path.GetDirectoryName(ProjectFile(ScenePath)));
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             Debug.Log("Tamagoochi Home scene and retained-mode panel are ready.");
         }
 
+        // Editor commands can be launched from the repository root with
+        // -projectPath unity. Never resolve Assets against the shell's CWD.
+        private static string ProjectFile(string assetPath) =>
+            Path.Combine(Application.dataPath, assetPath.Substring("Assets/".Length));
+
         private static PanelSettings EnsurePanel()
         {
-            Directory.CreateDirectory("Assets/Resources");
-            if (!File.Exists(ThemePath))
-                File.WriteAllText(ThemePath, "@import url(\"unity-theme://default\");\n");
+            Directory.CreateDirectory(Path.GetDirectoryName(ProjectFile(ThemePath)));
+            if (!File.Exists(ProjectFile(ThemePath)))
+                File.WriteAllText(ProjectFile(ThemePath), "@import url(\"unity-theme://default\");\n");
             AssetDatabase.ImportAsset(ThemePath, ImportAssetOptions.ForceSynchronousImport);
             var theme = AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>(ThemePath);
             if (theme == null)
@@ -50,7 +55,7 @@ namespace Tamagoochi.Editor
             var settings = AssetDatabase.LoadAssetAtPath<PanelSettings>(PanelPath);
             if (settings == null)
             {
-                if (File.Exists(LegacyPanelPath))
+                if (AssetDatabase.LoadAssetAtPath<PanelSettings>(LegacyPanelPath) != null)
                 {
                     string error = AssetDatabase.MoveAsset(LegacyPanelPath, PanelPath);
                     if (!string.IsNullOrEmpty(error))
@@ -79,7 +84,9 @@ namespace Tamagoochi.Editor
             var document = UnityEngine.Object.FindFirstObjectByType<UIDocument>();
             if (document == null || document.panelSettings == null ||
                 EditorBuildSettings.scenes.Length != 1 ||
-                !EditorBuildSettings.scenes[0].enabled || !File.Exists(ScenePath) ||
+                !EditorBuildSettings.scenes[0].enabled ||
+                !File.Exists(ProjectFile(ScenePath)) ||
+                !File.Exists(ProjectFile(ThemePath)) ||
                 document.panelSettings.themeStyleSheet == null ||
                 AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>(ThemePath) == null)
                 throw new InvalidOperationException("Unity Home scene or UI panel verification failed");

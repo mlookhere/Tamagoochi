@@ -1,3 +1,4 @@
+using System.IO;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -7,6 +8,15 @@ namespace Tamagoochi.Tests
 {
     public sealed class ArtImportTests
     {
+        [Test]
+        public void GeneratedUiFilesLiveInsideTheSelectedUnityProject()
+        {
+            string assets = Application.dataPath;
+            Assert.IsTrue(File.Exists(Path.Combine(assets, "Scenes/Home.unity")));
+            Assert.IsTrue(File.Exists(Path.Combine(assets, "Resources/TamagoochiTheme.tss")));
+            Assert.IsTrue(File.Exists(Path.Combine(assets, "Resources/TamagoochiPanel.asset")));
+        }
+
         [Test]
         public void RuntimePanelHasImportedDefaultTheme()
         {

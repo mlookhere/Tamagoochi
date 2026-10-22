@@ -28,7 +28,7 @@ The retained-mode UI Toolkit panel is authored from C# and layered over imported
 
 ## Native verification (not yet executed)
 
-Use the pinned Unity 6 editor and installed Android/iOS build modules. The following commands **must return success in Unity** before claiming native verification. They are entrypoints only, not passing test results:
+Use the pinned Unity 6 editor and installed Android/iOS build modules. The scene/setup Editor entrypoint resolves generated files relative to Unity's `Application.dataPath`, not the current shell directory (important when running `-projectPath unity` from the repository root). The following commands **must return success in Unity** before claiming native verification. They are entrypoints only, not passing test results:
 
 ```bash
 Unity -batchmode -nographics -projectPath unity -quit -executeMethod Tamagoochi.Editor.HomeSceneSetup.VerifyEditorSetup -logFile unity-editor.log
