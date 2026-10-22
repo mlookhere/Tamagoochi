@@ -108,8 +108,8 @@ def validate(project: Path, tests: Path, apk: Path) -> None:
     if not reports:
         raise ValueError("No Unity NUnit XML result files were produced")
     methods, art = _expected_unity_tests(project)
-    if sum(_passing_nunit_report(path, methods, art) for path in reports) != 1:
-        raise ValueError("Expected exactly one real NUnit test-run")
+    if len(reports) != 1 or not _passing_nunit_report(reports[0], methods, art):
+        raise ValueError("Expected exactly one fully passing NUnit test-run")
     _validate_apk(apk)
 
 
