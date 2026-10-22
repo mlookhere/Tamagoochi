@@ -97,6 +97,22 @@ jobs:
       - name: Reject missing/failed NUnit reports or Android APK
         run: python3 .unity-ci-control/ci/verify_unity_native.py --project unity --tests unity-test-results --apk unity/Builds/Tamagoochi.apk
 
+      - name: Confirm migration SHA is still current and record provenance
+        env:
+          MIGRATION_SHA: ${{ inputs.migration_sha }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --quiet --no-tags origin refs/heads/work/31-unity6-migration
+          if [[ "$(git rev-parse HEAD)" != "$MIGRATION_SHA" ||
+                "$(git rev-parse FETCH_HEAD)" != "$MIGRATION_SHA" ]]; then
+            echo "Unity migration head changed during native validation; evidence is stale" >&2
+            exit 1
+          fi
+          printf 'migration_sha=%s\nworkflow_sha=%s\nrun_id=%s\n' \
+            "$MIGRATION_SHA" "$WORKFLOW_SHA" "$GITHUB_RUN_ID" > unity-native-provenance.txt
+
       - name: Preserve Unity build and test evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -105,5 +121,6 @@ jobs:
           path: |
             unity-test-results/
             unity/Builds/
+            unity-native-provenance.txt
           if-no-files-found: warn
           retention-days: 14
