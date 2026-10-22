@@ -94,15 +94,17 @@ namespace Tamagoochi.Editor
         }
 
         public static void BuildAndroidDevelopment() =>
-            BuildDevelopment(BuildTarget.Android, "Builds/Tamagoochi.apk");
+            BuildDevelopment(BuildTarget.Android, "Tamagoochi.apk");
 
         public static void BuildIOSDevelopment() =>
-            BuildDevelopment(BuildTarget.iOS, "Builds/Tamagoochi-iOS");
+            BuildDevelopment(BuildTarget.iOS, "Tamagoochi-iOS");
 
-        private static void BuildDevelopment(BuildTarget target, string output)
+        private static void BuildDevelopment(BuildTarget target, string outputName)
         {
             VerifyEditorSetup();
-            Directory.CreateDirectory("Builds");
+            string output = Path.Combine(
+                Path.GetDirectoryName(Application.dataPath), "Builds", outputName);
+            Directory.CreateDirectory(Path.GetDirectoryName(output));
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
                 scenes = new[] { ScenePath },
