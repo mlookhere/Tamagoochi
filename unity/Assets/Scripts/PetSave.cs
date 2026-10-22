@@ -57,11 +57,25 @@ namespace Tamagoochi
                     stream.Flush(true);
                 }
 
-                // Atomic replace preserves the previously valid snapshot as a backup.
-                if (File.Exists(MainPath))
-                    File.Replace(tempPath, MainPath, BackupPath);
-                else
+                if (!File.Exists(MainPath))
+                {
                     File.Move(tempPath, MainPath);
+                }
+                else
+                {
+                    try
+                    {
+                        // On supported filesystems this replace is atomic.
+                        File.Replace(tempPath, MainPath, BackupPath);
+                    }
+                    catch (PlatformNotSupportedException)
+                    {
+                        // Recoverable fallback for mobile filesystems without File.Replace.
+                        File.Copy(MainPath, BackupPath, true);
+                        File.Delete(MainPath);
+                        File.Move(tempPath, MainPath);
+                    }
+                }
             }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException ||
                                           error is NotSupportedException)
