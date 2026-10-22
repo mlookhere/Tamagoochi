@@ -13,11 +13,12 @@ Open **unity/** (not the repository root) in Unity Hub. Pinned editor: **Unity 6
 
 - Non-punitive offline care simulation, age, sleep, bounded inventory, five recipes and safe room placement.
 - Three deterministic minigames, pet room affinities, optional one-time bond rewards and snack sharing.
+- Reused the existing project-original seedling expression/care illustrations and woodland marker studies from visual PR #20; a lightweight 2D stage displays character movement and care reactions. Artwork is **first-pass**, not final creative/device approval.
 - A version-2 complete care/workshop save containing inventory, room, bond ledger and all minigame progress; validation rejects inconsistent state. The previous save is retained as a backup on replacement. Version-1 pet-only saves can be imported as a fresh workshop.
 - Unity scene setup menu and focused state parity tests.
 
 ## Production gaps
 
-The rendered user interface is temporary IMGUI. Finished character/environment art, motion, mobile-native input/UI, sound, outdoor loop, accessibility, profiling and Unity-native CI are **not implemented or verified**. See [Unity quality bar](../docs/UNITY_GAME_QUALITY.md). The Expo PRs remain unmerged source references.
+The rendered controls are temporary IMGUI layered over the imported original seedling art. Finished character/environment art, motion, mobile-native input/UI, sound, outdoor loop, accessibility, profiling and Unity-native CI are **not implemented or verified**. See [Unity quality bar](../docs/UNITY_GAME_QUALITY.md). The Expo PRs remain unmerged source references.
 
 **Do not merge the migration on Expo-only checks.** Unity editor/test runner, game save/device recovery tests, Android/iOS builds and actual device QA are separate requirements.
