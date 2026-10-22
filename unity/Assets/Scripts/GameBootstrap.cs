@@ -91,13 +91,17 @@ namespace Tamagoochi
 
         private void Start()
         {
-            panel = ScriptableObject.CreateInstance<PanelSettings>();
-            panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
-            panel.referenceResolution = new Vector2Int(430, 932);
-            theme = ScriptableObject.CreateInstance<ThemeStyleSheet>();
-            panel.themeStyleSheet = theme;
             document = GetComponent<UIDocument>() ?? gameObject.AddComponent<UIDocument>();
-            document.panelSettings = panel;
+            if (document.panelSettings == null)
+            {
+                // Fallback for temporary scenes. The authored Home scene uses an Editor asset.
+                panel = ScriptableObject.CreateInstance<PanelSettings>();
+                panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
+                panel.referenceResolution = new Vector2Int(430, 932);
+                theme = ScriptableObject.CreateInstance<ThemeStyleSheet>();
+                panel.themeStyleSheet = theme;
+                document.panelSettings = panel;
+            }
             VisualElement root = document.rootVisualElement;
             root.style.flexGrow = 1;
             root.pickingMode = PickingMode.Ignore;

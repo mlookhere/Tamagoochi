@@ -6,7 +6,7 @@ Open **unity/** (not the repository root) in Unity Hub. Pinned editor: **Unity 6
 
 1. Open the project, let the Unity Package Manager import packages, and fix any project-specific compilation errors before committing a scene.
 2. Select **Tamagoochi → Create or Open Home Scene** to generate `Assets/Scenes/Home.unity` and register it in the enabled scene list.
-3. Press Play. The current editor **prototype** provides Care, Workshop, Games and Room. All three original minigames are ported.
+3. Press Play. The first retained-mode **UI Toolkit** prototype offers Care, Craft, Games, Room and Explore over the original companion stage; it is not final polished UI.
 4. Run NUnit EditMode tests from **Window → General → Test Runner**. These tests are committed but **have not been executed in Unity**. No Unity player build has yet been verified.
 
 ## Current capabilities
@@ -16,11 +16,11 @@ Open **unity/** (not the repository root) in Unity Hub. Pinned editor: **Unity 6
 - Reused the existing project-original seedling expression/care illustrations and woodland marker studies from visual PR #20; a lightweight 2D stage displays character movement and care reactions. Stable tracked Unity .meta GUIDs preserve future asset references. Artwork is **first-pass**, not final creative/device approval.
 - Three optional habitats (Grove, Meadow, Pond) now support a 10-minute offline expedition with original discoveries, a small journal, material rewards and full-basket recovery. This is a **no-GPS experience**, not yet step/location sensor integration.
 - A version-3 complete care/workshop save containing inventory, room, bond ledger and all minigame progress; validation rejects inconsistent state. The previous save is retained as a backup on replacement. Version-1 pet-only saves can be imported as a fresh workshop.
-- Unity scene setup menu and focused state parity tests.
+- Unity scene setup menu creates a persisted Editor panel asset and scene; focused state parity tests are authored but have not run in Unity.
 
 ## Production gaps
 
-The rendered controls are temporary IMGUI layered over imported original seedling sprites. Finished character/environment art, motion, mobile-native input/UI, sound, outdoor loop, accessibility, profiling and Unity-native CI are **not implemented or verified**. See [Unity quality bar](../docs/UNITY_GAME_QUALITY.md). The Expo PRs remain unmerged source references.
+The retained-mode UI Toolkit panel is authored from C# and layered over imported original seedling sprites. The Home Scene editor command creates a serialized PanelSettings asset and connects the UIDocument; generated scene and panel assets require Unity-native acceptance and a later tracked asset commit. Finished character/environment art, motion, mobile-native input/UI, sound, outdoor loop, accessibility, profiling and Unity-native CI are **not implemented or verified**. See [Unity quality bar](../docs/UNITY_GAME_QUALITY.md). The Expo PRs remain unmerged source references.
 
 **Do not merge the migration on Expo-only checks.** Unity editor/test runner, game save/device recovery tests, Android/iOS builds and actual device QA are separate requirements.
 
