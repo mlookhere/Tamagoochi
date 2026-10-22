@@ -23,3 +23,15 @@ Open **unity/** (not the repository root) in Unity Hub. Pinned editor: **Unity 6
 The rendered controls are temporary IMGUI layered over imported original seedling sprites. Finished character/environment art, motion, mobile-native input/UI, sound, outdoor loop, accessibility, profiling and Unity-native CI are **not implemented or verified**. See [Unity quality bar](../docs/UNITY_GAME_QUALITY.md). The Expo PRs remain unmerged source references.
 
 **Do not merge the migration on Expo-only checks.** Unity editor/test runner, game save/device recovery tests, Android/iOS builds and actual device QA are separate requirements.
+
+## Native verification (not yet executed)
+
+Use the pinned Unity 6 editor and installed Android/iOS build modules. The following commands **must return success in Unity** before claiming native verification. They are entrypoints only, not passing test results:
+
+```bash
+Unity -batchmode -nographics -projectPath unity -quit -executeMethod Tamagoochi.Editor.HomeSceneSetup.VerifyEditorSetup -logFile unity-editor.log
+Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults unity-tests.xml -quit -logFile unity-tests.log
+Unity -batchmode -nographics -projectPath unity -quit -executeMethod Tamagoochi.Editor.HomeSceneSetup.BuildAndroidDevelopment -logFile unity-android.log
+```
+
+For an iOS player build, use a **macOS** runner with iOS Build Support and invoke `Tamagoochi.Editor.HomeSceneSetup.BuildIOSDevelopment`. That produces an Xcode project, **not** a signed App Store binary; Xcode compilation, signing and real-device testing remain additional gates. Command-line Unity requires suitable editor installation/licensing. No GitHub Actions job currently executes these commands; do not treat green Expo CI as Unity validation.
