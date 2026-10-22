@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: b64dcc6c1daae7307f278e66f4c0345c
+guid: b64dcc6c1daae7307f278e66f4c0345c # pragma: allowlist secret
 TextureImporter:
   externalObjects: {}
   mipmaps:
