@@ -61,3 +61,7 @@ The current Unity care UI previews one of twelve original, named **future** form
 ### Mobile interaction acceptance — navigation and names
 
 The retained-mode Unity UI now uses two rows of three tabs rather than six compressed horizontal buttons. The name editor writes only trimmed 1–24-character values; malformed entries leave the current name/save valid, and existing v4/legacy names are preserved. NUnit tests cover rejection, international characters, JSON restoration and disk persistence; these tests are **authored, not run under Unity**. Before approving the build, verify safe-area/notch handling and readable/tappable three-column rows at representative 320/375/430-point portrait widths and large system text. Test keyboard overlap, repeated tab switching, invalid/whitespace entries, CJK names, pause/resume, persistence after relaunch and reduced-motion behavior. Track empirical findings and UI screenshots in the migration PR; do not mark production UX accepted from source inspection alone.
+
+### Care readability slice
+
+The six pet stats are now presented as two compact three-column rows of proportional meters with always-visible numeric labels, retaining exact values without relying on color alone. This is **authored retained-mode UI only**: inspect the bars for overflow at 320-point portrait widths, large accessibility text, and non-default font locales in Unity Editor and on Android/iOS before declaring acceptance. Care actions remain directly beneath the stat rows; avoid hiding interactions behind lengthy progression descriptions.

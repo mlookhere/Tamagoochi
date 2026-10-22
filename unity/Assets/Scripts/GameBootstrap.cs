@@ -215,8 +215,10 @@ namespace Tamagoochi
         private void Care()
         {
             Heading("Your little companion");
-            Line($"Hunger {pet.hunger:0} · Joy {pet.happiness:0} · Energy {pet.energy:0}");
-            Line($"Clean {pet.cleanliness:0} · Mood {pet.mood:0} · Bond {pet.bond:0}");
+            StatRow(("Hunger", pet.hunger), ("Joy", pet.happiness),
+                ("Energy", pet.energy));
+            StatRow(("Clean", pet.cleanliness), ("Mood", pet.mood),
+                ("Bond", pet.bond));
             Line(pet.sleeping ? $"{pet.name} is dreaming." : $"{pet.name} is happy to see you.");
             Heading($"Growing Soulprint · {session.Nature}");
             Line(session.NatureDescription);
@@ -571,6 +573,40 @@ namespace Tamagoochi
             message = result;
             GameStore.Save(session);
             Refresh();
+        }
+
+        // Three compact columns keep essential care actions reachable on phones.
+        // Every meter includes its numeric value; color alone never conveys state.
+        private void StatRow(params (string label, float value)[] stats)
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.marginBottom = 6;
+            foreach (var (label, value) in stats)
+            {
+                var column = new VisualElement();
+                column.style.flexGrow = 1;
+                column.style.flexBasis = 0;
+                column.style.marginRight = 5;
+                column.Add(Text($"{label} {value:0}/100", 12, true));
+
+                var track = new VisualElement();
+                track.style.height = 7;
+                track.style.marginTop = 4;
+                track.style.backgroundColor = new Color(0.82f, 0.87f, 0.79f);
+                Corners(track, 4);
+
+                var fill = new VisualElement();
+                fill.style.width = new Length(Mathf.Clamp(value, 0, 100),
+                    LengthUnit.Percent);
+                fill.style.height = 7;
+                fill.style.backgroundColor = new Color(0.38f, 0.66f, 0.42f);
+                Corners(fill, 4);
+                track.Add(fill);
+                column.Add(track);
+                row.Add(column);
+            }
+            page.Add(row);
         }
 
         private void Heading(string text)
