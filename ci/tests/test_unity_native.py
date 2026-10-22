@@ -15,6 +15,10 @@ ART = [
     "companions/action-seedling-clean", "companions/action-seedling-play",
     "world/grove", "world/meadow", "world/pond",
 ]
+def _art_size(asset: str) -> int:
+    return 128 if asset.startswith("world/") else 256
+
+
 def _method_case(index: int, name: str) -> str:
     suite = "Tamagoochi.Tests." + SUITE_FILES[min(index // 10, len(SUITE_FILES) - 1)]
     return (f'<test-case name="{name}" classname="{suite}" '
@@ -25,10 +29,10 @@ PASS = (f'<test-run result="Passed" total="{MINIMUM_EDITMODE_CASES}" '
         f'passed="{MINIMUM_EDITMODE_CASES}" failed="0" skipped="0" inconclusive="0">'
         '<test-suite type="Assembly">'
         + ''.join(_method_case(i, name) for i, name in enumerate(METHODS))
-        + ''.join(f'<test-case name=\'OriginalSpritesImportCorrectly("{asset}",256)\' '
+        + ''.join(f'<test-case name=\'OriginalSpritesImportCorrectly("{asset}",{_art_size(asset)})\' '
                   'classname="Tamagoochi.Tests.ArtImportTests" '
                   'methodname="OriginalSpritesImportCorrectly" '
-                  f'fullname=\'Tamagoochi.Tests.ArtImportTests.OriginalSpritesImportCorrectly("{asset}",256)\' '
+                  f'fullname=\'Tamagoochi.Tests.ArtImportTests.OriginalSpritesImportCorrectly("{asset}",{_art_size(asset)})\' '
                   'result="Passed"/>' for asset in ART)
         + '</test-suite></test-run>')
 
@@ -50,7 +54,7 @@ class NativeEvidenceTests(unittest.TestCase):
             names = METHODS[i * 10:(i + 1) * 10] if i < 5 else METHODS[50:]
             source = ''.join(f"[Test]\npublic void {name}() {{}}\n" for name in names)
             if suite == "ArtImportTests":
-                source += ''.join(f'[TestCase("{asset}",256)]\n' for asset in ART)
+                source += ''.join(f'[TestCase("{asset}",{_art_size(asset)})]\n' for asset in ART)
                 source += "public void OriginalSpritesImportCorrectly(string path,int size) {}\n"
             (folder / f"{suite}.cs").write_text(source)
         self.tests = root / "tests"
@@ -116,6 +120,13 @@ class NativeEvidenceTests(unittest.TestCase):
         self.xml.write_text(PASS.replace(
             'fullname="Tamagoochi.Tests.ArtImportTests.',
             'fullname="Tamagoochi.Tests.OtherTests.', 1))
+        self.assert_rejected()
+
+    def test_art_case_with_wrong_authored_size_fails(self):
+        self.assertIn('OriginalSpritesImportCorrectly("world/grove",128)', PASS)
+        self.xml.write_text(PASS.replace(
+            'OriginalSpritesImportCorrectly("world/grove",128)',
+            'OriginalSpritesImportCorrectly("world/grove",256)'))
         self.assert_rejected()
 
     def test_sprite_case_from_wrong_fixture_fails(self):
