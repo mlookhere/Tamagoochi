@@ -93,7 +93,7 @@ namespace Tamagoochi.Tests
             var restored = Expeditions.Restore(game.Snapshot());
             Assert.AreEqual(Expeditions.JournalLimit, restored.Journal.Count);
             Assert.AreEqual(Expeditions.JournalLimit + 2, restored.Completed);
-            Assert.AreEqual("Amber Bark", Expeditions.DiscoveryName(restored.Journal[0]));
+            Assert.AreEqual("Glimmer Seed", Expeditions.DiscoveryName(restored.Journal[0]));
             Assert.AreEqual("Amber Bark", restored.LatestDiscovery());
         }
 
