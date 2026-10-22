@@ -24,10 +24,20 @@ namespace Tamagoochi.Tests
             pet.Advance(100L * 3600000);
             Assert.AreEqual(34, pet.hunger);
             Assert.AreEqual(52, pet.happiness);
-            Assert.AreEqual(50, pet.health);
+            Assert.AreEqual(76, pet.health);
             Assert.AreEqual(100L * 3600000, pet.lastSimulatedAt);
             pet.Advance(100L * 3600000);
             Assert.AreEqual(34, pet.hunger);
+        }
+
+        [Test]
+        public void ClockSkewAndPartialHourDoNotAdvance()
+        {
+            var pet = Pet.Create(3600000);
+            pet.Advance(0);
+            pet.Advance(7199999);
+            Assert.AreEqual(82, pet.hunger);
+            Assert.AreEqual(3600000, pet.lastSimulatedAt);
         }
 
         [Test]
@@ -38,7 +48,10 @@ namespace Tamagoochi.Tests
             Assert.AreEqual(4, bag.Count(ItemId.WildBerry));
             Assert.AreEqual(5, bag.Count(ItemId.FlowerPetal));
             Assert.AreEqual(1, bag.Count(ItemId.PicnicSnack));
-            Assert.IsFalse(bag.Craft(ItemId.FlowerCrown) && bag.Count(ItemId.FlowerPetal) < 0);
+            Assert.IsTrue(bag.Craft(ItemId.FlowerCrown));
+            Assert.AreEqual(2, bag.Count(ItemId.FlowerPetal));
+            Assert.IsFalse(bag.Craft(ItemId.FlowerCrown));
+            Assert.AreEqual(2, bag.Count(ItemId.FlowerPetal));
         }
 
         [Test]
