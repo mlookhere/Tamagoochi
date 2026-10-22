@@ -57,6 +57,22 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void RoomMoodDescriptionUsesCompanionNameWithoutChangingGameplay()
+        {
+            var bag = Inventory.Starter();
+            var room = new Room();
+            Assert.AreEqual("Fern is ready to discover what you make next.",
+                room.MoodDescription("Fern"));
+            Assert.IsTrue(bag.Craft(ItemId.LeafToy));
+            Assert.IsTrue(room.Place(bag, RoomSlot.Window, ItemId.LeafToy));
+            Assert.AreEqual("Fern feels at home near a favorite object.",
+                room.MoodDescription("Fern"));
+            Assert.AreEqual("Mochi feels at home near a favorite object.",
+                room.MoodDescription());
+            Assert.AreEqual(RoomMood.Delighted, room.CompanionPlacement().mood);
+        }
+
+        [Test]
         public void MiniGameAndSnackBondCannotBeFarmed()
         {
             var bond = new WorkshopBond();

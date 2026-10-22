@@ -64,7 +64,7 @@ namespace Tamagoochi
             return (RoomSlot.Nook, RoomMood.Resting);
         }
 
-        public string MoodDescription()
+        public string MoodDescription(string companionName = "Mochi")
         {
             bool favorite = false, wary = false, neutral = false;
             foreach (var item in slots)
@@ -75,11 +75,11 @@ namespace Tamagoochi
                 wary |= preference == 2;
                 neutral |= preference == 1;
             }
-            if (favorite && wary) return "Mochi enjoys the cozy decor but keeps an eye on the shiny stone.";
-            if (favorite) return "Mochi feels at home near a favorite object.";
-            if (wary) return "Mochi gives the shiny stone a little space.";
-            if (neutral) return "Mochi is curious about the new decor.";
-            return "Mochi is ready to discover what you make next.";
+            if (favorite && wary) return $"{companionName} enjoys the cozy decor but keeps an eye on the shiny stone.";
+            if (favorite) return $"{companionName} feels at home near a favorite object.";
+            if (wary) return $"{companionName} gives the shiny stone a little space.";
+            if (neutral) return $"{companionName} is curious about the new decor.";
+            return $"{companionName} is ready to discover what you make next.";
         }
 
         private static int CheckedSlot(RoomSlot slot)

@@ -113,7 +113,7 @@ namespace Tamagoochi
             header.style.paddingLeft = 18;
             header.style.paddingRight = 18;
             Corners(header, 20);
-            title = Text("Mochi", 20, true);
+            title = Text(pet.name, 20, true);
             header.Add(title);
             root.Add(header);
 
@@ -211,7 +211,7 @@ namespace Tamagoochi
             Heading("Your little companion");
             Line($"Hunger {pet.hunger:0} · Joy {pet.happiness:0} · Energy {pet.energy:0}");
             Line($"Clean {pet.cleanliness:0} · Mood {pet.mood:0} · Bond {pet.bond:0}");
-            Line(pet.sleeping ? "Mochi is dreaming." : "Mochi is happy to see you.");
+            Line(pet.sleeping ? $"{pet.name} is dreaming." : $"{pet.name} is happy to see you.");
             Heading($"Growing Soulprint · {session.Nature}");
             Line(session.NatureDescription);
             Act("Feed", pet.Feed, "Yum!", "eat", MemoryKind.FirstFeed);
@@ -350,9 +350,9 @@ namespace Tamagoochi
         private void Decorate()
         {
             Heading("Your little home");
-            Line(room.MoodDescription());
+            Line(room.MoodDescription(pet.name));
             var placement = room.CompanionPlacement();
-            Line($"Mochi is near the {placement.slot} · {placement.mood}");
+            Line($"{pet.name} is near the {placement.slot} · {placement.mood}");
             Heading("Choose a decoration");
             foreach (ItemId item in Decorations)
             {
@@ -374,7 +374,7 @@ namespace Tamagoochi
                         selectedDecoration.HasValue && room.Place(inventory, target, selectedDecoration.Value);
                     if (success && placing) Remember(MemoryKind.FirstRoom);
                     if (success) selectedDecoration = null;
-                    Commit(success ? room.MoodDescription() : "Select a crafted item or make basket space.");
+                    Commit(success ? room.MoodDescription(pet.name) : "Select a crafted item or make basket space.");
                 });
             }
         }
@@ -393,7 +393,7 @@ namespace Tamagoochi
                     HabitatAction(habitat, () =>
                     {
                         if (expeditions.Start(target, GameStore.Now()))
-                            Commit($"Mochi is exploring the {target}!");
+                            Commit($"{pet.name} is exploring the {target}!");
                     });
                 }
             }
