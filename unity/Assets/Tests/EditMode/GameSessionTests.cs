@@ -42,6 +42,27 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void CompanionNamingIsTrimmedValidatedAndPreservedThroughRestore()
+        {
+            var session = GameSession.New(1000);
+            Assert.IsTrue(session.Pet.TryRename("  Willow  "));
+            Assert.AreEqual("Willow", session.Pet.name);
+            foreach (string invalid in new[]
+            {
+                (string)null, "", "   ", "New\nLine", new string('X', 25)
+            })
+            {
+                Assert.IsFalse(session.Pet.TryRename(invalid));
+                Assert.AreEqual("Willow", session.Pet.name);
+            }
+            Assert.IsTrue(session.Pet.TryRename("모치"));
+            var snapshot = UnityEngine.JsonUtility.FromJson<GameSnapshot>(
+                UnityEngine.JsonUtility.ToJson(session.Capture()));
+            Assert.IsTrue(GameSession.TryRestore(snapshot, out var restored));
+            Assert.AreEqual("모치", restored.Pet.name);
+        }
+
+        [Test]
         public void CorruptedInventoryIsRejectedWithoutHalfRestoring()
         {
             var snapshot = GameSession.New(0).Capture();

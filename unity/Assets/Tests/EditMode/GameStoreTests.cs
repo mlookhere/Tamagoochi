@@ -128,6 +128,17 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void PersonalizedNameSurvivesFileSaveAndLoad()
+        {
+            var session = GameSession.New(1000);
+            Assert.IsTrue(session.Pet.TryRename("Fern"));
+            GameStore.SaveToDirectory(session, directory);
+            var restored = GameStore.LoadFromDirectory(directory, 1000);
+            Assert.AreEqual("Fern", restored.Pet.name);
+            Assert.AreEqual(4, restored.Capture().version);
+        }
+
+        [Test]
         public void PetOnlyV1FileIsMigratedWithoutResettingPet()
         {
             Directory.CreateDirectory(directory);

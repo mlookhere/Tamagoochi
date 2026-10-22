@@ -130,15 +130,24 @@ namespace Tamagoochi
             root.Add(sheet);
 
             var navigation = new VisualElement();
-            navigation.style.flexDirection = FlexDirection.Row;
+            navigation.style.flexShrink = 0;
+            navigation.style.marginBottom = 4;
             sheet.Add(navigation);
             string[] tabs = { "Care", "Craft", "Games", "Room", "Explore", "Book" };
             navigationButtons = new Button[tabs.Length];
-            for (int i = 0; i < tabs.Length; i++)
+            for (int i = 0; i < tabs.Length; i += 3)
             {
-                int target = i;
-                navigationButtons[i] = Button(tabs[i], () => SelectTab(target), true);
-                navigation.Add(navigationButtons[i]);
+                var row = new VisualElement();
+                row.style.flexDirection = FlexDirection.Row;
+                navigation.Add(row);
+                for (int j = i; j < Math.Min(i + 3, tabs.Length); j++)
+                {
+                    int target = j;
+                    var button = Button(tabs[j], () => SelectTab(target), true);
+                    button.style.flexBasis = 0;
+                    navigationButtons[j] = button;
+                    row.Add(button);
+                }
             }
             contentScroll = new ScrollView();
             contentScroll.style.flexGrow = 1;
@@ -220,6 +229,24 @@ namespace Tamagoochi
                 PlayerPrefs.Save();
             });
             page.Add(toggle);
+            Heading("Make your companion your own");
+            var nameField = new TextField("Companion name")
+            {
+                value = pet.name,
+                maxLength = 24
+            };
+            nameField.style.marginBottom = 6;
+            page.Add(nameField);
+            Add("Save name", () =>
+            {
+                if (pet.TryRename(nameField.value))
+                    Commit("A name worth remembering.");
+                else
+                {
+                    message = "Please enter a name of 1–24 letters without line breaks.";
+                    Refresh();
+                }
+            });
             // Care remains immediately reachable in short mobile sessions.
             var future = session.FutureForm;
             Heading("A possible future · " + future.Name);

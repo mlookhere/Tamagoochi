@@ -46,6 +46,19 @@ namespace Tamagoochi
             lastSimulatedAt = lastSimulatedAt
         };
 
+        // Keep personalization in the validated save envelope; invalid input
+        // must never prevent a future autosave or change the existing name.
+        public bool TryRename(string candidate)
+        {
+            if (string.IsNullOrWhiteSpace(candidate)) return false;
+            string trimmed = candidate.Trim();
+            if (trimmed.Length > 24) return false;
+            foreach (char character in trimmed)
+                if (char.IsControl(character)) return false;
+            name = trimmed;
+            return true;
+        }
+
         public void Feed()
         {
             hunger = Cap(hunger + 18);
