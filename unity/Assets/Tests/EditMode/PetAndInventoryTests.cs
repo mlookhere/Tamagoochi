@@ -57,27 +57,25 @@ namespace Tamagoochi.Tests
         [Test]
         public void CraftPreviewAndActualCraftShareRequirementsAndCapacity()
         {
-            var bag = Inventory.Starter();
             foreach (ItemId item in new[] { ItemId.PicnicSnack, ItemId.LeafToy,
                 ItemId.MossCushion, ItemId.StarKeepsake, ItemId.FlowerCrown })
             {
+                var bag = Inventory.Starter();
                 var recipe = Inventory.RecipeFor(item);
+                var before = bag.Snapshot();
                 Assert.IsTrue(bag.CanCraft(item));
-                int before = bag.Count(item);
                 Assert.IsTrue(bag.Craft(item));
-                Assert.AreEqual(before + 1, bag.Count(item));
+                Assert.AreEqual(1, bag.Count(item));
                 foreach (var (ingredient, amount) in recipe)
-                    Assert.GreaterOrEqual(bag.Count(ingredient), 0);
+                    Assert.AreEqual(before[(int)ingredient] - amount, bag.Count(ingredient));
+                var restored = Inventory.Restore(bag.Snapshot());
+                Assert.AreEqual(bag.CanCraft(item), restored.CanCraft(item));
             }
-            var snapshot = bag.Snapshot();
-            var restored = Inventory.Restore(snapshot);
-            Assert.AreEqual(bag.CanCraft(ItemId.PicnicSnack),
-                restored.CanCraft(ItemId.PicnicSnack));
             var recipeCopy = Inventory.RecipeFor(ItemId.PicnicSnack);
             recipeCopy[0] = (ItemId.RiverStone, 99);
             Assert.AreEqual(ItemId.WildBerry, Inventory.RecipeFor(ItemId.PicnicSnack)[0].item);
             Assert.Throws<System.ArgumentOutOfRangeException>(() =>
-                bag.CanCraft(ItemId.WildBerry));
+                Inventory.Starter().CanCraft(ItemId.WildBerry));
         }
 
         [Test]
