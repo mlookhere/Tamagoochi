@@ -38,10 +38,10 @@ class NativeEvidenceTests(unittest.TestCase):
         folder.mkdir(parents=True)
         for i, suite in enumerate(SUITE_FILES):
             names = METHODS[i * 10:(i + 1) * 10] if i < 5 else METHODS[50:]
-            source = ''.join(f"[Test]\\npublic void {name}() {{}}\\n" for name in names)
+            source = ''.join(f"[Test]\npublic void {name}() {{}}\n" for name in names)
             if suite == "ArtImportTests":
-                source += ''.join(f'[TestCase("{asset}",256)]\\n' for asset in ART)
-                source += "public void OriginalSpritesImportCorrectly(string path,int size) {}\\n"
+                source += ''.join(f'[TestCase("{asset}",256)]\n' for asset in ART)
+                source += "public void OriginalSpritesImportCorrectly(string path,int size) {}\n"
             (folder / f"{suite}.cs").write_text(source)
         self.tests = root / "tests"
         self.tests.mkdir()
