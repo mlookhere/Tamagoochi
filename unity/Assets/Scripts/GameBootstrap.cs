@@ -461,6 +461,7 @@ namespace Tamagoochi
                     });
                     Add("Confirm return without reward", () =>
                     {
+                        confirmExpeditionReturn = false;
                         if (expeditions.Cancel(GameStore.Now()))
                             Commit($"{pet.name} is home again. You can explore anytime.");
                         else
@@ -468,7 +469,6 @@ namespace Tamagoochi
                             message = "Your discovery is ready. Collect it instead.";
                             Refresh();
                         }
-                        confirmExpeditionReturn = false;
                     });
                 }
                 else if (remaining > 0)
