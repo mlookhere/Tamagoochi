@@ -96,20 +96,12 @@ namespace Tamagoochi
         private Sprite LoadSprite(string path)
         {
             if (sprites.TryGetValue(path, out var cached)) return cached;
-            var texture = Resources.Load<Texture2D>("Art/" + path);
-            if (texture == null) return null;
-            var sprite = Sprite.Create(texture,
-                new Rect(0, 0, texture.width, texture.height),
-                new Vector2(0.5f, 0.5f), 100f);
+            var sprite = Resources.Load<Sprite>("Art/" + path);
+            if (sprite == null) return null;
             sprites.Add(path, sprite);
             return sprite;
         }
 
-        private void OnDestroy()
-        {
-            foreach (var sprite in sprites.Values)
-                if (sprite != null) Destroy(sprite);
-            sprites.Clear();
-        }
+        private void OnDestroy() => sprites.Clear();
     }
 }

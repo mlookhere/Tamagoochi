@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 
 namespace Tamagoochi.Tests
@@ -16,12 +17,17 @@ namespace Tamagoochi.Tests
         [TestCase("world/grove", 128)]
         [TestCase("world/meadow", 128)]
         [TestCase("world/pond", 128)]
-        public void OriginalSpriteLoadsAndHasExpectedDimensions(string path, int size)
+        public void OriginalSpritesImportCorrectly(string path, int size)
         {
-            var texture = Resources.Load<Texture2D>("Art/" + path);
-            Assert.IsNotNull(texture, $"Missing original Tamagoochi art: {path}");
-            Assert.AreEqual(size, texture.width);
-            Assert.AreEqual(size, texture.height);
+            var importer = AssetImporter.GetAtPath("Assets/Resources/Art/" + path + ".png")
+                as TextureImporter;
+            Assert.IsNotNull(importer, $"Missing art importer: {path}");
+            Assert.AreEqual(TextureImporterType.Sprite, importer.textureType);
+            Assert.IsFalse(importer.mipmapEnabled);
+            var sprite = Resources.Load<Sprite>("Art/" + path);
+            Assert.IsNotNull(sprite, $"Missing original Tamagoochi sprite: {path}");
+            Assert.AreEqual(size, sprite.texture.width);
+            Assert.AreEqual(size, sprite.texture.height);
         }
     }
 }
