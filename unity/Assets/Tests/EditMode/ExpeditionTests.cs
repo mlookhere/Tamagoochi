@@ -220,6 +220,10 @@ namespace Tamagoochi.Tests
             data = new Expeditions().Snapshot();
             data.completed = Expeditions.MaxCompleted;
             Assert.IsFalse(Expeditions.Restore(data).Start(Habitat.Grove, 0));
+            data.activeHabitat = (int)Habitat.Grove;
+            data.startedAt = 0;
+            data.readyAt = Expeditions.DurationMilliseconds;
+            Assert.Throws<System.ArgumentException>(() => Expeditions.Restore(data));
         }
     }
 }

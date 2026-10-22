@@ -169,12 +169,7 @@ namespace Tamagoochi
                     record.discoveredAt < previousAt)
                     throw new ArgumentException("Invalid discovery record");
                 previousAt = record.discoveredAt;
-                result.journal.Add(new DiscoveryRecord
-                {
-                    habitat = record.habitat,
-                    variation = record.variation,
-                    discoveredAt = record.discoveredAt
-                });
+                result.journal.Add(CopyRecord(record));
             }
             return result;
         }
