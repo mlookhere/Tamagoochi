@@ -5,14 +5,22 @@ import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from ci.verify_unity_native import MINIMUM_EDITMODE_CASES, REQUIRED_TESTS, validate
+from ci.verify_unity_native import MINIMUM_EDITMODE_CASES, REQUIRED_TESTS, SUITE_FILES, validate
 
+METHODS = sorted(REQUIRED_TESTS) + [f"ExtraMethod{i}" for i in range(56)]
+ART = [
+    "companions/seedling-neutral", "companions/seedling-joyful",
+    "companions/seedling-sad", "companions/seedling-asleep",
+    "companions/seedling-surprised", "companions/action-seedling-eat",
+    "companions/action-seedling-clean", "companions/action-seedling-play",
+    "world/grove", "world/meadow", "world/pond",
+]
 PASS = (f'<test-run result="Passed" total="{MINIMUM_EDITMODE_CASES}" '
         f'passed="{MINIMUM_EDITMODE_CASES}" failed="0" skipped="0" inconclusive="0">'
         '<test-suite type="Assembly">'
-        + ''.join(f'<test-case name="{name}" result="Passed"/>' for name in sorted(REQUIRED_TESTS))
-        + ''.join(f'<test-case name="additional-{i}" result="Passed"/>'
-                  for i in range(MINIMUM_EDITMODE_CASES - len(REQUIRED_TESTS)))
+        + ''.join(f'<test-case name="{name}" result="Passed"/>' for name in METHODS)
+        + ''.join(f'<test-case name=\'OriginalSpritesImportCorrectly("{asset}",256)\' '
+                  'result="Passed"/>' for asset in ART)
         + '</test-suite></test-run>')
 FAIL = '<test-run result="Failed" total="3" passed="2" failed="1" skipped="0" inconclusive="0"/>'
 
@@ -26,6 +34,15 @@ class NativeEvidenceTests(unittest.TestCase):
         version = self.project / "ProjectSettings" / "ProjectVersion.txt"
         version.parent.mkdir(parents=True)
         version.write_text("m_EditorVersion: 6000.0.62f1\n")
+        folder = self.project / "Assets" / "Tests" / "EditMode"
+        folder.mkdir(parents=True)
+        for i, suite in enumerate(SUITE_FILES):
+            names = METHODS[i * 10:(i + 1) * 10] if i < 5 else METHODS[50:]
+            source = ''.join(f"[Test]\\npublic void {name}() {{}}\\n" for name in names)
+            if suite == "ArtImportTests":
+                source += ''.join(f'[TestCase("{asset}",256)]\\n' for asset in ART)
+                source += "public void OriginalSpritesImportCorrectly(string path,int size) {}\\n"
+            (folder / f"{suite}.cs").write_text(source)
         self.tests = root / "tests"
         self.tests.mkdir()
         self.xml = self.tests / "results.xml"
@@ -69,6 +86,19 @@ class NativeEvidenceTests(unittest.TestCase):
         self.xml.write_text('<test-run result="Passed" total="6" passed="6" '
                             'failed="0" skipped="0" inconclusive="0">'
                             f'{cases}</test-run>')
+        self.assert_rejected()
+
+    def test_non_sentinel_authored_test_cannot_be_substituted(self):
+        self.xml.write_text(PASS.replace('name="ExtraMethod0"', 'name="not-authored"'))
+        self.assert_rejected()
+
+    def test_missing_unity_source_suite_fails(self):
+        (self.project / "Assets" / "Tests" / "EditMode" / "GameStoreTests.cs").unlink()
+        self.assert_rejected()
+
+    def test_original_sprite_parameter_case_must_be_reported(self):
+        self.xml.write_text(PASS.replace('companions/seedling-neutral',
+                                         'companions/not-authored'))
         self.assert_rejected()
 
     def test_filtered_suite_is_rejected_even_if_root_counts_pass(self):

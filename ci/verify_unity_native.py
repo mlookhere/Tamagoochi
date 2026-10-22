@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """Fail-closed evidence validation for a real Unity EditMode + Android run."""
 import argparse
+import re
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 
 EDITOR_VERSION = "6000.0.62f1"
-MINIMUM_EDITMODE_CASES = 73  # 62 [Test] + 11 [TestCase] cases in the six migration suites.
+MINIMUM_EDITMODE_CASES = 73  # Audited floor for the six migration suites.
+SUITE_FILES = (
+    "ArtImportTests", "ExpeditionTests", "GameSessionTests",
+    "GameStoreTests", "GameplayParityTests", "PetAndInventoryTests",
+)
+DIRECT_TEST = re.compile(r"(?m)^[ \t]*\[Test\][ \t]*\r?\n[ \t]*public void ([A-Za-z]\w*)\(")
+ART_CASE = re.compile(r'(?m)^[ \t]*\[TestCase\("([^"]+)"')
 REQUIRED_TESTS = frozenset({
     "GeneratedUiFilesLiveInsideTheSelectedUnityProject",
     "ExpeditionFinishesAcrossOfflineTimeWithoutBackgroundTimers",
@@ -18,7 +25,29 @@ REQUIRED_TESTS = frozenset({
 })
 
 
-def _passing_nunit_report(path: Path) -> bool:
+
+def _expected_unity_tests(project: Path):
+    folder = project / "Assets" / "Tests" / "EditMode"
+    methods = set()
+    art = []
+    for name in SUITE_FILES:
+        source = (folder / f"{name}.cs").read_text()
+        found = DIRECT_TEST.findall(source)
+        if not found:
+            raise ValueError(f"Missing NUnit test methods in {name}")
+        methods.update(found)
+        cases = ART_CASE.findall(source)
+        if name == "ArtImportTests":
+            art = cases
+        elif cases:
+            raise ValueError(f"Unexpected untracked parameterized tests in {name}")
+    if (len(methods) < 62 or len(art) < 11 or
+            not REQUIRED_TESTS <= methods or len(art) != len(set(art))):
+        raise ValueError("Unity authored EditMode test source is incomplete or changed")
+    return methods, art
+
+
+def _passing_nunit_report(path: Path, methods: set, art: list) -> bool:
     root = ET.parse(path).getroot()
     if root.tag != "test-run":
         return False
@@ -28,14 +57,17 @@ def _passing_nunit_report(path: Path) -> bool:
         raise ValueError(f"Unity EditMode tests did not fully pass: {path}")
     total = int(attrs.get("total", "0"))
     passed = int(attrs.get("passed", "-1"))
-    if total < MINIMUM_EDITMODE_CASES or passed != total:
+    if total < max(MINIMUM_EDITMODE_CASES, len(methods) + len(art)) or passed != total:
         raise ValueError(f"Unity EditMode test count mismatch: {path}")
     cases = root.findall(".//test-case")
     if len(cases) != total or any(case.get("result") != "Passed" for case in cases):
         raise ValueError(f"Unity EditMode test-case results missing or inconsistent: {path}")
-    present = {case.get("name") for case in cases}
-    if not REQUIRED_TESTS <= present:
-        raise ValueError(f"Unity EditMode suite is incomplete: {path}")
+    names = [case.get("name") for case in cases]
+    present = set(names)
+    if (len(present) != total or not methods <= present or
+            any(sum("OriginalSpritesImportCorrectly" in name and asset in name
+                    for name in names) != 1 for asset in art)):
+        raise ValueError(f"Unity EditMode suite is incomplete or duplicated: {path}")
     return True
 
 
@@ -59,7 +91,8 @@ def validate(project: Path, tests: Path, apk: Path) -> None:
     reports = sorted(tests.rglob("*.xml")) if tests.is_dir() else []
     if not reports:
         raise ValueError("No Unity NUnit XML result files were produced")
-    if sum(_passing_nunit_report(path) for path in reports) != 1:
+    methods, art = _expected_unity_tests(project)
+    if sum(_passing_nunit_report(path, methods, art) for path in reports) != 1:
         raise ValueError("Expected exactly one real NUnit test-run")
     _validate_apk(apk)
 
