@@ -7,6 +7,14 @@ import zipfile
 from pathlib import Path
 
 EDITOR_VERSION = "6000.0.62f1"
+REQUIRED_TESTS = frozenset({
+    "GeneratedUiFilesLiveInsideTheSelectedUnityProject",
+    "ExpeditionFinishesAcrossOfflineTimeWithoutBackgroundTimers",
+    "FullStateRoundTripsThroughUnityJson",
+    "CorruptPrimaryRecoversBackupWithoutOverwritingIt",
+    "StoneSkipPreviewCannotMutateAndRetriesAreFree",
+    "PetCareMatchesOriginalRules",
+})
 
 
 def _passing_nunit_report(path: Path) -> bool:
@@ -24,6 +32,9 @@ def _passing_nunit_report(path: Path) -> bool:
     cases = root.findall(".//test-case")
     if len(cases) != total or any(case.get("result") != "Passed" for case in cases):
         raise ValueError(f"Unity EditMode test-case results missing or inconsistent: {path}")
+    present = {case.get("name") for case in cases}
+    if not REQUIRED_TESTS <= present:
+        raise ValueError(f"Unity EditMode suite is incomplete: {path}")
     return True
 
 
