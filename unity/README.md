@@ -17,6 +17,7 @@ Open **unity/** (not the repository root) in Unity Hub. Pinned editor: **Unity 6
 - Three optional habitats (Grove, Meadow, Pond) now support a 10-minute offline expedition with original discoveries, a small journal, material rewards and full-basket recovery. This is a **no-GPS experience**, not yet step/location sensor integration.
 - A version-4 complete gameplay save contains pet, inventory, room, activities, expeditions and a one-time firsts memory ledger. Version-3/2 gameplay and version-1 pet-only saves migrate, preserving existing progress and starting a blank memory book where history cannot be reconstructed. Corruption validation and previous-save backup recovery remain.
 - The Book tab records up to 13 locally stored first experiences from care, successful crafting, minigame wins, room placement, snack sharing and discovered habitats. Records are one-time, schema-validated and clock-skew-safe; no GPS coordinates or opaque chat histories.
+- The six main sections use two three-button navigation rows to preserve useful tap widths in portrait mode. The Care tab includes optional companion naming (trimmed, 1–24 characters, rejects control characters) stored in the existing v4 pet snapshot; Unicode names are accepted. Editor/unit and actual phone UI validation remain pending.
 - Unity scene setup menu creates a persisted Editor panel asset and scene; focused state parity tests are authored but have not run in Unity.
 
 ## Production gaps
