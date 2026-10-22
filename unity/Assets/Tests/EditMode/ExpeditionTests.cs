@@ -75,6 +75,39 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void FieldJournalNamesSurviveSaveAndRemainBounded()
+        {
+            var game = new Expeditions();
+            var bag = Inventory.Starter();
+            long now = 0;
+            for (int i = 0; i < Expeditions.JournalLimit + 2; i++)
+            {
+                // Make room for habitat rewards so completed trips cannot be lost.
+                if (bag.Count(ItemId.WildBerry) > 0)
+                    bag.Take(ItemId.WildBerry);
+                Assert.IsTrue(game.Start(Habitat.Grove, now));
+                now += Expeditions.DurationMilliseconds;
+                Assert.AreEqual(ExpeditionClaim.Claimed, game.Claim(now, bag));
+            }
+
+            var restored = Expeditions.Restore(game.Snapshot());
+            Assert.AreEqual(Expeditions.JournalLimit, restored.Journal.Count);
+            Assert.AreEqual(Expeditions.JournalLimit + 2, restored.Completed);
+            Assert.AreEqual("Amber Bark", Expeditions.DiscoveryName(restored.Journal[0]));
+            Assert.AreEqual("Amber Bark", restored.LatestDiscovery());
+        }
+
+        [Test]
+        public void DiscoveryNamesRejectMalformedData()
+        {
+            Assert.Throws<System.ArgumentException>(() => Expeditions.DiscoveryName(null));
+            Assert.Throws<System.ArgumentException>(() =>
+                Expeditions.DiscoveryName(new DiscoveryRecord { habitat = 10 }));
+            Assert.Throws<System.ArgumentException>(() =>
+                Expeditions.DiscoveryName(new DiscoveryRecord { habitat = 2, variation = -1 }));
+        }
+
+        [Test]
         public void InvalidRestorationIsRejected()
         {
             var data = new Expeditions().Snapshot();

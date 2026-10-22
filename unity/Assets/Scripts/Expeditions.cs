@@ -95,10 +95,14 @@ namespace Tamagoochi
             return ExpeditionClaim.Claimed;
         }
 
-        public string LatestDiscovery()
+        public string LatestDiscovery() =>
+            journal.Count == 0 ? "No discoveries yet" : DiscoveryName(journal[journal.Count - 1]);
+
+        public static string DiscoveryName(DiscoveryRecord record)
         {
-            if (journal.Count == 0) return "No discoveries yet";
-            var record = journal[journal.Count - 1];
+            if (record == null || record.habitat < 0 || record.habitat >= Finds.Length ||
+                record.variation < 0 || record.variation >= Finds[record.habitat].Length)
+                throw new ArgumentException("Invalid discovery record", nameof(record));
             return Finds[record.habitat][record.variation];
         }
 

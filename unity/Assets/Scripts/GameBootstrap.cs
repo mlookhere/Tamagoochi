@@ -323,6 +323,7 @@ namespace Tamagoochi
             Heading("A world of small wonders");
             Line("Offline adventures. No location or step permissions required.");
             Line($"Finds {expeditions.Completed} · {expeditions.LatestDiscovery()}");
+            ShowFieldJournal();
             if (!expeditions.IsExploring)
             {
                 foreach (Habitat habitat in Enum.GetValues(typeof(Habitat)))
@@ -354,6 +355,44 @@ namespace Tamagoochi
                     _ => "Still exploring."
                 });
             });
+        }
+
+        private void ShowFieldJournal()
+        {
+            var entries = expeditions.Journal;
+            if (entries.Count == 0) return;
+            Heading("Field journal");
+            // Most recent finds first. Keep this view short during exploration.
+            for (int i = entries.Count - 1; i >= Mathf.Max(0, entries.Count - 5); i--)
+            {
+                var record = entries[i];
+                var habitat = (Habitat)record.habitat;
+                var row = new VisualElement();
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.alignItems = Align.Center;
+                row.style.marginBottom = 6;
+                row.style.paddingTop = 5;
+                row.style.paddingBottom = 5;
+                row.style.backgroundColor = new Color(0.92f, 0.95f, 0.87f);
+                Corners(row, 12);
+
+                var image = new Image
+                {
+                    sprite = Resources.Load<Sprite>("Art/world/" + habitat.ToString().ToLowerInvariant()),
+                    scaleMode = ScaleMode.ScaleToFit,
+                    pickingMode = PickingMode.Ignore
+                };
+                image.style.width = 56;
+                image.style.height = 56;
+                image.style.marginLeft = 8;
+                image.style.marginRight = 12;
+                row.Add(image);
+
+                var label = Text(habitat + " · " + Expeditions.DiscoveryName(record), 14, true);
+                label.style.flexGrow = 1;
+                row.Add(label);
+                page.Add(row);
+            }
         }
 
         private void Reward(MiniGame game, ItemId item)
