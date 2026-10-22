@@ -28,8 +28,13 @@ def _validate_apk(apk: Path) -> None:
     if not apk.is_file() or apk.stat().st_size <= 0 or not zipfile.is_zipfile(apk):
         raise ValueError("Native Android APK missing, empty or invalid")
     with zipfile.ZipFile(apk) as archive:
-        if archive.testzip() is not None or "AndroidManifest.xml" not in archive.namelist():
-            raise ValueError("Android APK archive is damaged or lacks a manifest")
+        names = archive.namelist()
+        if archive.testzip() is not None or not {"AndroidManifest.xml", "classes.dex"} <= set(names):
+            raise ValueError("Android APK archive is damaged or missing runtime entries")
+        if not archive.read("AndroidManifest.xml").startswith(b"\x03\x00\x08\x00"):
+            raise ValueError("Android manifest is not compiled binary XML")
+        if not archive.read("classes.dex").startswith(b"dex\n"):
+            raise ValueError("Android DEX bytecode is missing or invalid")
 
 
 def validate(project: Path, tests: Path, apk: Path) -> None:

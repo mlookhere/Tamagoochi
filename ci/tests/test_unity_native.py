@@ -26,7 +26,8 @@ class NativeEvidenceTests(unittest.TestCase):
         self.xml.write_text(PASS)
         self.apk = root / "Tamagoochi.apk"
         with zipfile.ZipFile(self.apk, "w") as archive:
-            archive.writestr("AndroidManifest.xml", "binary-placeholder")
+            archive.writestr("AndroidManifest.xml", b"\x03\x00\x08\x00" + b"synthetic")
+            archive.writestr("classes.dex", b"dex\n035\x00" + b"synthetic")
 
     def assert_rejected(self):
         with self.assertRaises((ValueError, OSError, ET.ParseError, zipfile.BadZipFile)) as caught:
@@ -82,6 +83,21 @@ class NativeEvidenceTests(unittest.TestCase):
         self.assert_rejected()
         self.apk.write_text("not an APK")
         self.assert_rejected()
+
+    def test_uncompiled_manifest_fails(self):
+        with zipfile.ZipFile(self.apk, "w") as archive:
+            archive.writestr("AndroidManifest.xml", "not-binary-xml")
+            archive.writestr("classes.dex", b"dex\n035\x00")
+        self.assert_rejected()
+
+    def test_missing_or_invalid_dex_fails(self):
+        for include_dex, contents in [(False, b""), (True, b"not-dex")]:
+            with self.subTest(include_dex=include_dex):
+                with zipfile.ZipFile(self.apk, "w") as archive:
+                    archive.writestr("AndroidManifest.xml", b"\x03\x00\x08\x00")
+                    if include_dex:
+                        archive.writestr("classes.dex", contents)
+                self.assert_rejected()
 
     def test_apk_without_android_manifest_fails(self):
         with zipfile.ZipFile(self.apk, "w") as archive:
