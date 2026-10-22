@@ -85,7 +85,7 @@ class NativeEvidenceTests(unittest.TestCase):
     def test_wrong_root_or_missing_nunit_counters_fail(self):
         for xml in ['<testsuite tests="3"/>',
                     PASS.replace(' failed="0"', ''),
-                    PASS.replace(' passed="3"', '')]:
+                    PASS.replace(' passed="6"', '')]:
             with self.subTest(xml=xml):
                 self.xml.write_text(xml)
                 self.assert_rejected()
