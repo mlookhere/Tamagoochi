@@ -15,6 +15,14 @@ namespace Tamagoochi.Editor
         private const string PanelPath = "Assets/Resources/TamagoochiPanel.asset";
         private const string LegacyPanelPath = "Assets/TamagoochiPanel.asset";
         private const string ThemePath = "Assets/Resources/TamagoochiTheme.tss";
+        private static readonly string[] RequiredSprites =
+        {
+            "companions/seedling-neutral", "companions/seedling-joyful",
+            "companions/seedling-sad", "companions/seedling-asleep",
+            "companions/seedling-surprised", "companions/action-seedling-eat",
+            "companions/action-seedling-clean", "companions/action-seedling-play",
+            "world/grove", "world/meadow", "world/pond"
+        };
 
         [MenuItem("Tamagoochi/Create or Open Home Scene")]
         public static void CreateOrOpen()
@@ -90,7 +98,15 @@ namespace Tamagoochi.Editor
                 document.panelSettings.themeStyleSheet == null ||
                 AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>(ThemePath) == null)
                 throw new InvalidOperationException("Unity Home scene or UI panel verification failed");
-            Debug.Log("Unity Home scene and UI panel verification succeeded.");
+            foreach (string path in RequiredSprites)
+            {
+                string asset = "Assets/Resources/Art/" + path + ".png";
+                var importer = AssetImporter.GetAtPath(asset) as TextureImporter;
+                if (importer == null || importer.textureType != TextureImporterType.Sprite ||
+                    Resources.Load<Sprite>("Art/" + path) == null)
+                    throw new InvalidOperationException("Required original sprite missing or invalid: " + asset);
+            }
+            Debug.Log("Unity Home scene, UI panel and original sprite imports verified.");
         }
 
         public static void BuildAndroidDevelopment() =>

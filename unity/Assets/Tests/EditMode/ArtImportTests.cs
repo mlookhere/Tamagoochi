@@ -55,6 +55,15 @@ namespace Tamagoochi.Tests
             }
         }
 
+        [Test]
+        public void NativePreflightChecksPlayableSceneAndOriginalSprites()
+        {
+            Assert.DoesNotThrow(() => Tamagoochi.Editor.HomeSceneSetup.VerifyEditorSetup());
+            var bootstrap = Object.FindFirstObjectByType<GameBootstrap>();
+            Assert.IsNotNull(bootstrap, "Home scene must contain a playable bootstrap");
+            Assert.AreEqual(1, EditorBuildSettings.scenes.Length);
+        }
+
         [TestCase("companions/seedling-neutral", 256)]
         [TestCase("companions/seedling-joyful", 256)]
         [TestCase("companions/seedling-sad", 256)]
