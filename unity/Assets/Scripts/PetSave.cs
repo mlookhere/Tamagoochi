@@ -110,7 +110,7 @@ namespace Tamagoochi
                     JsonUtility.FromJson<GameSnapshot>(File.ReadAllText(path)), out session);
             }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException ||
-                                          error is ArgumentException || error is UnityException)
+                                          error is ArgumentException || error is UnityException || error is NotSupportedException)
             {
                 Debug.LogWarning($"Saved game unavailable: {error.Message}");
                 return false;
@@ -138,7 +138,7 @@ namespace Tamagoochi
                 return true;
             }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException ||
-                                          error is ArgumentException || error is UnityException)
+                                          error is ArgumentException || error is UnityException || error is NotSupportedException)
             {
                 Debug.LogWarning($"Legacy save unavailable: {error.Message}");
                 return false;
