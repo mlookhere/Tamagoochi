@@ -17,6 +17,7 @@ namespace Tamagoochi
         };
 
         private GameSession session;
+        private CompanionStage stage;
         private Pet pet => session.Pet;
         private Inventory inventory => session.Inventory;
         private Room room => session.Room;
@@ -40,6 +41,7 @@ namespace Tamagoochi
         private void Awake()
         {
             session = GameStore.Load();
+            stage = GetComponent<CompanionStage>() ?? gameObject.AddComponent<CompanionStage>();
         }
 
         private void OnApplicationPause(bool paused)
@@ -61,6 +63,11 @@ namespace Tamagoochi
             if (session != null) GameStore.Save(session);
         }
 
+        private void Update()
+        {
+            if (session != null) stage.Present(pet, room);
+        }
+
         private void OnGUI()
         {
             float scale = Mathf.Clamp(Screen.width / 430f, 0.85f, 2f);
@@ -69,8 +76,11 @@ namespace Tamagoochi
             GUI.skin.label.wordWrap = true;
             float width = Screen.width / scale;
             float height = Screen.height / scale;
-            GUILayout.BeginArea(new Rect(12, 12, width - 24, height - 24), GUI.skin.box);
-            GUILayout.Label($"TAMAGOOCHI  •  {pet.name}  •  Day {pet.AgeDays(GameStore.Now())}");
+            GUI.Label(new Rect(18, 14, width - 36, 26),
+                $"TAMAGOOCHI  •  {pet.name}  •  Day {pet.AgeDays(GameStore.Now())}");
+            float stageHeight = Mathf.Clamp(height * 0.48f, 200f, 440f);
+            GUILayout.BeginArea(new Rect(12, stageHeight, width - 24,
+                Mathf.Max(120, height - stageHeight - 12)), GUI.skin.box);
             GUILayout.Label($"Pet bond {pet.bond:0}   |   Workshop bond {bond.Bond}");
             int next = GUILayout.SelectionGrid(tab, new[] { "Care", "Workshop", "Games", "Room" }, 4);
             if (next != tab) { tab = next; scroll = Vector2.zero; }
@@ -93,10 +103,10 @@ namespace Tamagoochi
             GUILayout.Label($"Hunger {pet.hunger:0}   Happiness {pet.happiness:0}   Energy {pet.energy:0}");
             GUILayout.Label($"Cleanliness {pet.cleanliness:0}   Mood {pet.mood:0}   Health {pet.health:0}");
             GUILayout.Label(pet.sleeping ? "Mochi is resting" : "Mochi is awake");
-            if (GUILayout.Button("Feed")) { pet.Feed(); message = "Yum!"; }
-            if (GUILayout.Button("Play")) { pet.Play(); message = "Let's play!"; }
-            if (GUILayout.Button("Clean")) { pet.Clean(); message = "Fresh and happy"; }
-            if (GUILayout.Button("Comfort")) { pet.Comfort(); message = "Feeling loved"; }
+            if (GUILayout.Button("Feed")) { pet.Feed(); stage.React("joyful"); message = "Yum!"; }
+            if (GUILayout.Button("Play")) { pet.Play(); stage.React("joyful"); message = "Let's play!"; }
+            if (GUILayout.Button("Clean")) { pet.Clean(); stage.React("joyful"); message = "Fresh and happy"; }
+            if (GUILayout.Button("Comfort")) { pet.Comfort(); stage.React("joyful"); message = "Feeling loved"; }
             if (GUILayout.Button(pet.sleeping ? "Wake" : "Sleep"))
             {
                 pet.sleeping = !pet.sleeping;
@@ -224,7 +234,7 @@ namespace Tamagoochi
             bool found = inventory.Give(item);
             bool first = bond.Complete(game);
             message = found ? $"Great work! Found a {item}." : $"The {item} basket is full.";
-            if (first) message += " Your bond grew!";
+            if (first) { message += " Your bond grew!"; stage.React("joyful"); }
         }
     }
 }
