@@ -45,7 +45,7 @@ def _expected_unity_tests(project: Path):
         elif cases:
             raise ValueError(f"Unexpected untracked parameterized tests in {name}")
     if (len(methods) < 62 or len(art) < 11 or
-            not REQUIRED_TESTS <= methods or len(art) != len(set(art))):
+            not REQUIRED_TESTS <= methods.keys() or len(art) != len(set(art))):
         raise ValueError("Unity authored EditMode test source is incomplete or changed")
     return methods, art
 
@@ -79,7 +79,7 @@ def _passing_nunit_report(path: Path, methods: set, art: list) -> bool:
         raise ValueError(f"Unity EditMode test-case results missing or inconsistent: {path}")
     names = [case.get("name") or "" for case in cases]
     present = set(names)
-    if (len(present) != total or not methods <= present or
+    if (len(present) != total or not methods.keys() <= present or
             not _matches_authored_suites(cases, methods, art)):
         raise ValueError(f"Unity EditMode suite is incomplete or duplicated: {path}")
     return True
