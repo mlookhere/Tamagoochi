@@ -59,7 +59,7 @@ namespace Tamagoochi
 
         public GameSnapshot Capture() => new()
         {
-            pet = Pet,
+            pet = Pet.Copy(),
             items = Inventory.Snapshot(),
             room = Room.Snapshot(),
             completed = Bond.Snapshot(),
@@ -115,7 +115,7 @@ namespace Tamagoochi
                 // v2 saves predate expeditions. Preserve their workshop exactly.
                 var expeditions = snapshot.version == 2 ? new Tamagoochi.Expeditions() :
                     Tamagoochi.Expeditions.Restore(snapshot.expeditions);
-                session = new GameSession(snapshot.pet, inventory, room, bond,
+                session = new GameSession(snapshot.pet.Copy(), inventory, room, bond,
                     echo, skip, pairs, expeditions);
                 return true;
             }

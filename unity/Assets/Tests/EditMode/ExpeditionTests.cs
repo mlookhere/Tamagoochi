@@ -98,6 +98,19 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void PublicJournalCannotMutateInternalRecords()
+        {
+            var game = new Expeditions();
+            var bag = Inventory.Starter();
+            game.Start(Habitat.Grove, 0);
+            Assert.AreEqual(ExpeditionClaim.Claimed,
+                game.Claim(Expeditions.DurationMilliseconds, bag));
+            game.Journal[0].habitat = 99;
+            Assert.AreEqual("Singing Leaf", game.LatestDiscovery());
+            Assert.DoesNotThrow(() => Expeditions.Restore(game.Snapshot()));
+        }
+
+        [Test]
         public void DiscoveryNamesRejectMalformedData()
         {
             Assert.Throws<System.ArgumentException>(() => Expeditions.DiscoveryName(null));

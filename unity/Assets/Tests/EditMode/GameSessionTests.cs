@@ -29,6 +29,19 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void CapturedAndRestoredPetNeverAliasLiveState()
+        {
+            var live = GameSession.New(1000);
+            var snapshot = live.Capture();
+            snapshot.pet.hunger = 1;
+            Assert.AreEqual(82, live.Pet.hunger);
+            Assert.IsTrue(GameSession.TryRestore(snapshot, out var restored));
+            snapshot.pet.hunger = 99;
+            Assert.AreEqual(1, restored.Pet.hunger);
+            Assert.AreEqual(82, live.Pet.hunger);
+        }
+
+        [Test]
         public void CorruptedInventoryIsRejectedWithoutHalfRestoring()
         {
             var snapshot = GameSession.New(0).Capture();

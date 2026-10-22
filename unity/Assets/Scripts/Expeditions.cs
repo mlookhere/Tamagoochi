@@ -47,7 +47,8 @@ namespace Tamagoochi
         public Habitat? ActiveHabitat => active;
         public long ReadyAt => readyAt;
         public int Completed => completed;
-        public IReadOnlyList<DiscoveryRecord> Journal => journal.AsReadOnly();
+        // Never expose mutable save records owned by the live expedition state.
+        public IReadOnlyList<DiscoveryRecord> Journal => journal.ConvertAll(CopyRecord).AsReadOnly();
 
         public bool Start(Habitat habitat, long now)
         {
@@ -106,18 +107,20 @@ namespace Tamagoochi
             return Finds[record.habitat][record.variation];
         }
 
+        private static DiscoveryRecord CopyRecord(DiscoveryRecord record) => new()
+        {
+            habitat = record.habitat,
+            variation = record.variation,
+            discoveredAt = record.discoveredAt
+        };
+
         public ExpeditionSave Snapshot() => new()
         {
             activeHabitat = active.HasValue ? (int)active.Value : -1,
             startedAt = startedAt,
             readyAt = readyAt,
             completed = completed,
-            journal = journal.ConvertAll(record => new DiscoveryRecord
-            {
-                habitat = record.habitat,
-                variation = record.variation,
-                discoveredAt = record.discoveredAt
-            }).ToArray()
+            journal = journal.ConvertAll(CopyRecord).ToArray()
         };
 
         public static Expeditions Restore(ExpeditionSave save)

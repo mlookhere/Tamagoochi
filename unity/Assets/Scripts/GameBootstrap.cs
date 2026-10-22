@@ -31,6 +31,7 @@ namespace Tamagoochi
         private int tab;
         private int gameTab;
         private bool reducedMotion;
+        private bool showAllDiscoveries;
         private UIDocument document;
         private VisualElement header;
         private VisualElement sheet;
@@ -363,7 +364,8 @@ namespace Tamagoochi
             if (entries.Count == 0) return;
             Heading("Field journal");
             // Most recent finds first. Keep this view short during exploration.
-            for (int i = entries.Count - 1; i >= Mathf.Max(0, entries.Count - 5); i--)
+            int firstVisible = showAllDiscoveries ? 0 : Mathf.Max(0, entries.Count - 5);
+            for (int i = entries.Count - 1; i >= firstVisible; i--)
             {
                 var record = entries[i];
                 var habitat = (Habitat)record.habitat;
@@ -393,6 +395,12 @@ namespace Tamagoochi
                 row.Add(label);
                 page.Add(row);
             }
+            if (entries.Count > 5)
+                Add(showAllDiscoveries ? "Show recent finds" : "View full journal", () =>
+                {
+                    showAllDiscoveries = !showAllDiscoveries;
+                    Refresh();
+                });
         }
 
         private void Reward(MiniGame game, ItemId item)

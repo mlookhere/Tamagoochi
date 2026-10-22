@@ -28,6 +28,24 @@ namespace Tamagoochi
             lastSimulatedAt = Math.Max(0, now)
         };
 
+        public Pet Copy() => new()
+        {
+            name = name,
+            hunger = hunger,
+            happiness = happiness,
+            energy = energy,
+            cleanliness = cleanliness,
+            mood = mood,
+            bond = bond,
+            health = health,
+            curiosity = curiosity,
+            gentleness = gentleness,
+            sleeping = sleeping,
+            roomItemSlot = roomItemSlot,
+            bornAt = bornAt,
+            lastSimulatedAt = lastSimulatedAt
+        };
+
         public void Feed()
         {
             hunger = Cap(hunger + 18);
