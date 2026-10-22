@@ -2,6 +2,7 @@
 import tempfile
 import unittest
 import zipfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from ci.verify_unity_native import validate
@@ -28,7 +29,7 @@ class NativeEvidenceTests(unittest.TestCase):
             archive.writestr("AndroidManifest.xml", "binary-placeholder")
 
     def assert_rejected(self):
-        with self.assertRaises((ValueError, OSError, Exception)) as caught:
+        with self.assertRaises((ValueError, OSError, ET.ParseError, zipfile.BadZipFile)) as caught:
             validate(self.project, self.tests, self.apk)
         self.assertNotEqual(str(caught.exception), "")
 
@@ -58,6 +59,14 @@ class NativeEvidenceTests(unittest.TestCase):
     def test_invalid_xml_fails(self):
         self.xml.write_text("<test-run")
         self.assert_rejected()
+
+    def test_wrong_root_or_missing_nunit_counters_fail(self):
+        for xml in ['<testsuite tests="3"/>',
+                    PASS.replace(' failed="0"', ''),
+                    PASS.replace(' passed="3"', '')]:
+            with self.subTest(xml=xml):
+                self.xml.write_text(xml)
+                self.assert_rejected()
 
     def test_duplicate_nunit_results_fail(self):
         (self.tests / "duplicate.xml").write_text(PASS)
