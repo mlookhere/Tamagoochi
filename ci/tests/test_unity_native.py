@@ -194,6 +194,12 @@ class NativeEvidenceTests(unittest.TestCase):
         (self.tests / "duplicate.xml").write_text(PASS)
         self.assert_rejected()
 
+    def test_extra_invalid_nunit_results_fail(self):
+        for xml in ['<testsuite tests="0"/>', FAIL]:
+            with self.subTest(report=xml.split(">")[0]):
+                (self.tests / "extra.xml").write_text(xml)
+                self.assert_rejected()
+
     def test_wrong_unity_version_fails(self):
         (self.project / "ProjectSettings" / "ProjectVersion.txt").write_text(
             "m_EditorVersion: 2022.3.10f1\n")
