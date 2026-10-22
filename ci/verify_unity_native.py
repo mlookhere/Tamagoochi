@@ -14,7 +14,9 @@ SUITE_FILES = (
     "GameStoreTests", "GameplayParityTests", "PetAndInventoryTests",
 )
 DIRECT_TEST = re.compile(r"(?m)^[ \t]*\[Test\][ \t]*\r?\n[ \t]*public void ([A-Za-z]\w*)\(")
-ART_CASE = re.compile(r'(?m)^[ \t]*\[TestCase\("([^"]+)",\s*(\d+)\)\]')
+TEST_ATTRIBUTES = re.compile(r"(?m)^[ \\t]*\\[Test\\][ \\t]*$")
+CASE_ATTRIBUTES = re.compile(r"(?m)^[ \\t]*\\[TestCase\\b")
+ART_CASE = re.compile(r'(?m)^[ \\t]*\\[TestCase\\("([^"]+)",\\s*(\\d+)\\)\\]')
 REQUIRED_TESTS = frozenset({
     "GeneratedUiFilesLiveInsideTheSelectedUnityProject",
     "ExpeditionFinishesAcrossOfflineTimeWithoutBackgroundTimers",
@@ -33,13 +35,15 @@ def _expected_unity_tests(project: Path):
     for name in SUITE_FILES:
         source = (folder / f"{name}.cs").read_text()
         found = DIRECT_TEST.findall(source)
-        if not found:
-            raise ValueError(f"Missing NUnit test methods in {name}")
+        if not found or len(found) != len(TEST_ATTRIBUTES.findall(source)):
+            raise ValueError(f"Unrecognized or missing NUnit [Test] method in {name}")
         for method in found:
             if method in methods:
                 raise ValueError(f"Duplicate NUnit test method: {method}")
             methods[method] = f"Tamagoochi.Tests.{name}"
         cases = ART_CASE.findall(source)
+        if len(cases) != len(CASE_ATTRIBUTES.findall(source)):
+            raise ValueError(f"Unrecognized NUnit [TestCase] parameters in {name}")
         if name == "ArtImportTests":
             art = cases
         elif cases:
