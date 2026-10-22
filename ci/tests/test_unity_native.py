@@ -84,9 +84,13 @@ class NativeEvidenceTests(unittest.TestCase):
 
     def test_missing_or_failed_case_fails(self):
         required = sorted(REQUIRED_TESTS)[0]
-        case = f'<test-case name="{required}" result="Passed"/>'
-        for xml in [PASS.replace(case, ''), PASS.replace(case, case.replace("Passed", "Failed"))]:
-            with self.subTest(xml=xml):
+        case = _method_case(METHODS.index(required), required)
+        self.assertIn(case, PASS)
+        for label, xml in [
+            ("missing", PASS.replace(case, "")),
+            ("failed", PASS.replace(case, case.replace('result="Passed"', 'result="Failed"'))),
+        ]:
+            with self.subTest(case=label):
                 self.xml.write_text(xml)
                 self.assert_rejected()
 
@@ -141,8 +145,10 @@ class NativeEvidenceTests(unittest.TestCase):
 
     def test_filtered_suite_is_rejected_even_if_root_counts_pass(self):
         excluded = sorted(REQUIRED_TESTS)[0]
-        missing = f'<test-case name="{excluded}" result="Passed"/>'
-        self.xml.write_text(PASS.replace(missing, '<test-case name="unrelated" result="Passed"/>'))
+        original = _method_case(METHODS.index(excluded), excluded)
+        self.assertIn(original, PASS)
+        self.xml.write_text(PASS.replace(original, original.replace(
+            f'name="{excluded}"', 'name="unrelated"', 1)))
         self.assert_rejected()
 
     def test_failed_and_partial_tests_fail(self):
