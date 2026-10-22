@@ -41,7 +41,7 @@ namespace Tamagoochi.Editor
         {
             Directory.CreateDirectory("Assets/Resources");
             if (!File.Exists(ThemePath))
-                File.WriteAllText(ThemePath, "@import url(\"unity-theme://default\");\\n".Replace("\\n", "\n"));
+                File.WriteAllText(ThemePath, "@import url(\"unity-theme://default\");\n");
             AssetDatabase.ImportAsset(ThemePath, ImportAssetOptions.ForceSynchronousImport);
             var theme = AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>(ThemePath);
             if (theme == null)
