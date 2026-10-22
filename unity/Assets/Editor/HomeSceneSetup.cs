@@ -98,6 +98,13 @@ namespace Tamagoochi.Editor
                 document.panelSettings.themeStyleSheet == null ||
                 AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>(ThemePath) == null)
                 throw new InvalidOperationException("Unity Home scene or UI panel verification failed");
+            VerifyOriginalSprites();
+            Debug.Log("Unity Home scene, UI panel and original sprite imports verified.");
+        }
+
+        // Read-only check: safe for EditMode test execution without scene edits.
+        public static void VerifyOriginalSprites()
+        {
             foreach (string path in RequiredSprites)
             {
                 string asset = "Assets/Resources/Art/" + path + ".png";
@@ -106,7 +113,6 @@ namespace Tamagoochi.Editor
                     Resources.Load<Sprite>("Art/" + path) == null)
                     throw new InvalidOperationException("Required original sprite missing or invalid: " + asset);
             }
-            Debug.Log("Unity Home scene, UI panel and original sprite imports verified.");
         }
 
         public static void BuildAndroidDevelopment() =>

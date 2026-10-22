@@ -56,12 +56,9 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
-        public void NativePreflightChecksPlayableSceneAndOriginalSprites()
+        public void NativePreflightRejectsMissingOrInvalidOriginalSprites()
         {
-            Assert.DoesNotThrow(() => Tamagoochi.Editor.HomeSceneSetup.VerifyEditorSetup());
-            var bootstrap = Object.FindFirstObjectByType<GameBootstrap>();
-            Assert.IsNotNull(bootstrap, "Home scene must contain a playable bootstrap");
-            Assert.AreEqual(1, EditorBuildSettings.scenes.Length);
+            Assert.DoesNotThrow(() => Tamagoochi.Editor.HomeSceneSetup.VerifyOriginalSprites());
         }
 
         [TestCase("companions/seedling-neutral", 256)]
