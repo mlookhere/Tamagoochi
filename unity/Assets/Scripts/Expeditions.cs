@@ -51,9 +51,10 @@ namespace Tamagoochi
 
         public bool Start(Habitat habitat, long now)
         {
-            if (!Enum.IsDefined(typeof(Habitat), habitat) || now < 0 ||
-                now > long.MaxValue - DurationMilliseconds)
+            if (!Enum.IsDefined(typeof(Habitat), habitat))
                 throw new ArgumentOutOfRangeException(nameof(habitat));
+            if (now < 0 || now > long.MaxValue - DurationMilliseconds)
+                throw new ArgumentOutOfRangeException(nameof(now));
             if (IsExploring) return false;
             active = habitat;
             startedAt = now;
@@ -78,11 +79,12 @@ namespace Tamagoochi
             };
             // Never consume a finished expedition if its reward cannot be stored.
             if (!inventory.Give(item)) return ExpeditionClaim.BasketFull;
+            long previousDiscovery = journal.Count == 0 ? 0 : journal[journal.Count - 1].discoveredAt;
             var record = new DiscoveryRecord
             {
                 habitat = (int)habitat,
                 variation = completed % Finds[(int)habitat].Length,
-                discoveredAt = now
+                discoveredAt = Math.Max(now, previousDiscovery)
             };
             completed++;
             journal.Add(record);

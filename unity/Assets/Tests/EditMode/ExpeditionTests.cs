@@ -55,6 +55,26 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void BackwardClockDoesNotCorruptDiscoveryJournal()
+        {
+            var game = new Expeditions();
+            var bag = Inventory.Starter();
+            long initial = 5000000;
+            game.Start(Habitat.Grove, initial);
+            Assert.AreEqual(ExpeditionClaim.Claimed,
+                game.Claim(initial + Expeditions.DurationMilliseconds, bag));
+            // The device clock moves backward after the first discovery.
+            game.Start(Habitat.Pond, 0);
+            Assert.AreEqual(ExpeditionClaim.Claimed,
+                game.Claim(Expeditions.DurationMilliseconds, bag));
+            var saved = game.Snapshot();
+            Assert.AreEqual(2, saved.completed);
+            Assert.GreaterOrEqual(saved.journal[1].discoveredAt,
+                saved.journal[0].discoveredAt);
+            Assert.DoesNotThrow(() => Expeditions.Restore(saved));
+        }
+
+        [Test]
         public void InvalidRestorationIsRejected()
         {
             var data = new Expeditions().Snapshot();
