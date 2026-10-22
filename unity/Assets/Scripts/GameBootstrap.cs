@@ -271,11 +271,16 @@ namespace Tamagoochi
             foreach (ItemId item in Recipes)
             {
                 ItemId selected = item;
-                Add($"Make {item} · {inventory.Count(item)} owned", () =>
+                var recipe = Inventory.RecipeFor(selected);
+                Line(string.Join(" + ", Array.ConvertAll(recipe, ingredient =>
+                    $"{inventory.Count(ingredient.item)}/{ingredient.quantity} {ingredient.item}")));
+                string status = inventory.CanCraft(selected) ? "Ready" :
+                    inventory.RemainingCapacity(selected) == 0 ? "Storage full" : "Need materials";
+                Add($"Make {selected} · {inventory.Count(selected)} owned · {status}", () =>
                 {
                     bool success = inventory.Craft(selected);
                     if (success) Remember(MemoryKind.FirstCraft);
-                    Commit(success ? $"Created {selected}!" : "Gather more materials first.");
+                    Commit(success ? $"Created {selected}!" : "Check materials and storage space.");
                 });
             }
             Add($"Share snack · {inventory.Count(ItemId.PicnicSnack)} owned", () =>

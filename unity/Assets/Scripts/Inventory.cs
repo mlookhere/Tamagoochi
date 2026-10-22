@@ -67,9 +67,8 @@ namespace Tamagoochi
             return true;
         }
 
-        public bool Craft(ItemId output)
-        {
-            (ItemId, int)[] ingredients = output switch
+        // Return a fresh recipe to prevent callers from mutating craft rules.
+        public static (ItemId item, int quantity)[] RecipeFor(ItemId output) => output switch
             {
                 ItemId.PicnicSnack => new[] { (ItemId.WildBerry, 2), (ItemId.FlowerPetal, 1) },
                 ItemId.LeafToy => new[] { (ItemId.FlowerPetal, 2), (ItemId.SoftFiber, 1) },
@@ -78,10 +77,23 @@ namespace Tamagoochi
                 ItemId.FlowerCrown => new[] { (ItemId.FlowerPetal, 3), (ItemId.SoftFiber, 1) },
                 _ => throw new ArgumentOutOfRangeException(nameof(output))
             };
-            if (Count(output) >= Limits[(int)output]) return false;
-            foreach (var (item, amount) in ingredients)
-                if (Count(item) < amount) return false;
-            foreach (var (item, amount) in ingredients) counts[(int)item] -= amount;
+
+        public bool CanCraft(ItemId output) =>
+            HasIngredients(output, RecipeFor(output));
+
+        private bool HasIngredients(ItemId output, (ItemId item, int quantity)[] recipe)
+        {
+            if (RemainingCapacity(output) == 0) return false;
+            foreach (var (item, quantity) in recipe)
+                if (Count(item) < quantity) return false;
+            return true;
+        }
+
+        public bool Craft(ItemId output)
+        {
+            var recipe = RecipeFor(output);
+            if (!HasIngredients(output, recipe)) return false;
+            foreach (var (item, quantity) in recipe) counts[(int)item] -= quantity;
             counts[(int)output]++;
             return true;
         }

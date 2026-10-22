@@ -55,6 +55,44 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void CraftPreviewAndActualCraftShareRequirementsAndCapacity()
+        {
+            var bag = Inventory.Starter();
+            foreach (ItemId item in new[] { ItemId.PicnicSnack, ItemId.LeafToy,
+                ItemId.MossCushion, ItemId.StarKeepsake, ItemId.FlowerCrown })
+            {
+                var recipe = Inventory.RecipeFor(item);
+                Assert.IsTrue(bag.CanCraft(item));
+                int before = bag.Count(item);
+                Assert.IsTrue(bag.Craft(item));
+                Assert.AreEqual(before + 1, bag.Count(item));
+                foreach (var (ingredient, amount) in recipe)
+                    Assert.GreaterOrEqual(bag.Count(ingredient), 0);
+            }
+            var snapshot = bag.Snapshot();
+            var restored = Inventory.Restore(snapshot);
+            Assert.AreEqual(bag.CanCraft(ItemId.PicnicSnack),
+                restored.CanCraft(ItemId.PicnicSnack));
+            var recipeCopy = Inventory.RecipeFor(ItemId.PicnicSnack);
+            recipeCopy[0] = (ItemId.RiverStone, 99);
+            Assert.AreEqual(ItemId.WildBerry, Inventory.RecipeFor(ItemId.PicnicSnack)[0].item);
+            Assert.Throws<System.ArgumentOutOfRangeException>(() =>
+                bag.CanCraft(ItemId.WildBerry));
+        }
+
+        [Test]
+        public void FullOutputStackBlocksCraftWithoutUsingMaterials()
+        {
+            var values = Inventory.Starter().Snapshot();
+            values[(int)ItemId.PicnicSnack] = 20;
+            var bag = Inventory.Restore(values);
+            var before = bag.Snapshot();
+            Assert.IsFalse(bag.CanCraft(ItemId.PicnicSnack));
+            Assert.IsFalse(bag.Craft(ItemId.PicnicSnack));
+            CollectionAssert.AreEqual(before, bag.Snapshot());
+        }
+
+        [Test]
         public void RemainingCapacityMatchesAtomicGiveAndRestoredLimits()
         {
             var bag = Inventory.Starter();

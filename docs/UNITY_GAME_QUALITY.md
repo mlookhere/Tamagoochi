@@ -77,3 +77,7 @@ Habitat choices preview their deterministic material reward and the exact free-s
 ### Companion expression and tactile silhouette
 
 The seedling 2D stage now prioritizes authored care-reaction expressions over a sad idle expression (sleeping still wins), adds low-amplitude breathing and brief celebratory squash/stretch, and disables all shape/bounce motion when reduced motion is enabled. Motion is computed from unscaled elapsed time without per-frame allocations; missing sprite paths are cached, preventing repeated resource lookups. Editor tests assert reaction precedence and bounded, reduced-motion-safe transforms. Unity import, render smoothness and animation art quality **remain unverified** on real devices.
+
+### Crafting clarity and recoverable basket space
+
+The workshop displays current/required ingredient counts and ready, missing-material, or output-storage-full status for each of its five recipes. UI preview and actual crafting use the same pure recipe definitions and atomic capacity checks, so players can identify which recipe spends a full expedition-reward stack without changing balance. The returned ingredient arrays are copied on each lookup so the UI cannot mutate recipes. Unity EditMode tests are authored for all recipes, output limits and save-restored status; Unity Editor/device usability is unverified.
