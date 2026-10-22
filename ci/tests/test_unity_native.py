@@ -25,15 +25,19 @@ def _method_case(index: int, name: str) -> str:
             f'methodname="{name}" fullname="{suite}.{name}" result="Passed"/>')
 
 
+def _art_case(asset: str) -> str:
+    case = f'OriginalSpritesImportCorrectly("{asset}",{_art_size(asset)})'
+    fixture = "Tamagoochi.Tests.ArtImportTests"
+    return (f"<test-case name='{case}' "
+            f'classname="{fixture}" methodname="OriginalSpritesImportCorrectly" '
+            f"fullname='{fixture}.{case}' result=\"Passed\"/>")
+
+
 PASS = (f'<test-run result="Passed" total="{MINIMUM_EDITMODE_CASES}" '
         f'passed="{MINIMUM_EDITMODE_CASES}" failed="0" skipped="0" inconclusive="0">'
         '<test-suite type="Assembly">'
         + ''.join(_method_case(i, name) for i, name in enumerate(METHODS))
-        + ''.join(f'<test-case name=\'OriginalSpritesImportCorrectly("{asset}",{_art_size(asset)})\' '
-                  'classname="Tamagoochi.Tests.ArtImportTests" '
-                  'methodname="OriginalSpritesImportCorrectly" '
-                  f'fullname=\'Tamagoochi.Tests.ArtImportTests.OriginalSpritesImportCorrectly("{asset}",{_art_size(asset)})\' '
-                  'result="Passed"/>' for asset in ART)
+        + ''.join(_art_case(asset) for asset in ART)
         + '</test-suite></test-run>')
 
 FAIL = '<test-run result="Failed" total="3" passed="2" failed="1" skipped="0" inconclusive="0"/>'
