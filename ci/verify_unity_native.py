@@ -47,6 +47,11 @@ def _expected_unity_tests(project: Path):
     return methods, art
 
 
+def _has_all_art_cases(names: list, assets: list) -> bool:
+    return all(sum("OriginalSpritesImportCorrectly" in name and asset in name
+                   for name in names) == 1 for asset in assets)
+
+
 def _passing_nunit_report(path: Path, methods: set, art: list) -> bool:
     root = ET.parse(path).getroot()
     if root.tag != "test-run":
@@ -62,11 +67,10 @@ def _passing_nunit_report(path: Path, methods: set, art: list) -> bool:
     cases = root.findall(".//test-case")
     if len(cases) != total or any(case.get("result") != "Passed" for case in cases):
         raise ValueError(f"Unity EditMode test-case results missing or inconsistent: {path}")
-    names = [case.get("name") for case in cases]
+    names = [case.get("name") or "" for case in cases]
     present = set(names)
     if (len(present) != total or not methods <= present or
-            any(sum("OriginalSpritesImportCorrectly" in name and asset in name
-                    for name in names) != 1 for asset in art)):
+            not _has_all_art_cases(names, art)):
         raise ValueError(f"Unity EditMode suite is incomplete or duplicated: {path}")
     return True
 
