@@ -28,14 +28,17 @@ REQUIRED_TESTS = frozenset({
 
 def _expected_unity_tests(project: Path):
     folder = project / "Assets" / "Tests" / "EditMode"
-    methods = set()
+    methods = {}
     art = []
     for name in SUITE_FILES:
         source = (folder / f"{name}.cs").read_text()
         found = DIRECT_TEST.findall(source)
         if not found:
             raise ValueError(f"Missing NUnit test methods in {name}")
-        methods.update(found)
+        for method in found:
+            if method in methods:
+                raise ValueError(f"Duplicate NUnit test method: {method}")
+            methods[method] = f"Tamagoochi.Tests.{name}"
         cases = ART_CASE.findall(source)
         if name == "ArtImportTests":
             art = cases
@@ -47,9 +50,16 @@ def _expected_unity_tests(project: Path):
     return methods, art
 
 
-def _has_all_art_cases(names: list, assets: list) -> bool:
-    return all(sum("OriginalSpritesImportCorrectly" in name and asset in name
-                   for name in names) == 1 for asset in assets)
+def _matches_authored_suites(cases: list, methods: dict, assets: list) -> bool:
+    actual = {(case.get("classname"), case.get("methodname"), case.get("fullname"))
+              for case in cases}
+    if any((suite, method, f"{suite}.{method}") not in actual
+           for method, suite in methods.items()):
+        return False
+    return all(sum(case.get("classname") == "Tamagoochi.Tests.ArtImportTests" and
+                   case.get("methodname") == "OriginalSpritesImportCorrectly" and
+                   asset in (case.get("name") or "")
+                   for case in cases) == 1 for asset in assets)
 
 
 def _passing_nunit_report(path: Path, methods: set, art: list) -> bool:
@@ -70,7 +80,7 @@ def _passing_nunit_report(path: Path, methods: set, art: list) -> bool:
     names = [case.get("name") or "" for case in cases]
     present = set(names)
     if (len(present) != total or not methods <= present or
-            not _has_all_art_cases(names, art)):
+            not _matches_authored_suites(cases, methods, art)):
         raise ValueError(f"Unity EditMode suite is incomplete or duplicated: {path}")
     return True
 
