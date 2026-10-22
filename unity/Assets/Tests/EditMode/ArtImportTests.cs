@@ -86,6 +86,8 @@ namespace Tamagoochi.Tests
             Assert.IsNotNull(importer, $"Missing art importer: {path}");
             Assert.AreEqual(TextureImporterType.Sprite, importer.textureType);
             Assert.IsFalse(importer.mipmapEnabled);
+            Assert.IsFalse(importer.isReadable);
+            Assert.AreEqual(SpriteImportMode.Single, importer.spriteImportMode);
             var sprite = Resources.Load<Sprite>("Art/" + path);
             Assert.IsNotNull(sprite, $"Missing original Tamagoochi sprite: {path}");
             Assert.AreEqual(size, sprite.texture.width);

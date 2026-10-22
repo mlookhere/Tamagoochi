@@ -112,7 +112,8 @@ namespace Tamagoochi.Editor
                 var sprite = Resources.Load<Sprite>("Art/" + path);
                 int expected = path.StartsWith("world/", StringComparison.Ordinal) ? 128 : 256;
                 if (importer == null || importer.textureType != TextureImporterType.Sprite ||
-                    importer.mipmapEnabled || sprite == null ||
+                    importer.mipmapEnabled || importer.isReadable ||
+                    importer.spriteImportMode != SpriteImportMode.Single || sprite == null ||
                     sprite.texture.width != expected || sprite.texture.height != expected)
                     throw new InvalidOperationException("Required original sprite missing or invalid: " + asset);
             }
