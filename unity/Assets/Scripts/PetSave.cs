@@ -5,51 +5,105 @@ using UnityEngine;
 namespace Tamagoochi
 {
     [Serializable]
-    public sealed class PetSave
+    public sealed class LegacyPetSave
     {
         public int version = 1;
         public Pet pet;
     }
 
-    public static class PetStore
+    public static class GameStore
     {
-        private static string SavePath => Path.Combine(Application.persistentDataPath, "pet.json");
+        private static string MainPath => Path.Combine(Application.persistentDataPath, "game.json");
+        private static string BackupPath => MainPath + ".bak";
+        private static string LegacyPath => Path.Combine(Application.persistentDataPath, "pet.json");
         public static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        public static Pet Load()
+        public static GameSession Load()
         {
-            try
+            if (ReadSnapshot(MainPath, out var session) ||
+                ReadSnapshot(BackupPath, out session))
             {
-                if (File.Exists(SavePath))
-                {
-                    var save = JsonUtility.FromJson<PetSave>(File.ReadAllText(SavePath));
-                    if (save != null && save.version == 1 && save.pet != null &&
-                        !string.IsNullOrWhiteSpace(save.pet.name) &&
-                        save.pet.bornAt >= 0 && save.pet.lastSimulatedAt >= save.pet.bornAt)
-                    {
-                        save.pet.Advance(Now());
-                        return save.pet;
-                    }
-                }
+                session.Pet.Advance(Now());
+                return session;
             }
-            catch (Exception e) when (e is IOException || e is ArgumentException || e is UnauthorizedAccessException)
+
+            if (ReadLegacy(out var pet))
             {
-                Debug.LogWarning($"Save could not be read: {e.Message}");
+                pet.Advance(Now());
+                return GameSession.New(Now(), pet);
             }
-            return Pet.Create(Now());
+            return GameSession.New(Now());
         }
 
-        public static void Save(Pet pet)
+        public static void Save(GameSession session)
         {
-            string temp = SavePath + ".tmp";
+            if (session == null) throw new ArgumentNullException(nameof(session));
+            var snapshot = session.Capture();
+            if (!GameSession.TryRestore(snapshot, out _))
+            {
+                Debug.LogWarning("Game state failed validation and was not saved.");
+                return;
+            }
+
+            var tempPath = MainPath + ".tmp";
             try
             {
-                File.WriteAllText(temp, JsonUtility.ToJson(new PetSave { pet = pet }));
-                File.Move(temp, SavePath, true);
+                Directory.CreateDirectory(Application.persistentDataPath);
+                using (var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                using (var writer = new StreamWriter(stream))
+                {
+                    writer.Write(JsonUtility.ToJson(snapshot));
+                    writer.Flush();
+                    stream.Flush(true);
+                }
+
+                // Atomic replace preserves the previously valid snapshot as a backup.
+                if (File.Exists(MainPath))
+                    File.Replace(tempPath, MainPath, BackupPath);
+                else
+                    File.Move(tempPath, MainPath);
             }
-            catch (IOException e)
+            catch (Exception error) when (error is IOException || error is UnauthorizedAccessException ||
+                                          error is NotSupportedException)
             {
-                Debug.LogWarning($"Save could not be written: {e.Message}");
+                Debug.LogWarning($"Game save could not be committed: {error.Message}");
+            }
+        }
+
+        private static bool ReadSnapshot(string path, out GameSession session)
+        {
+            session = null;
+            try
+            {
+                if (!File.Exists(path)) return false;
+                return GameSession.TryRestore(
+                    JsonUtility.FromJson<GameSnapshot>(File.ReadAllText(path)), out session);
+            }
+            catch (Exception error) when (error is IOException || error is UnauthorizedAccessException ||
+                                          error is ArgumentException)
+            {
+                Debug.LogWarning($"Saved game unavailable: {error.Message}");
+                return false;
+            }
+        }
+
+        private static bool ReadLegacy(out Pet pet)
+        {
+            pet = null;
+            try
+            {
+                if (!File.Exists(LegacyPath)) return false;
+                var save = JsonUtility.FromJson<LegacyPetSave>(File.ReadAllText(LegacyPath));
+                if (save == null || save.version != 1 || !GameSession.IsValidPet(save.pet))
+                    return false;
+                pet = save.pet;
+                return true;
+            }
+            catch (Exception error) when (error is IOException || error is UnauthorizedAccessException ||
+                                          error is ArgumentException)
+            {
+                Debug.LogWarning($"Legacy save unavailable: {error.Message}");
+                return false;
             }
         }
     }
