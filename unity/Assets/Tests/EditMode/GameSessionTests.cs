@@ -235,6 +235,49 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void AllTwelveFutureFormsHaveUniqueAuthoredDescriptions()
+        {
+            var names = new System.Collections.Generic.HashSet<string>();
+            foreach (Habitat habitat in System.Enum.GetValues(typeof(Habitat)))
+            foreach (SoulprintNature nature in System.Enum.GetValues(typeof(SoulprintNature)))
+            {
+                var form = EvolutionPaths.Preview(habitat, nature);
+                Assert.IsTrue(names.Add(form.Name));
+                Assert.IsNotEmpty(form.Description);
+                Assert.AreEqual(habitat, form.Habitat);
+                Assert.AreEqual(nature, form.Nature);
+            }
+            Assert.AreEqual(12, names.Count);
+            Assert.Throws<System.ArgumentOutOfRangeException>(() =>
+                EvolutionPaths.Preview((Habitat)999, SoulprintNature.Curious));
+        }
+
+        [Test]
+        public void FamiliarHabitatPreviewSurvivesSaveAndDoesNotAlterState()
+        {
+            var session = GameSession.New(0);
+            var bag = session.Inventory;
+            long now = 0;
+            foreach (var habitat in new[] { Habitat.Grove, Habitat.Pond, Habitat.Pond })
+            {
+                Assert.IsTrue(session.Expeditions.Start(habitat, now));
+                now += Expeditions.DurationMilliseconds;
+                Assert.AreEqual(ExpeditionClaim.Claimed,
+                    session.Expeditions.Claim(now, bag));
+            }
+
+            var before = session.Capture();
+            Assert.AreEqual(Habitat.Pond, session.FamiliarHabitat);
+            var preview = session.FutureForm;
+            Assert.AreEqual(Habitat.Pond, preview.Habitat);
+            Assert.IsTrue(GameSession.TryRestore(before, out var restored));
+            Assert.AreEqual(preview.Name, restored.FutureForm.Name);
+            Assert.AreEqual(preview.Description, restored.FutureForm.Description);
+            Assert.AreEqual(before.expeditions.completed, session.Expeditions.Completed);
+            Assert.AreEqual(0, session.Memories.Entries.Count);
+        }
+
+        [Test]
         public void RestoredRewardsRemainOneTimeOnly()
         {
             var session = GameSession.New(0);

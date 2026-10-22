@@ -205,6 +205,11 @@ namespace Tamagoochi
             Line(pet.sleeping ? "Mochi is dreaming." : "Mochi is happy to see you.");
             Heading($"Growing Soulprint · {session.Nature}");
             Line(session.NatureDescription);
+            var future = session.FutureForm;
+            Heading("A possible future · " + future.Name);
+            Line(future.Description);
+            Line($"Shaped by {future.Habitat} discoveries and a {future.Nature} spirit.");
+            Line("A glimpse, not an unlocked evolution. Forms and animations are still in development.");
             Act("Feed", pet.Feed, "Yum!", "eat", MemoryKind.FirstFeed);
             Act("Play", pet.Play, "That was fun!", "play", MemoryKind.FirstPlay);
             Act("Clean", pet.Clean, "Fresh and cozy.", "clean", MemoryKind.FirstClean);

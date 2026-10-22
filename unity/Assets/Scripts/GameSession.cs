@@ -32,6 +32,59 @@ namespace Tamagoochi
     // An early, reversible personality glimpse—not the final evolution system.
     public enum SoulprintNature { Budding, Tenderhearted, Curious, Trailblazer }
 
+    // Twelve authored future silhouettes. This is a preview, not a committed evolution.
+    public readonly struct EvolutionPreview
+    {
+        public string Name { get; }
+        public string Description { get; }
+        public Habitat Habitat { get; }
+        public SoulprintNature Nature { get; }
+
+        public EvolutionPreview(string name, string description, Habitat habitat,
+            SoulprintNature nature)
+        {
+            Name = name;
+            Description = description;
+            Habitat = habitat;
+            Nature = nature;
+        }
+    }
+
+    public static class EvolutionPaths
+    {
+        private static readonly (string name, string description)[,] Forms =
+        {
+            {
+                ("Mossveil", "A quiet keeper of ancient woodland roots."),
+                ("Fernwhisper", "A sheltering spirit who listens to every leaf."),
+                ("Lumenfern", "An inquisitive wanderer collecting forest light."),
+                ("Briarstride", "A fearless guardian of winding green trails.")
+            },
+            {
+                ("Cloudblossom", "A peaceful traveler among sunlit grasses."),
+                ("Petalhush", "A gentle soul caring for forgotten flowers."),
+                ("Pollenwink", "A bright explorer chasing unfamiliar colors."),
+                ("Sunskip", "A swift dancer leaping over golden fields.")
+            },
+            {
+                ("Stillwater", "A thoughtful spirit watching moonlit ripples."),
+                ("Reedhymn", "A calming voice among the waterside reeds."),
+                ("Pearlglint", "An adventurer drawn to luminous depths."),
+                ("Rippledash", "A brave skimmer crossing silver-blue water.")
+            }
+        };
+
+        public static EvolutionPreview Preview(Habitat habitat, SoulprintNature nature)
+        {
+            if (!Enum.IsDefined(typeof(Habitat), habitat))
+                throw new ArgumentOutOfRangeException(nameof(habitat));
+            if (!Enum.IsDefined(typeof(SoulprintNature), nature))
+                throw new ArgumentOutOfRangeException(nameof(nature));
+            var form = Forms[(int)habitat, (int)nature];
+            return new EvolutionPreview(form.name, form.description, habitat, nature);
+        }
+    }
+
     public sealed class GameSession
     {
         public Pet Pet { get; }
@@ -64,6 +117,23 @@ namespace Tamagoochi
                     SoulprintNature.Curious;
             }
         }
+
+        // The most visited recorded habitat informs a possible future form.
+        // Ties remain stable; no location is recorded or inferred.
+        public Habitat FamiliarHabitat
+        {
+            get
+            {
+                var visits = new int[3];
+                foreach (var record in Expeditions.Journal) visits[record.habitat]++;
+                int best = 0;
+                for (int i = 1; i < visits.Length; i++)
+                    if (visits[i] > visits[best]) best = i;
+                return (Habitat)best;
+            }
+        }
+
+        public EvolutionPreview FutureForm => EvolutionPaths.Preview(FamiliarHabitat, Nature);
 
         public string NatureDescription => Nature switch
         {

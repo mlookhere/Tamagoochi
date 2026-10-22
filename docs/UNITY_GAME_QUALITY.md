@@ -53,3 +53,7 @@ Keep historical Expo source PRs #20, #23 and #24 intact as feature parity refere
 ### Structured memories (save v4)
 
 First care/play/clean/comfort, first successful craft/snack/room placement, three initial minigame wins and first discoveries in each habitat create unique local-only moments. Duplicate moments are rejected; records are bounded, validated, saved with the full session and safely migrated from v2/v3 with no fabricated historical dates. This is an initial **Firsts** book, not yet the full moments/evolution/relationships system. Unity Editor and device verification are still outstanding.
+
+### Authored evolution-path glimpse
+
+The current Unity care UI previews one of twelve original, named **future** forms from four Soulprint natures and three discovery habitats (most frequently visited recorded habitat, deterministic ties). Each has a unique short description; the preview changes safely as habits change and round-trips existing v4 state without new fields or personal location data. These are *conceptual form routes*, **not unlocked evolutions, completed art, rigs, animations or permanent species changes**. The existing 12-form production acceptance requirement remains open until those systems are built and verified on mobile.
