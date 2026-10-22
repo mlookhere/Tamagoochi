@@ -132,7 +132,7 @@ namespace Tamagoochi
             var navigation = new VisualElement();
             navigation.style.flexDirection = FlexDirection.Row;
             sheet.Add(navigation);
-            string[] tabs = { "Care", "Craft", "Games", "Room", "Explore" };
+            string[] tabs = { "Care", "Craft", "Games", "Room", "Explore", "Book" };
             navigationButtons = new Button[tabs.Length];
             for (int i = 0; i < tabs.Length; i++)
             {
@@ -190,6 +190,7 @@ namespace Tamagoochi
                 case 2: Games(); break;
                 case 3: Decorate(); break;
                 case 4: Explore(); break;
+                case 5: ShowMemories(); break;
             }
             notice.text = message;
             // Rebuilding cards should not jump the player's reading position.
@@ -204,10 +205,10 @@ namespace Tamagoochi
             Line(pet.sleeping ? "Mochi is dreaming." : "Mochi is happy to see you.");
             Heading($"Growing Soulprint · {session.Nature}");
             Line(session.NatureDescription);
-            Act("Feed", pet.Feed, "Yum!", "eat");
-            Act("Play", pet.Play, "That was fun!", "play");
-            Act("Clean", pet.Clean, "Fresh and cozy.", "clean");
-            Act("Comfort", pet.Comfort, "Feeling loved.", "joyful");
+            Act("Feed", pet.Feed, "Yum!", "eat", MemoryKind.FirstFeed);
+            Act("Play", pet.Play, "That was fun!", "play", MemoryKind.FirstPlay);
+            Act("Clean", pet.Clean, "Fresh and cozy.", "clean", MemoryKind.FirstClean);
+            Act("Comfort", pet.Comfort, "Feeling loved.", "joyful", MemoryKind.FirstComfort);
             Act(pet.sleeping ? "Wake" : "Sleep", () => pet.sleeping = !pet.sleeping,
                 "A peaceful moment.");
             var toggle = new Toggle("Reduce motion") { value = reducedMotion };
@@ -231,12 +232,15 @@ namespace Tamagoochi
                 Add($"Make {item} · {inventory.Count(item)} owned", () =>
                 {
                     bool success = inventory.Craft(selected);
+                    if (success) Remember(MemoryKind.FirstCraft);
                     Commit(success ? $"Created {selected}!" : "Gather more materials first.");
                 });
             }
             Add($"Share snack · {inventory.Count(ItemId.PicnicSnack)} owned", () =>
             {
-                Commit(bond.ShareSnack(inventory) ? "A cozy picnic!" : "Make a snack first.");
+                bool shared = bond.ShareSnack(inventory);
+                if (shared) Remember(MemoryKind.FirstSnack);
+                Commit(shared ? "A cozy picnic!" : "Make a snack first.");
             });
             Line($"Workshop bond {bond.Bond}");
         }
@@ -332,8 +336,10 @@ namespace Tamagoochi
                 RoomSlot target = slot;
                 Add($"{slot} · {room.At(slot)?.ToString() ?? "empty"}", () =>
                 {
-                    bool success = room.At(target).HasValue ? room.PickUp(inventory, target) :
+                    bool placing = !room.At(target).HasValue;
+                    bool success = !placing ? room.PickUp(inventory, target) :
                         selectedDecoration.HasValue && room.Place(inventory, target, selectedDecoration.Value);
+                    if (success && placing) Remember(MemoryKind.FirstRoom);
                     if (success) selectedDecoration = null;
                     Commit(success ? room.MoodDescription() : "Select a crafted item or make basket space.");
                 });
@@ -370,8 +376,18 @@ namespace Tamagoochi
                 {
                     Add("Collect your discovery", () =>
                     {
+                        var habitat = expeditions.ActiveHabitat;
                         var result = expeditions.Claim(GameStore.Now(), inventory);
-                        if (result == ExpeditionClaim.Claimed) stage.React("joyful");
+                        if (result == ExpeditionClaim.Claimed)
+                        {
+                            stage.React("joyful");
+                            Remember(habitat switch
+                            {
+                                Habitat.Grove => MemoryKind.FirstGrove,
+                                Habitat.Meadow => MemoryKind.FirstMeadow,
+                                _ => MemoryKind.FirstPond
+                            });
+                        }
                         Commit(result switch
                         {
                             ExpeditionClaim.Claimed => $"Found {expeditions.LatestDiscovery()}!",
@@ -454,15 +470,58 @@ namespace Tamagoochi
         {
             bool found = inventory.Give(item);
             bool first = bond.Complete(game);
-            if (first) stage.React("joyful");
+            if (first)
+            {
+                stage.React("joyful");
+                Remember(game switch
+                {
+                    MiniGame.Echo => MemoryKind.FirstEcho,
+                    MiniGame.Skip => MemoryKind.FirstSkip,
+                    _ => MemoryKind.FirstPairs
+                });
+            }
             Commit((found ? $"Found a {item}!" : "Basket full.") + (first ? " Your bond grew!" : ""));
         }
 
-        private void Act(string label, Action action, string result, string pose = null)
+        private void ShowMemories()
+        {
+            Heading("Our little book of firsts");
+            Line("The memories you make together stay here, even when days go by.");
+            var entries = session.Memories.Entries;
+            Line($"{entries.Count} of {MemoryBook.Limit} first moments collected");
+            if (entries.Count == 0)
+            {
+                Line("Feed, play, create, and explore to write your first page.");
+                return;
+            }
+            for (int i = entries.Count - 1; i >= 0; i--)
+            {
+                var entry = entries[i];
+                var kind = (MemoryKind)entry.kind;
+                var card = new VisualElement();
+                card.style.backgroundColor = new Color(0.92f, 0.95f, 0.87f);
+                card.style.marginBottom = 8;
+                card.style.paddingLeft = 14;
+                card.style.paddingTop = 10;
+                card.style.paddingBottom = 10;
+                Corners(card, 14);
+                card.Add(Text(MemoryBook.Title(kind), 16, true));
+                card.Add(Text(DateTimeOffset.FromUnixTimeMilliseconds(
+                    entry.occurredAt).ToString("MMM d, yyyy"), 12));
+                page.Add(card);
+            }
+        }
+
+        private void Remember(MemoryKind kind) =>
+            session.Memories.Record(kind, GameStore.Now());
+
+        private void Act(string label, Action action, string result,
+            string pose = null, MemoryKind? memory = null)
         {
             Add(label, () =>
             {
                 action();
+                if (memory.HasValue) Remember(memory.Value);
                 if (pose != null) stage.React(pose);
                 Commit(result);
             });

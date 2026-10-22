@@ -6,7 +6,7 @@ Open **unity/** (not the repository root) in Unity Hub. Pinned editor: **Unity 6
 
 1. Open the project, let Unity import packages, and resolve any compilation errors before committing generated assets. Do not skip the Home Scene setup: it creates the required default runtime theme.
 2. Select **Tamagoochi → Create or Open Home Scene** to generate `Assets/Scenes/Home.unity` and register it in the enabled scene list.
-3. Press Play. The first retained-mode **UI Toolkit** prototype offers Care, Craft, Games, Room and Explore over the original companion stage; it is not final polished UI.
+3. Press Play. The first retained-mode **UI Toolkit** prototype offers Care, Craft, Games, Room, Explore and Book over the original companion stage; it is not final polished UI.
 4. Run NUnit EditMode tests from **Window → General → Test Runner**. These tests are committed but **have not been executed in Unity**. No Unity player build has yet been verified.
 
 ## Current capabilities
@@ -15,7 +15,8 @@ Open **unity/** (not the repository root) in Unity Hub. Pinned editor: **Unity 6
 - Three deterministic minigames, pet room affinities, optional one-time bond rewards and snack sharing.
 - Reused the existing project-original seedling expression/care illustrations and woodland marker studies from visual PR #20; a lightweight 2D stage displays character movement and care reactions. Stable tracked Unity .meta GUIDs preserve future asset references. Artwork is **first-pass**, not final creative/device approval.
 - Three optional habitats (Grove, Meadow, Pond) now support a 10-minute offline expedition with original discoveries, a small journal, material rewards and full-basket recovery. This is a **no-GPS experience**, not yet step/location sensor integration.
-- A version-3 complete care/workshop save containing inventory, room, bond ledger and all minigame progress; validation rejects inconsistent state. The previous save is retained as a backup on replacement. Version-1 pet-only saves can be imported as a fresh workshop.
+- A version-4 complete gameplay save contains pet, inventory, room, activities, expeditions and a one-time firsts memory ledger. Version-3/2 gameplay and version-1 pet-only saves migrate, preserving existing progress and starting a blank memory book where history cannot be reconstructed. Corruption validation and previous-save backup recovery remain.
+- The Book tab records up to 13 locally stored first experiences from care, successful crafting, minigame wins, room placement, snack sharing and discovered habitats. Records are one-time, schema-validated and clock-skew-safe; no GPS coordinates or opaque chat histories.
 - Unity scene setup menu creates a persisted Editor panel asset and scene; focused state parity tests are authored but have not run in Unity.
 
 ## Production gaps
