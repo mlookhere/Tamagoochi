@@ -149,6 +149,16 @@ class NativeEvidenceTests(unittest.TestCase):
         second.write_text(source.replace(prior, f"public void {METHODS[0]}()"))
         self.assert_rejected()
 
+    def test_unrecognized_inline_nunit_method_fails(self):
+        path = self.project / "Assets" / "Tests" / "EditMode" / "ExpeditionTests.cs"
+        path.write_text(path.read_text() + "\n[Test] public void AddedTest() {}\n")
+        self.assert_rejected()
+
+    def test_unrecognized_parameterized_nunit_case_fails(self):
+        path = self.project / "Assets" / "Tests" / "EditMode" / "ArtImportTests.cs"
+        path.write_text(path.read_text() + "\n[TestCase(true)]\n")
+        self.assert_rejected()
+
     def test_missing_unity_source_suite_fails(self):
         (self.project / "Assets" / "Tests" / "EditMode" / "GameStoreTests.cs").unlink()
         self.assert_rejected()
