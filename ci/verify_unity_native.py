@@ -14,9 +14,9 @@ SUITE_FILES = (
     "GameStoreTests", "GameplayParityTests", "PetAndInventoryTests",
 )
 DIRECT_TEST = re.compile(r"(?m)^[ \t]*\[Test\][ \t]*\r?\n[ \t]*public void ([A-Za-z]\w*)\(")
-TEST_ATTRIBUTES = re.compile(r"(?m)^[ \\t]*\\[Test\\][ \\t]*$")
-CASE_ATTRIBUTES = re.compile(r"(?m)^[ \\t]*\\[TestCase\\b")
-ART_CASE = re.compile(r'(?m)^[ \\t]*\\[TestCase\\("([^"]+)",\\s*(\\d+)\\)\\]')
+TEST_ATTRIBUTES = re.compile(r"(?m)^[ \t]*\[Test\][ \t]*$")
+CASE_ATTRIBUTES = re.compile(r"(?m)^[ \t]*\[TestCase\b")
+ART_CASE = re.compile(r'(?m)^[ \t]*\[TestCase\("([^"]+)",\s*(\d+)\)\]')
 REQUIRED_TESTS = frozenset({
     "GeneratedUiFilesLiveInsideTheSelectedUnityProject",
     "ExpeditionFinishesAcrossOfflineTimeWithoutBackgroundTimers",
