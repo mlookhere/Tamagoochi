@@ -2,6 +2,11 @@ name: Unity native validation (licensed; manually gated)
 
 on:
   workflow_dispatch:
+    inputs:
+      migration_sha:
+        description: Exact reviewed 40-character SHA at work/31-unity6-migration HEAD
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -19,6 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.migration_sha }}
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Verify trusted ref, project, and activation
@@ -26,13 +33,21 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          MIGRATION_SHA: ${{ inputs.migration_sha }}
         shell: bash
         run: |
           set -euo pipefail
           case "$GITHUB_REF" in
-            refs/heads/work/31-unity6-migration|refs/heads/dev) ;;
+            refs/heads/main|refs/heads/dev) ;;
             *) echo "Native validation requires a reviewed migration or integration ref" >&2; exit 1 ;;
           esac
+          [[ "$MIGRATION_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid migration SHA" >&2; exit 1; }
+          [[ "$(git rev-parse HEAD)" == "$MIGRATION_SHA" ]] || { echo "Wrong checkout SHA" >&2; exit 1; }
+          git fetch --quiet --no-tags origin refs/heads/work/31-unity6-migration
+          [[ "$(git rev-parse FETCH_HEAD)" == "$MIGRATION_SHA" ]] || {
+            echo "Only the current reviewed migration branch HEAD can be validated" >&2
+            exit 1
+          }
           grep -qx 'm_EditorVersion: 6000.0.62f1' unity/ProjectSettings/ProjectVersion.txt
           if [[ -z "$UNITY_LICENSE" || -z "$UNITY_EMAIL" || -z "$UNITY_PASSWORD" ]]; then
             echo "Unity activation unavailable: configure protected unity-native environment secrets" >&2
