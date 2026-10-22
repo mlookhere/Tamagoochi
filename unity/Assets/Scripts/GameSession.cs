@@ -28,6 +28,9 @@ namespace Tamagoochi
         public ExpeditionSave expeditions;
     }
 
+    // An early, reversible personality glimpse—not the final evolution system.
+    public enum SoulprintNature { Budding, Tenderhearted, Curious, Trailblazer }
+
     public sealed class GameSession
     {
         public Pet Pet { get; }
@@ -38,6 +41,35 @@ namespace Tamagoochi
         public StoneSkip Skip { get; }
         public MeadowPairs Pairs { get; }
         public Expeditions Expeditions { get; }
+
+        // Derived exclusively from persisted care and activity. No extra save fields,
+        // randomness, location tracking, punitive decay or evolution commitment.
+        public SoulprintNature Nature
+        {
+            get
+            {
+                int wonder = (int)Math.Max(0, Pet.curiosity - 50) +
+                    Math.Min(12, Expeditions.Completed * 2) + Bond.Curiosity * 2;
+                int kindness = (int)Math.Max(0, Pet.gentleness - 50) * 2 +
+                    (Bond.SnackShared ? 2 : 0);
+                int courage = Bond.Courage * 6;
+
+                if (Math.Max(wonder, Math.Max(kindness, courage)) < 6)
+                    return SoulprintNature.Budding;
+                if (courage > wonder && courage > kindness)
+                    return SoulprintNature.Trailblazer;
+                return kindness > wonder ? SoulprintNature.Tenderhearted :
+                    SoulprintNature.Curious;
+            }
+        }
+
+        public string NatureDescription => Nature switch
+        {
+            SoulprintNature.Tenderhearted => "Gentle moments are shaping a caring spirit.",
+            SoulprintNature.Curious => "Every game and discovery sparks new wonder.",
+            SoulprintNature.Trailblazer => "Brave little leaps are becoming a habit.",
+            _ => "Your shared moments are shaping a unique personality."
+        };
 
         private GameSession(Pet pet, Inventory inventory, Room room, WorkshopBond bond,
             ForestEcho echo, StoneSkip skip, MeadowPairs pairs, Expeditions expeditions)

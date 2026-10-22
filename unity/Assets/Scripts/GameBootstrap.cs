@@ -202,6 +202,8 @@ namespace Tamagoochi
             Line($"Hunger {pet.hunger:0} · Joy {pet.happiness:0} · Energy {pet.energy:0}");
             Line($"Clean {pet.cleanliness:0} · Mood {pet.mood:0} · Bond {pet.bond:0}");
             Line(pet.sleeping ? "Mochi is dreaming." : "Mochi is happy to see you.");
+            Heading($"Growing Soulprint · {session.Nature}");
+            Line(session.NatureDescription);
             Act("Feed", pet.Feed, "Yum!", "eat");
             Act("Play", pet.Play, "That was fun!", "play");
             Act("Clean", pet.Clean, "Fresh and cozy.", "clean");

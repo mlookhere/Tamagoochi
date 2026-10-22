@@ -44,7 +44,7 @@ These are **targets**, not claims of measured performance. Performance, accessib
 | Continuity | Complete care+workshop snapshot, backup recovery, schema validation and old pet-save import | Version-3 state, version-2/1 migration and backup recovery tests authored; editor/device verification pending |
 | Signature look | Production creature rigs/sprites, room scene, animations, UI, sound and interaction FX | Pending |
 | Outdoor loop | Step/activity-backed walks, coarse habitats, discoveries and expedition rewards with no-location path | No-GPS offline expeditions, three habitats and short discovery journal authored; real steps, habitats and sensor permission gates pending |
-| Emotional depth | Soulprint, 12 authored evolution forms, memory book, NPC encounter continuity | Pending |
+| Emotional depth | Soulprint, 12 authored evolution forms, memory book, NPC encounter continuity | Early reversible Soulprint nature derived from care, games and expedition history; 12 forms, memories, NPC continuity still pending |
 | Social + platform | Opt-in meetings, safe share cards, notifications/widgets, backup sync | Pending |
 | Release | Unity Editor/CI tests, mobile device QA, store builds, accessibility/security/performance signoffs | Pending |
 

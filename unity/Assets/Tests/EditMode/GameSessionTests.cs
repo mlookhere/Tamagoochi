@@ -113,6 +113,54 @@ namespace Tamagoochi.Tests
         }
 
         [Test]
+        public void SoulprintRespondsToCarePlayAndAdventure()
+        {
+            var gentle = GameSession.New(0);
+            Assert.AreEqual(SoulprintNature.Budding, gentle.Nature);
+            for (int i = 0; i < 3; i++) gentle.Pet.Comfort();
+            Assert.AreEqual(SoulprintNature.Tenderhearted, gentle.Nature);
+
+            var curious = GameSession.New(0);
+            for (int i = 0; i < 3; i++) curious.Pet.Play();
+            Assert.AreEqual(SoulprintNature.Curious, curious.Nature);
+
+            var brave = GameSession.New(0);
+            Assert.IsTrue(brave.Bond.Complete(MiniGame.Skip));
+            Assert.AreEqual(SoulprintNature.Trailblazer, brave.Nature);
+
+            var explorer = GameSession.New(0);
+            long now = 0;
+            for (int i = 0; i < 3; i++)
+            {
+                Assert.IsTrue(explorer.Expeditions.Start(Habitat.Pond, now));
+                now += Expeditions.DurationMilliseconds;
+                Assert.AreEqual(ExpeditionClaim.Claimed,
+                    explorer.Expeditions.Claim(now, explorer.Inventory));
+            }
+            Assert.AreEqual(SoulprintNature.Curious, explorer.Nature);
+        }
+
+        [Test]
+        public void SoulprintRecomputesIdenticallyAfterRestoringOldAndNewSaves()
+        {
+            var original = GameSession.New(0);
+            original.Pet.Comfort();
+            original.Pet.Comfort();
+            original.Pet.Comfort();
+            Assert.AreEqual(SoulprintNature.Tenderhearted, original.Nature);
+
+            foreach (int version in new[] { 2, 3 })
+            {
+                var snapshot = original.Capture();
+                snapshot.version = version;
+                if (version == 2) snapshot.expeditions = null;
+                Assert.IsTrue(GameSession.TryRestore(snapshot, out var restored));
+                Assert.AreEqual(original.Nature, restored.Nature);
+                Assert.AreEqual(original.NatureDescription, restored.NatureDescription);
+            }
+        }
+
+        [Test]
         public void RestoredRewardsRemainOneTimeOnly()
         {
             var session = GameSession.New(0);
