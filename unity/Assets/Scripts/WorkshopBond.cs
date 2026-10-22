@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Tamagoochi
 {
@@ -74,4 +75,88 @@ namespace Tamagoochi
             return (int)game;
         }
     }
+
+    // Structured, local-only firsts. Durable save schema v4; one entry per kind.
+    public enum MemoryKind
+    {
+        FirstFeed, FirstPlay, FirstClean, FirstComfort, FirstCraft, FirstSnack,
+        FirstEcho, FirstSkip, FirstPairs, FirstRoom, FirstGrove, FirstMeadow, FirstPond
+    }
+
+    [Serializable]
+    public sealed class MemoryEntry
+    {
+        public int kind;
+        public long occurredAt;
+    }
+
+    public sealed class MemoryBook
+    {
+        public const int Limit = 13;
+        private const long MaxTimestamp = 253402300799999L;
+        private readonly List<MemoryEntry> entries = new();
+
+        // Never leak mutable objects from the live save ledger.
+        public IReadOnlyList<MemoryEntry> Entries => entries.ConvertAll(Copy).AsReadOnly();
+
+        public bool Record(MemoryKind kind, long now)
+        {
+            if (!Enum.IsDefined(typeof(MemoryKind), kind) || now < 0 || now > MaxTimestamp)
+                throw new ArgumentOutOfRangeException(nameof(kind));
+            foreach (var entry in entries)
+                if (entry.kind == (int)kind) return false;
+
+            // A clock correction cannot invalidate chronology or remove memories.
+            long time = entries.Count == 0 ? now :
+                Math.Max(now, entries[entries.Count - 1].occurredAt);
+            entries.Add(new MemoryEntry { kind = (int)kind, occurredAt = time });
+            return true;
+        }
+
+        public MemoryEntry[] Snapshot() => entries.ConvertAll(Copy).ToArray();
+
+        public static MemoryBook Restore(MemoryEntry[] saved)
+        {
+            if (saved == null || saved.Length > Limit)
+                throw new ArgumentException("Invalid memory collection");
+            var book = new MemoryBook();
+            var seen = new HashSet<int>();
+            long previous = 0;
+            foreach (var entry in saved)
+            {
+                if (entry == null || entry.kind < 0 || entry.kind >= Limit ||
+                    entry.occurredAt < previous || entry.occurredAt > MaxTimestamp ||
+                    !seen.Add(entry.kind))
+                    throw new ArgumentException("Invalid or duplicate memory");
+                previous = entry.occurredAt;
+                book.entries.Add(Copy(entry));
+            }
+            return book;
+        }
+
+        public static string Title(MemoryKind kind) => kind switch
+        {
+            MemoryKind.FirstFeed => "Our first treat",
+            MemoryKind.FirstPlay => "A playful afternoon",
+            MemoryKind.FirstClean => "Fresh as a daisy",
+            MemoryKind.FirstComfort => "A quiet promise",
+            MemoryKind.FirstCraft => "Made with care",
+            MemoryKind.FirstSnack => "Our first picnic",
+            MemoryKind.FirstEcho => "The forest melody",
+            MemoryKind.FirstSkip => "Stones across the pond",
+            MemoryKind.FirstPairs => "A meadow of pairs",
+            MemoryKind.FirstRoom => "A home of our own",
+            MemoryKind.FirstGrove => "Secrets of the grove",
+            MemoryKind.FirstMeadow => "A meadow keepsake",
+            MemoryKind.FirstPond => "A treasure by the pond",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
+
+        private static MemoryEntry Copy(MemoryEntry entry) => new()
+        {
+            kind = entry.kind,
+            occurredAt = entry.occurredAt
+        };
+    }
+
 }

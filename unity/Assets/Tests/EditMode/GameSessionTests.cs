@@ -86,7 +86,7 @@ namespace Tamagoochi.Tests
             Assert.AreEqual(1, restored.Inventory.Count(ItemId.LeafToy));
             Assert.AreEqual(48, restored.Bond.Bond);
             Assert.AreEqual(0, restored.Expeditions.Completed);
-            Assert.AreEqual(3, restored.Capture().version);
+            Assert.AreEqual(4, restored.Capture().version);
         }
 
         [Test]
@@ -157,6 +157,64 @@ namespace Tamagoochi.Tests
                 Assert.IsTrue(GameSession.TryRestore(snapshot, out var restored));
                 Assert.AreEqual(original.Nature, restored.Nature);
                 Assert.AreEqual(original.NatureDescription, restored.NatureDescription);
+            }
+        }
+
+        [Test]
+        public void MemoriesPersistAcrossV4SaveRoundTripsAndRemainOneTime()
+        {
+            var original = GameSession.New(1000);
+            Assert.IsTrue(original.Memories.Record(MemoryKind.FirstFeed, 1100));
+            Assert.IsFalse(original.Memories.Record(MemoryKind.FirstFeed, 1200));
+            Assert.IsTrue(original.Memories.Record(MemoryKind.FirstGrove, 900));
+            Assert.AreEqual(1100, original.Memories.Entries[1].occurredAt);
+
+            var snapshot = JsonUtility.FromJson<GameSnapshot>(
+                JsonUtility.ToJson(original.Capture()));
+            Assert.AreEqual(4, snapshot.version);
+            Assert.IsTrue(GameSession.TryRestore(snapshot, out var restored));
+            Assert.AreEqual(2, restored.Memories.Entries.Count);
+            Assert.AreEqual("Our first treat", MemoryBook.Title(MemoryKind.FirstFeed));
+            snapshot.memories[0].kind = 99;
+            Assert.AreEqual(MemoryKind.FirstFeed, (MemoryKind)restored.Memories.Entries[0].kind);
+            restored.Memories.Entries[0].kind = 88;
+            Assert.AreEqual(MemoryKind.FirstFeed, (MemoryKind)restored.Memories.Entries[0].kind);
+        }
+
+        [Test]
+        public void MemoriesRejectInvalidDuplicatesAndFutureData()
+        {
+            var snapshot = GameSession.New(0).Capture();
+            snapshot.memories = new[]
+            {
+                new MemoryEntry { kind = 0, occurredAt = 100 },
+                new MemoryEntry { kind = 0, occurredAt = 200 }
+            };
+            Assert.IsFalse(GameSession.TryRestore(snapshot, out _));
+
+            snapshot.memories[1].kind = (int)MemoryKind.FirstPlay;
+            snapshot.memories[1].occurredAt = 99;
+            Assert.IsFalse(GameSession.TryRestore(snapshot, out _));
+
+            snapshot.memories = null;
+            Assert.IsFalse(GameSession.TryRestore(snapshot, out _));
+        }
+
+        [Test]
+        public void OlderGameplaySavesMigrateToAnEmptyMemoryBook()
+        {
+            var game = GameSession.New(1000);
+            game.Pet.Play();
+            foreach (int version in new[] { 2, 3 })
+            {
+                var snapshot = game.Capture();
+                snapshot.version = version;
+                snapshot.memories = null;
+                if (version == 2) snapshot.expeditions = null;
+                Assert.IsTrue(GameSession.TryRestore(snapshot, out var migrated));
+                Assert.AreEqual(0, migrated.Memories.Entries.Count);
+                Assert.AreEqual(4, migrated.Capture().version);
+                Assert.AreEqual(game.Pet.happiness, migrated.Pet.happiness);
             }
         }
 

@@ -97,7 +97,7 @@ namespace Tamagoochi.Tests
             Assert.AreEqual(0, session.Expeditions.Completed);
             Assert.AreEqual(6, session.Inventory.Count(ItemId.WildBerry));
             GameStore.SaveToDirectory(session, directory);
-            Assert.AreEqual(3,
+            Assert.AreEqual(4,
                 JsonUtility.FromJson<GameSnapshot>(
                     File.ReadAllText(Path.Combine(directory, "game.json"))).version);
         }
