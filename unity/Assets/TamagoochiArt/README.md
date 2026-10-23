@@ -75,3 +75,16 @@ The original low-detail generator remains unchanged. New tools add a separately 
 ### Acceptance remains explicit
 
 Static source coverage and repository CI are not proof of Unity C# compilation, prefab generation, actual Blender execution, skinned deformation, or mobile performance. Record each real native/visual result in Issue #35 before claiming that stage complete.
+
+## High-detail visual quality gate
+
+The Blender sculpt source has an organic geometry pass (`DCC/sculpt_details.py`): tapered quad ear-fins, cheek/forelock tufts, eye and iris layers, freckles, toe pads, and four recognizable original species silhouettes. It also creates portable UV albedo PNGs for fur, fins and tail markings so they can survive GLB export.
+
+Before an asset may be called high-detail/game-ready:
+
+1. Generate both `--profile sculpt` and `--profile mobile` files for each species in Blender. The Blender script now requires `validate_glb.py` to confirm actual skinned geometry, facial blend shapes, UVs, texture exports and mobile triangle budgets.
+2. Generate the 32 native Blender proof images using `DCC/render_quality_review.py` (4 views, 3 facial expressions and one real mobile-profile phone capture per starter).
+3. Visually compare every image and an animated gesture preview against the approved concept art; score shape, expression, distinct anatomy, materials, deformation and game-camera readability as defined in `DCC/VISUAL_QUALITY_GATE.md`.
+4. Validate imports and actual skinned animation in the Unity Editor, then verify the target phones. **The existing repository CI is not this visual gate.**
+
+Neither Blender nor the licensed Unity Editor is installed here. Therefore these sources are committed, but **no real model render, generated GLB or aesthetic approval can honestly be reported yet**. PR #36 remains draft. Do not substitute concept images for imported game asset screenshots.
