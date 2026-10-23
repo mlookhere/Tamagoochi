@@ -37,21 +37,31 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--resolution", type=int, default=960)
+    parser.add_argument("--engine", choices=("cycles", "eevee"), default="cycles")
+    parser.add_argument("--samples", type=int, default=32)
+    parser.add_argument("--species", choices=("all",) + SPECIES, default="all")
     return parser.parse_args(arguments)
 
 
-def reset(species: str, profile: str = "sculpt"):
+def reset(species: str, profile: str = "sculpt", engine: str = "cycles",
+          samples: int = 32):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     rig = create_armature()
     build_creature(rig, species, profile)
     studio()
     scene = bpy.context.scene
 
-    # Blender 4.2–4.x changed the EEVEE engine identifier.
-    version = bpy.app.version
-    engine = ("BLENDER_EEVEE_NEXT" if (4, 2, 0) <= version < (5, 0, 0)
-              else "BLENDER_EEVEE")
-    scene.render.engine = engine
+    # CPU Cycles works on headless render farms without an EEVEE GPU context.
+    if engine == "cycles":
+        scene.render.engine = "CYCLES"
+        scene.cycles.device = "CPU"
+        scene.cycles.samples = samples
+        scene.cycles.use_denoising = True
+    else:
+        version = bpy.app.version
+        scene.render.engine = ("BLENDER_EEVEE_NEXT"
+                               if (4, 2, 0) <= version < (5, 0, 0)
+                               else "BLENDER_EEVEE")
     scene.render.image_settings.file_format = "PNG"
     scene.render.film_transparent = False
     return rig
@@ -138,8 +148,9 @@ def save_render(path: Path, resolution: int) -> int:
     return path.stat().st_size
 
 
-def species_review(species: str, target: Path, resolution: int) -> dict:
-    reset(species)
+def species_review(species: str, target: Path, resolution: int,
+                   engine: str, samples: int) -> dict:
+    reset(species, engine=engine, samples=samples)
     metrics = mesh_metrics(species)
     screenshots = {}
     for angle, degrees in ANGLES.items():
@@ -160,7 +171,7 @@ def species_review(species: str, target: Path, resolution: int) -> dict:
     metrics["proof_images"] = screenshots
 
     # Review both genuine sculpt study and optimized mobile topology.
-    reset(species, "mobile")
+    reset(species, "mobile", engine=engine, samples=samples)
     metrics["mobile_triangles"] = mesh_metrics(species)["triangles"]
     metrics["mobile_budget"] = 30000
 
@@ -186,11 +197,15 @@ def main() -> None:
     args = parse_args()
     if not 512 <= args.resolution <= 2048:
         raise ValueError("QA resolution must be between 512 and 2048")
+    if not 8 <= args.samples <= 256:
+        raise ValueError("Samples must be between 8 and 256")
     directory = args.output.resolve()
     directory.mkdir(parents=True, exist_ok=True)
     results = []
-    for species in SPECIES:
-        results.append(species_review(species, directory, args.resolution))
+    selected = SPECIES if args.species == "all" else (args.species,)
+    for species in selected:
+        results.append(species_review(species, directory, args.resolution,
+                                      args.engine, args.samples))
 
     passed = all(row["mechanical_pass"] for row in results)
     report = {
@@ -206,7 +221,7 @@ def main() -> None:
         json.dumps(report, indent=2) + "\n", encoding="utf-8")
     if not passed:
         raise RuntimeError("Mechanical art checks failed; inspect quality_report.json")
-    print("Generated 32 proof renders, including phone-scale images.")
+    print("Generated", len(results) * 8, "proof renders, including phone-scale images.")
     print("Creative approval is still required.")
 
 
