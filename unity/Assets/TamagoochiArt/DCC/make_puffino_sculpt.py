@@ -382,7 +382,7 @@ def main() -> None:
     )
     if ("FINISHED" not in fbx_result or not fbx.is_file()
             or fbx.stat().st_size < 1024
-            or fbx.open("rb").read(23) != b"Kaydara FBX Binary  \\x00\\x1a\\x00"):
+            or fbx.open("rb").read(23) != b"Kaydara FBX Binary  \x00\x1a\x00"):
         raise RuntimeError("Blender Unity FBX export is missing or malformed.")
     print("Unity FBX export staged for native Editor import:", fbx.name)
     print("Visual quality is NOT approved until native proof renders are reviewed.")
