@@ -21,7 +21,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from validate_glb import validate
-from sculpt_details import petal_ear, configure_fur_shader, configure_fur_albedo, configure_tail_bands, decorate_face
+from sculpt_details import petal_ear, curled_puffino_tail, configure_fur_shader, configure_fur_albedo, configure_tail_bands, decorate_face
 
 
 def parse_args() -> argparse.Namespace:
@@ -184,6 +184,8 @@ def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profi
         side = -1 if name.endswith("_L") else 1
         obj = petal_ear(name, location,
                         (scale[0], scale[1], scale[2] * 2), mat, side, species)
+    elif name == "Tail" and species == "puffino":
+        obj = curled_puffino_tail(mat, profile)
     else:
         sculpt_subdiv = 1 if profile == "sculpt" else 0
         segments, rings = (48, 32) if profile == "sculpt" else (32, 20)
