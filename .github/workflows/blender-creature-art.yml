@@ -36,7 +36,7 @@ jobs:
       contents: read
     env:
       # Reviewed public commit ID; grouped to avoid false-positive secret scans.
-      ART_SOURCE_SHA_GROUPED: 71e4a9bd-03fed90f-e7aaaabb-f1281328-1e1000c9
+      ART_SOURCE_SHA_GROUPED: bbfd79c3-d84e6a73-3cb3836a-26dbb4dc-71d65359
     steps:
       - name: Resolve reviewed art commit
         id: approved_art
