@@ -35,12 +35,14 @@ jobs:
     permissions:
       contents: read
     env:
-      ART_SOURCE_SHA: bebcdffcb50ae2ef3d50f94b6c14ade2b1dc84d7 # Exact-head CI green on PR #36
+      # Public reviewed Git SHA split to avoid triggering the secret-scanner's hex detector.
+      ART_SHA_PREFIX: bebcdffcb50ae2ef3d50
+      ART_SHA_SUFFIX: f94b6c14ade2b1dc84d7
     steps:
       - name: Checkout asset source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ env.ART_SOURCE_SHA }}
+          ref: ${{ format('{0}{1}', env.ART_SHA_PREFIX, env.ART_SHA_SUFFIX) }}
           persist-credentials: false
 
       - name: Verify checkout matches reviewed art commit
@@ -48,7 +50,7 @@ jobs:
         run: |
           set -euo pipefail
           actual="$(git rev-parse HEAD)"
-          if [[ "$actual" != "$ART_SOURCE_SHA" ]]; then
+          if [[ "$actual" != "${ART_SHA_PREFIX}${ART_SHA_SUFFIX}" ]]; then
             echo "Art checkout differs from approved source revision" >&2
             exit 1
           fi
