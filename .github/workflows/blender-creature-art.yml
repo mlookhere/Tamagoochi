@@ -142,18 +142,18 @@ jobs:
             for profile in sculpt mobile; do
               FBX_PATH="$PWD/artifacts/blender/models/${creature}_${profile}.fbx" \
                 blender --background --factory-startup --python-exit-code 1 --python-expr '
-import os
-import bpy
-bpy.ops.import_scene.fbx(filepath=os.environ["FBX_PATH"])
-heads = [obj for obj in bpy.data.objects if obj.type == "MESH" and obj.name == "Head"]
-assert len(heads) == 1, "Expected one FBX skinned Head mesh"
-head = heads[0]
-assert any(mod.type == "ARMATURE" for mod in head.modifiers), "FBX Head skinning missing"
-assert any(obj.type == "ARMATURE" for obj in bpy.data.objects), "FBX skeleton missing"
-keys = set(head.data.shape_keys.key_blocks.keys()) if head.data.shape_keys else set()
-assert {"Smile", "Pout", "CheekPuff", "Curious"} <= keys, "FBX face morphs missing"
-print("FBX_IMPORT_MORPHS_OK", os.environ["FBX_PATH"])
-'
+          import os
+          import bpy
+          bpy.ops.import_scene.fbx(filepath=os.environ["FBX_PATH"])
+          heads = [obj for obj in bpy.data.objects if obj.type == "MESH" and obj.name == "Head"]
+          assert len(heads) == 1, "Expected one FBX skinned Head mesh"
+          head = heads[0]
+          assert any(mod.type == "ARMATURE" for mod in head.modifiers), "FBX Head skinning missing"
+          assert any(obj.type == "ARMATURE" for obj in bpy.data.objects), "FBX skeleton missing"
+          keys = set(head.data.shape_keys.key_blocks.keys()) if head.data.shape_keys else set()
+          assert {"Smile", "Pout", "CheekPuff", "Curious"} <= keys, "FBX face morphs missing"
+          print("FBX_IMPORT_MORPHS_OK", os.environ["FBX_PATH"])
+          '
             done
           done
           blender --background --factory-startup --python-exit-code 1 \
