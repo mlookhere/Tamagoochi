@@ -152,6 +152,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           import json
+          import math
           import os
           from pathlib import Path
 
@@ -171,8 +172,23 @@ jobs:
               raise SystemExit("Art evidence does not match the approved source commit")
           expected_proofs = {"front", "three_quarter", "side", "back",
                              "face_Smile", "face_Pout", "face_Curious", "phone_256"}
+          observed_bodies = set()
           for row in report["species"]:
               name = row["species"]
+              dimensions = row.get("silhouette_dimensions", {})
+              if set(dimensions) != {"Body", "Head", "Tail"}:
+                  raise SystemExit(f"Missing native silhouette dimensions: {name}")
+              for part, axes in dimensions.items():
+                  if (not isinstance(axes, list) or len(axes) != 3
+                          or any(not isinstance(axis, (int, float)) or not math.isfinite(axis)
+                                 or axis <= 0 for axis in axes)):
+                      raise SystemExit(f"Invalid native silhouette dimensions: {name}/{part}")
+              body_dimensions = tuple(dimensions["Body"])
+              if body_dimensions in observed_bodies:
+                  raise SystemExit(f"Duplicate native body proportions: {name}")
+              observed_bodies.add(body_dimensions)
+              if row["mobile_triangles"] > row["mobile_budget"]:
+                  raise SystemExit(f"Native mobile triangle budget exceeded: {name}")
               if set(row.get("proof_images", {})) != expected_proofs or row.get("mechanical_pass") is not True:
                   raise SystemExit(f"Missing native proof angles or failed mechanical QA: {name}")
               for key, recorded_size in row["proof_images"].items():
