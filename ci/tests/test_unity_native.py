@@ -334,6 +334,11 @@ class NativeEvidenceTests(unittest.TestCase):
 class NativeWorkflowPolicyTests(unittest.TestCase):
     WORKFLOWS = Path(__file__).resolve().parents[2] / ".github" / "workflows"
 
+    def test_required_ci_discovers_all_unity_evidence_test_modules(self):
+        workflow = (self.WORKFLOWS / "ci-pr.yml").read_text()
+        self.assertIn("-p 'test_unity_*.py' -v", workflow)
+        self.assertIn("ci/tests", workflow)
+
     def test_native_platform_workflows_remain_manual_and_protected(self):
         for filename, environment in [
             ("unity-native.yml", "unity-native"),
