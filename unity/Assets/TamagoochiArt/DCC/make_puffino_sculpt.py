@@ -25,7 +25,6 @@ def parse_args() -> argparse.Namespace:
                         default="puffino")
     return parser.parse_args(args)
 
-
 def material(name: str, color: tuple[float, float, float, float]) -> bpy.types.Material:
     mat = bpy.data.materials.new(name)
     mat.diffuse_color = color
@@ -47,11 +46,8 @@ def sculpt_part(
     segments: int = 48,
     rings: int = 32,
 ) -> bpy.types.Object:
-    bpy.ops.mesh.primitive_uv_sphere_add(
-        segments=segments,
-        ring_count=rings,
-        location=location,
-    )
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=segments, ring_count=rings,
+                                         location=location)
     obj = bpy.context.object
     obj.name = name
     obj.scale = dimensions
@@ -73,6 +69,13 @@ def sculpt_part(
             side = min(1.0, max(0.0, (abs(x) / dimensions[0] - 0.63) / 0.37))
             tuft = max(0.0, math.cos(7 * phase + 3 * z / dimensions[2]))**4
             amount = (0.035 if name == "Head" else 0.025) * max(back, 0.6 * side) * tuft
+            front = max(0.0, min(1.0, (-y / dimensions[1] - 0.45) / 0.5))
+            cheek = math.exp(-((abs(x / dimensions[0]) - 0.78) / 0.20)**2
+                             - ((z / dimensions[2] + 0.25) / 0.32)**2)
+            chest = math.exp(-((z / dimensions[2] - 0.40) / 0.34)**2)
+            fold = 0.70 + 0.30 * max(0.0, math.cos(6 * phase + 5 * z))
+            amount = max(amount, (0.043 * cheek if name == "Head"
+                                  else 0.030 * chest) * front * fold)
             vertex.co += vertex.normal * amount
             peak = max(peak, amount)
         obj["fur_surface_relief"] = peak
@@ -107,7 +110,6 @@ def create_armature() -> bpy.types.Object:
     bpy.ops.object.mode_set(mode="OBJECT")
     rig.select_set(False)
     return rig
-
 
 def skin(
     obj: bpy.types.Object,
@@ -152,7 +154,6 @@ def face_keys(head: bpy.types.Object) -> None:
             elif name == "Curious" and co.x > 0 and co.z > 0.11:
                 co.z += 0.05 * front
 
-
 def face_feature_keys(feature: bpy.types.Object) -> None:
     """Make separately modeled eyes and mouth respond to exported facial morphs."""
     feature.shape_key_add(name="Basis", from_mix=False)
@@ -177,7 +178,6 @@ def face_feature_keys(feature: bpy.types.Object) -> None:
                 co.z += 0.09
             else:
                 co.z -= 0.045
-
 
 def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile, lining):
     if name.startswith("Ear"):
