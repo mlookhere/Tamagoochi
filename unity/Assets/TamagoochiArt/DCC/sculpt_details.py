@@ -261,14 +261,14 @@ def decorate_face(species, rig, sculpt_part, skin, palette):
                (side * 0.25, -0.45, 1.40),
                (0.16, 0.034, 0.035), ivory, "head")
         detail("Iris_" + suffix,
-               (side * 0.24, -0.552, 1.20),
-               (0.107, 0.014, 0.14), coral, "head")
+               (side * 0.24, -0.547, 1.20),
+               (0.104, 0.004, 0.133), coral, "head")
         detail("Pupil_" + suffix,
-               (side * 0.24, -0.572, 1.20),
-               (0.073, 0.011, 0.092), dark, "head")
+               (side * 0.24, -0.553, 1.20),
+               (0.069, 0.003, 0.089), dark, "head")
         detail("CatchlightSm_" + suffix,
-               (side * 0.18, -0.591, 1.14),
-               (0.022, 0.008, 0.026), shine, "head")
+               (side * 0.18, -0.559, 1.14),
+               (0.022, 0.003, 0.026), shine, "head")
 
         for pad in range(3):
             detail(
