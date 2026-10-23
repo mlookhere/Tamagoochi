@@ -262,8 +262,8 @@ def _add_creature_details(rig, details, pink):
                 vertex.co.y -= 0.018 * max(0.0, -vertex.co.y / 0.25)**2
             for polygon in obj.data.polygons:
                 c = polygon.center
-                if c.y < -0.12 and c.z < 0.025 and abs(c.x) < 0.18:
-                    polygon.material_index = 1
+                polygon.material_index = int(
+                    c.y < -0.12 and c.z < 0.025 and abs(c.x) < 0.18)
         if name in ("Mouth", "Eye_L", "Eye_R"):
             face_feature_keys(obj)
         skin(obj, rig, bone)
