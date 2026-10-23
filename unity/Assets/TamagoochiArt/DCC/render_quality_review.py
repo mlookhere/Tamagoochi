@@ -163,17 +163,17 @@ def species_review(species: str, target: Path, resolution: int,
         expression(face)
         path = target / (species + "_face_" + face.lower() + ".png")
         screenshots["face_" + face] = save_render(path, resolution)
-    # Native phone-scale capture: beautiful closeups alone are insufficient.
+    # Review both genuine sculpt study and optimized mobile topology.
+    reset(species, "mobile", engine=engine, samples=samples)
+    metrics["mobile_triangles"] = mesh_metrics(species)["triangles"]
+    metrics["mobile_budget"] = 30000
+
+    # Phone-scale proof must use the optimized mobile mesh, not sculpt geometry.
     move_camera(0)
     expression("Smile")
     phone = target / (species + "_phone_256.png")
     screenshots["phone_256"] = save_render(phone, 256)
     metrics["proof_images"] = screenshots
-
-    # Review both genuine sculpt study and optimized mobile topology.
-    reset(species, "mobile", engine=engine, samples=samples)
-    metrics["mobile_triangles"] = mesh_metrics(species)["triangles"]
-    metrics["mobile_budget"] = 30000
 
     failures = (
         metrics["missing_signature_features"] or
