@@ -95,6 +95,24 @@ class UnitySourceIntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Trusted verifier checkout"):
             self.verify()
 
+    def test_native_workflows_enforce_source_gate_before_accepting_evidence(self):
+        workflows = Path(__file__).resolve().parents[2] / ".github/workflows"
+        for name, before, after in [
+            ("unity-native.yml", "      - name: Run actual Unity EditMode tests",
+             "      - name: Reject missing/failed NUnit reports or Android APK"),
+            ("unity-ios-native.yml", "      - name: Generate Xcode project using pinned Unity",
+             "      - name: Compile iOS device player with Xcode (unsigned)"),
+        ]:
+            with self.subTest(workflow=name):
+                contents = (workflows / name).read_text()
+                before_idx = contents.index(before)
+                gate_idx = contents.index("      - name: Reject modified or injected Unity executable source")
+                after_idx = contents.index(after)
+                self.assertLess(before_idx, gate_idx)
+                self.assertLess(gate_idx, after_idx)
+                self.assertIn("python3 -I -B .unity-ci-control/ci/verify_unity_sources.py", contents)
+                self.assertIn("git -C .unity-ci-control", contents)
+
     def test_wrong_migration_head_fails(self):
         with self.assertRaisesRegex(ValueError, "migration checkout"):
             verify(self.migration, self.control, "a" * 40, self.workflow_sha)
