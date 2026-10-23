@@ -7,15 +7,17 @@ This directory is a standalone DCC tool, not a Unity runtime dependency. No Blen
 From Blender 4.x with the bundled glTF exporter enabled:
 
 ```bash
-blender --background --python unity/Assets/TamagoochiArt/DCC/make_puffino_sculpt.py -- --output /absolute/output/directory
+blender --background --python unity/Assets/TamagoochiArt/DCC/make_puffino_sculpt.py -- --output /absolute/output/directory --species puffino
 ```
 
-The script stages a **real editable** `puffino_sculpt_study.blend` and a skinned + morph-target `puffino_sculpt_study.glb` in the chosen output directory, *if execution succeeds*. These files are not pre-rendered or verified in this repository.
+The script stages a **real editable** `<species>_sculpt_study.blend` and skinned + morph-target `<species>_sculpt_study.glb` in the chosen output directory, *if execution succeeds*. Valid species: `puffino`, `lunari`, `sproutle`, `bubblin`. These are not pre-rendered or verified in this repository.
+
+Run the command separately for each starter species. Shapes share an armature convention but differ in ear-fin silhouette, colors and species-defining accessories (horn nubs, lunar antennas, sprout crown or cloud orbs). This is an **artist base**, not four polished final sculpts.
 
 ### What the script does
 
 - Builds distinct subdivision-smoothed quad meshes for Puffino's body, head, ear fins and tail; the anatomy intentionally does not match any exact real animal.
-- Creates the base original ivory/coral/peach material library, stylized eyes, horns, paws and muzzle details.
+- Creates per-species original pastel material palettes, stylized eyes, ears, paws, muzzle details and accessory silhouettes.
 - Adds an armature with 10 named bones (`root`, `body`, `head`, ear roots/tips, tail root/tip and `jaw`), associated skin weights, and four named facial morphs.
 - Prepares soft three-point studio lighting and an orthographic preview camera.
 - Exports both Blender-native source and glTF binary. Blender's Z-up and glTF's coordinate conversion differ from Unity's Y-up; inspect axes, pose/rest transforms, eye direction and unit scale in Unity before use.
