@@ -256,6 +256,8 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     coral = material(species + "_Accent", accent_color)
     pink = material(species + "_Fin", fin_color)
     dark = material(species + "_Eyes", eye_color)
+    eyes = material(species + "_PaintedEyes", accent_color)
+    configure_fur_albedo(eyes, accent_color, texture_dir, eye=True)
     shine = material(species + "_Light", (1.0, 0.98, 0.92, 1))
     brown = material(species + "_Nubs", (0.63, 0.30, 0.18, 1))
     tail_bands = material(species + "_TailBands", accent_color)
@@ -264,7 +266,7 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
                        (pink, fin_color)):
         configure_fur_albedo(fur, color, texture_dir)
         configure_fur_shader(fur)
-    eye_node = dark.node_tree.nodes.get("Principled BSDF")
+    eye_node = eyes.node_tree.nodes.get("Principled BSDF")
     eye_node.inputs["Roughness"].default_value = 0.12
     if eye_node.inputs.get("Coat Weight") is not None:
         eye_node.inputs["Coat Weight"].default_value = 0.4
@@ -303,10 +305,8 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
         ("Inner_R", (0.55, -0.11, 1.82), (0.13, 0.05, 0.24), pink, "ear_root_R"),
         ("Horn_L", (-0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
         ("Horn_R", (0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
-        ("Eye_L", (-0.24, -0.50, 1.20), (0.185, 0.05, 0.205), dark, "head"),
-        ("Eye_R", (0.24, -0.50, 1.20), (0.185, 0.05, 0.205), dark, "head"),
-        ("Glint_L", (-0.28, -0.585, 1.29), (0.03, 0.015, 0.035), shine, "head"),
-        ("Glint_R", (0.20, -0.585, 1.29), (0.03, 0.015, 0.035), shine, "head"),
+        ("Eye_L", (-0.24, -0.50, 1.20), (0.185, 0.05, 0.205), eyes, "head"),
+        ("Eye_R", (0.24, -0.50, 1.20), (0.185, 0.05, 0.205), eyes, "head"),
         ("Paw_L", (-0.32, -0.34, 0.61), (0.17, 0.18, 0.19), ivory, "body"),
         ("Paw_R", (0.32, -0.34, 0.61), (0.17, 0.18, 0.19), ivory, "body"),
         ("Foot_L", (-0.32, -0.25, 0.16), (0.23, 0.25, 0.12), coral, "body"),
@@ -318,6 +318,13 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
         details = [detail for detail in details if not detail[0].startswith("Horn_")]
     for name, location, scale, mat, bone in details:
         obj = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
+        if name.startswith("Eye_"):
+            layer = obj.data.uv_layers.active
+            for polygon in obj.data.polygons:
+                for loop_index in polygon.loop_indices:
+                    vertex = obj.data.vertices[obj.data.loops[loop_index].vertex_index]
+                    layer.data[loop_index].uv = (0.5 + vertex.co.x / (2 * scale[0]),
+                                                 0.5 + vertex.co.z / (2 * scale[2]))
         if name.startswith("Paw_"):
             for vertex in obj.data.vertices:
                 root = max(0.0, min(1.0, vertex.co.z / 0.19))
