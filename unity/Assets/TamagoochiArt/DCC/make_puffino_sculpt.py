@@ -243,7 +243,7 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     shine = material(species + "_Light", (1.0, 0.98, 0.92, 1))
     brown = material(species + "_Nubs", (0.63, 0.30, 0.18, 1))
     tail_bands = material(species + "_TailBands", accent_color)
-    configure_tail_bands(tail_bands, body_color, accent_color, texture_dir)
+    configure_tail_bands(tail_bands, body_color, accent_color, texture_dir, species)
     for fur, color in ((ivory, body_color), (coral, accent_color),
                        (pink, fin_color)):
         configure_fur_albedo(fur, color, texture_dir)
@@ -254,25 +254,31 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
         eye_node.inputs["Coat Weight"].default_value = 0.4
     ear_scale = {
         "puffino": (0.22, 0.13, 0.35),
-        "lunari": (0.26, 0.11, 0.45),
-        "sproutle": (0.18, 0.10, 0.43),
-        "bubblin": (0.30, 0.16, 0.32),
+        "lunari": (0.23, 0.11, 0.53),
+        "sproutle": (0.23, 0.10, 0.47),
+        "bubblin": (0.27, 0.17, 0.28),
     }[species]
 
     # Different proportions are visible even with all species rendered in silhouette.
     silhouette = {
         "puffino": ((0.49, 0.42, 0.57), (0.57, 0.49, 0.48), (0.42, 0.32, 0.37)),
-        "lunari": ((0.40, 0.36, 0.67), (0.54, 0.46, 0.54), (0.36, 0.28, 0.44)),
-        "sproutle": ((0.57, 0.46, 0.64), (0.54, 0.46, 0.50), (0.31, 0.27, 0.38)),
-        "bubblin": ((0.63, 0.49, 0.46), (0.66, 0.53, 0.49), (0.45, 0.35, 0.33)),
+        "lunari": ((0.40, 0.36, 0.67), (0.54, 0.46, 0.54), (0.24, 0.21, 0.62)),
+        "sproutle": ((0.57, 0.46, 0.64), (0.54, 0.46, 0.50), (0.33, 0.22, 0.53)),
+        "bubblin": ((0.63, 0.49, 0.46), (0.66, 0.53, 0.49), (0.32, 0.35, 0.32)),
     }
     body_scale, head_scale, tail_scale = silhouette[species]
+    tail_positions = {
+        "puffino": (0.77, 0.50, 0.76),
+        "lunari": (0.68, 0.52, 1.04),
+        "sproutle": (0.76, 0.50, 0.90),
+        "bubblin": (0.78, 0.49, 0.68),
+    }
     parts = [
         ("Body", (0, 0, 0.62), body_scale, ivory, "body", None),
         ("Head", (0, -0.04, 1.18), head_scale, ivory, "head", None),
         ("Ear_L", (-0.55, 0, 1.80), ear_scale, coral, "ear_root_L", "ear_tip_L"),
         ("Ear_R", (0.55, 0, 1.80), ear_scale, coral, "ear_root_R", "ear_tip_R"),
-        ("Tail", (0.77, 0.50, 0.76), tail_scale, tail_bands, "tail_root", "tail_tip"),
+        ("Tail", tail_positions[species], tail_scale, tail_bands, "tail_root", "tail_tip"),
     ]
     for name, location, scale, mat, bone, tip in parts:
         _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile)
