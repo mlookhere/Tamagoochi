@@ -92,6 +92,45 @@ def configure_fur_shader(material):
     links.new(bump.outputs["Normal"], surface.inputs["Normal"])
 
 
+def configure_fur_albedo(material, base, texture_dir=None):
+    """UV-friendly handoff color map that survives Blender-to-glTF export."""
+    size = 256
+    image = bpy.data.images.new(
+        name=material.name + "_Albedo", width=size, height=size, alpha=True)
+    pixels = []
+    for row in range(size):
+        v = row / max(1, size - 1)
+        for column in range(size):
+            u = column / max(1, size - 1)
+            # Tonal variation reads softly at mobile scale, unlike hard random noise.
+            texture = 0.975 + 0.018 * math.sin(61.0 * u + 71.0 * v)
+            texture += 0.007 * math.sin(173.0 * u - 131.0 * v)
+            light = 0.98 + 0.035 * v
+            pixels.extend((
+                min(1.0, max(0.0, base[channel] * texture * light))
+                for channel in range(3)
+            ))
+            pixels.append(1.0)
+
+    image.pixels.foreach_set(pixels)
+    image.update()
+    if texture_dir is not None:
+        destination = Path(texture_dir) / "Textures"
+        destination.mkdir(parents=True, exist_ok=True)
+        image.filepath_raw = str(destination / (image.name + ".png"))
+        image.file_format = "PNG"
+        image.save()
+    else:
+        image.pack()
+
+    surface = material.node_tree.nodes.get("Principled BSDF")
+    node = material.node_tree.nodes.new("ShaderNodeTexImage")
+    node.name = "ExportableFurAlbedo"
+    node.image = image
+    material.node_tree.links.new(
+        node.outputs["Color"], surface.inputs["Base Color"])
+
+
 def configure_tail_bands(material, cream, accent, texture_dir=None):
     """Exportable UV albedo stripes. Do not rely on Blender-only wave shaders."""
     size = 256
