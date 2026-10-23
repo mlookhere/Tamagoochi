@@ -136,8 +136,7 @@ def face_keys(head: bpy.types.Object) -> None:
         key = head.shape_key_add(name=name, from_mix=False)
         for vertex in key.data:
             co = vertex.co
-            # Original head local coordinates. Blender forward = negative Y.
-            front = max(0.0, min(1.0, (-co.y - 0.23) / 0.30))
+                    front = max(0.0, min(1.0, (-co.y - 0.23) / 0.30))
             lower = max(0.0, 1.0 - abs(co.z + 0.17) / 0.28)
             mouth = max(0.0, 1.0 - abs(co.x) / 0.38)
             cheek = max(0.0, 1.0 - abs(abs(co.x) - 0.31) / 0.23)
@@ -276,7 +275,6 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
         "bubblin": (0.27, 0.17, 0.28),
     }[species]
 
-    # Different proportions are visible even with all species rendered in silhouette.
     silhouette = {
         "puffino": ((0.49, 0.42, 0.57), (0.57, 0.49, 0.48), (0.42, 0.32, 0.37)),
         "lunari": ((0.40, 0.36, 0.67), (0.54, 0.46, 0.54), (0.24, 0.21, 0.62)),
@@ -309,8 +307,8 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
         ("Eye_R", (0.24, -0.50, 1.20), (0.185, 0.05, 0.205), dark, "head"),
         ("Glint_L", (-0.28, -0.585, 1.29), (0.03, 0.015, 0.035), shine, "head"),
         ("Glint_R", (0.20, -0.585, 1.29), (0.03, 0.015, 0.035), shine, "head"),
-        ("Paw_L", (-0.50, -0.25, 0.56), (0.20, 0.20, 0.20), ivory, "body"),
-        ("Paw_R", (0.50, -0.25, 0.56), (0.20, 0.20, 0.20), ivory, "body"),
+        ("Paw_L", (-0.32, -0.34, 0.61), (0.17, 0.18, 0.19), ivory, "body"),
+        ("Paw_R", (0.32, -0.34, 0.61), (0.17, 0.18, 0.19), ivory, "body"),
         ("Foot_L", (-0.32, -0.25, 0.16), (0.23, 0.25, 0.12), coral, "body"),
         ("Foot_R", (0.32, -0.25, 0.16), (0.23, 0.25, 0.12), coral, "body"),
         ("Nose", (0, -0.54, 1.02), (0.07, 0.05, 0.05), brown, "head"),
@@ -320,12 +318,15 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
         details = [detail for detail in details if not detail[0].startswith("Horn_")]
     for name, location, scale, mat, bone in details:
         obj = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
+        if name.startswith("Paw_"):
+            for vertex in obj.data.vertices:
+                root = max(0.0, min(1.0, vertex.co.z / 0.19))
+                vertex.co.x *= 1.0 - 0.35 * root
+                vertex.co.y -= 0.045 * max(0.0, -vertex.co.z) / 0.19
         if name in ("Mouth", "Eye_L", "Eye_R"):
             face_feature_keys(obj)
         skin(obj, rig, bone)
     _add_species_extras(species, rig, ivory, coral, pink)
-    # Keep full sculpt geometry while reducing ONLY mobile accessory topology.
-    # This preserves original facial silhouettes and enforces the GLB triangle gate.
     def face_detail(name, location, dimensions, material, subdivisions=0):
         if profile == "sculpt":
             return sculpt_part(name, location, dimensions, material, subdivisions)
