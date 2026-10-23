@@ -101,6 +101,17 @@ def _passing_nunit_report(path: Path, methods: set, art: list) -> bool:
     return True
 
 
+def _valid_android_manifest(contents: bytes) -> bool:
+    return (len(contents) >= 16 and contents[:4] == b"\x03\x00\x08\x00" and
+            int.from_bytes(contents[4:8], "little") == len(contents))
+
+
+def _valid_dex(contents: bytes) -> bool:
+    return (len(contents) >= 0x70 and contents[:4] == b"dex\n" and
+            contents[4:7].isdigit() and contents[7:8] == b"\x00" and
+            int.from_bytes(contents[32:36], "little") == len(contents))
+
+
 def _validate_apk(apk: Path) -> None:
     if not apk.is_file() or apk.stat().st_size <= 0 or not zipfile.is_zipfile(apk):
         raise ValueError("Native Android APK missing, empty or invalid")
@@ -108,10 +119,10 @@ def _validate_apk(apk: Path) -> None:
         names = archive.namelist()
         if archive.testzip() is not None or not {"AndroidManifest.xml", "classes.dex"} <= set(names):
             raise ValueError("Android APK archive is damaged or missing runtime entries")
-        if not archive.read("AndroidManifest.xml").startswith(b"\x03\x00\x08\x00"):
-            raise ValueError("Android manifest is not compiled binary XML")
-        if not archive.read("classes.dex").startswith(b"dex\n"):
-            raise ValueError("Android DEX bytecode is missing or invalid")
+        if not _valid_android_manifest(archive.read("AndroidManifest.xml")):
+            raise ValueError("Android manifest is not well-formed compiled binary XML")
+        if not _valid_dex(archive.read("classes.dex")):
+            raise ValueError("Android DEX header or declared file size is invalid")
 
 
 def validate(project: Path, tests: Path, apk: Path) -> None:
