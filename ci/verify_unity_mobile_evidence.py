@@ -103,12 +103,12 @@ def verify(android: Path, ios: Path, migration_sha: str, workflow_sha: str,
         raise ValueError("Android and iOS evidence must match the reviewed migration SHA")
     if a["workflow_sha"] != workflow_sha or i["workflow_sha"] != workflow_sha:
         raise ValueError("Android and iOS evidence must match the trusted workflow SHA")
+    if a["run_id"] == i["run_id"] or i["result"] != "unsigned_xcode_compile_only":
+        raise ValueError("Expected independent Android and unsigned iOS build runs")
     if not all(re.fullmatch(r"[1-9][0-9]*", value) for value in (android_run_id, ios_run_id)):
         raise ValueError("Expected positive GitHub Actions run IDs from reviewed run URLs")
     if a["run_id"] != android_run_id or i["run_id"] != ios_run_id:
         raise ValueError("Android/iOS evidence run IDs do not match the reviewed Actions runs")
-    if a["run_id"] == i["run_id"] or i["result"] != "unsigned_xcode_compile_only":
-        raise ValueError("Expected independent Android and unsigned iOS build runs")
     reports = list((android / "unity-test-results").rglob("*.xml"))
     if len(reports) != 1:
         raise ValueError("Expected exactly one archived Android NUnit XML report")
