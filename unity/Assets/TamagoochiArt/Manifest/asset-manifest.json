@@ -111,5 +111,59 @@
     "hand-designed VFX",
     "creature Foley/music",
     "mobile UI icons/portraits"
-  ]
+  ],
+  "sculptProductionStudies": {
+    "source": "DCC/make_puffino_sculpt.py",
+    "generator": "Editor/CreatureRigBuilder.cs",
+    "generatedPrefab": "Generated/SculptReady/Prefabs/puffino_sculpt_study.prefab",
+    "generatedOnEditorRun": true,
+    "rigBones": [
+      "BodyRoot",
+      "Head",
+      "EarRoot_L",
+      "EarTip_L",
+      "EarRoot_R",
+      "EarTip_R",
+      "TailRoot",
+      "TailTip",
+      "Jaw"
+    ],
+    "skinnedMeshParts": [
+      "BodyMesh",
+      "FaceMesh",
+      "EarMesh_L",
+      "EarMesh_R",
+      "TailMesh"
+    ],
+    "facialBlendShapes": [
+      "Smile",
+      "Pout",
+      "CheekPuff",
+      "Curious"
+    ],
+    "facialClips": [
+      "face_happy",
+      "face_pouty",
+      "face_curious",
+      "face_eating",
+      "face_sleepy",
+      "face_blink"
+    ],
+    "integrationComponent": "Runtime/CreaturePerformance.cs",
+    "status": "source-authored-not-Unity-or-Blender-executed",
+    "note": "Separate deformable studies, not final hand-sculpted meshes or validated export"
+  },
+  "effectStudies": {
+    "generator": "Editor/CreatureEffectBuilder.cs",
+    "presets": [
+      "heart_burst",
+      "dream_drift",
+      "forest_growth",
+      "lunar_evolve",
+      "ember_evolve"
+    ],
+    "particleLimitPerEmitter": 64,
+    "status": "source-authored-not-Unity-executed",
+    "note": "Budgeted particles with color/size gradients; hand-designed textures, trails and custom shaders pending"
+  }
 }
