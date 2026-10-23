@@ -16,7 +16,6 @@ if str(SCRIPT_DIR) not in sys.path:
 from validate_glb import validate
 from sculpt_details import petal_ear, curled_puffino_tail, configure_fur_shader, configure_fur_albedo, configure_tail_bands, decorate_face
 
-
 def parse_args() -> argparse.Namespace:
     args = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     parser = argparse.ArgumentParser()
@@ -38,7 +37,6 @@ def material(name: str, color: tuple[float, float, float, float]) -> bpy.types.M
     if subsurface is not None:
         subsurface.default_value = 0.12
     return mat
-
 
 def sculpt_part(
     name: str,
@@ -79,7 +77,6 @@ def sculpt_part(
             peak = max(peak, amount)
         obj["fur_surface_relief"] = peak
     return obj
-
 
 def create_armature() -> bpy.types.Object:
     bones = [
@@ -133,7 +130,6 @@ def skin(
     modifier.object = rig
     obj.parent = rig
     obj.matrix_parent_inverse = rig.matrix_world.inverted()
-
 
 def face_keys(head: bpy.types.Object) -> None:
     head.shape_key_add(name="Basis", from_mix=False)
@@ -354,12 +350,16 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     decorate_face(species, rig, face_detail, skin, (ivory, coral, pink, dark, shine, brown))
 
 def studio() -> None:
+    world = bpy.data.worlds.new("WarmStudio")
+    world.use_nodes = True
+    world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.62, 0.47, 0.45, 1)
+    bpy.context.scene.world = world
     bpy.ops.object.camera_add(location=(2.75, -5.50, 2.65))
     camera = bpy.context.object
     target = Vector((0, 0, 1.04))
     camera.rotation_euler = (target - camera.location).to_track_quat("-Z", "Y").to_euler()
     camera.data.type = "ORTHO"
-    camera.data.ortho_scale = 3.65
+    camera.data.ortho_scale = 3.15
     bpy.context.scene.camera = camera
 
     for name, position, power, area in (
