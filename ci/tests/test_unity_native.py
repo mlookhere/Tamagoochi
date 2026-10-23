@@ -305,5 +305,38 @@ class NativeEvidenceTests(unittest.TestCase):
         self.assert_rejected()
 
 
+class NativeWorkflowPolicyTests(unittest.TestCase):
+    WORKFLOWS = Path(__file__).resolve().parents[2] / ".github" / "workflows"
+
+    def test_native_platform_workflows_remain_manual_and_protected(self):
+        for filename, environment in [
+            ("unity-native.yml", "unity-native"),
+            ("unity-ios-native.yml", "unity-ios-native"),
+        ]:
+            with self.subTest(workflow=filename):
+                source = (self.WORKFLOWS / filename).read_text()
+                events = source.split("\npermissions:", 1)[0]
+                self.assertIn("\n  workflow_dispatch:\n", events)
+                self.assertNotIn("pull_request:", events)
+                self.assertIn("\npermissions:\n  contents: read\n", source)
+                self.assertIn(f"    environment: {environment}\n", source)
+                self.assertIn("    runs-on: ", source)
+                for line in source.splitlines():
+                    if "uses: " in line:
+                        self.assertRegex(line.split("uses: ", 1)[1], r"^[^@ ]+@[0-9a-f]{40}(?:\s|$)")
+
+    def test_native_platforms_require_distinct_execution_evidence(self):
+        android = (self.WORKFLOWS / "unity-native.yml").read_text()
+        ios = (self.WORKFLOWS / "unity-ios-native.yml").read_text()
+        for required in ["testMode: EditMode", "verify_unity_native.py", "unity-native-provenance.txt"]:
+            self.assertIn(required, android)
+        for required in [
+            "runs-on: macos-15", "CODE_SIGNING_ALLOWED=NO", "-sdk iphoneos",
+            "UnityFramework.framework/UnityFramework", "xcrun lipo -archs",
+            "unity-ios-executable.sha256", "unity-ios-framework.sha256",
+        ]:
+            self.assertIn(required, ios)
+
+
 if __name__ == "__main__":
     unittest.main()
