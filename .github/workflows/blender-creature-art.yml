@@ -15,7 +15,7 @@ on:
         type: choice
         default: smoke
         options: [smoke, review]
-  # First-run smoke test only for this workflow branch; no untrusted PR trigger.
+  # Run all-species CPU smoke on reviewed workflow-branch updates; no untrusted PR trigger.
   push:
     branches: [work/37-blender-render-pipeline]
     paths: [.github/workflows/blender-creature-art.yml]
@@ -107,7 +107,7 @@ jobs:
       - name: Generate meshes and render actual model proof
         shell: bash
         env:
-          ART_SPECIES: ${{ github.event_name == 'workflow_dispatch' && inputs.species || 'puffino' }}
+          ART_SPECIES: ${{ github.event_name == 'workflow_dispatch' && inputs.species || 'all' }}
           ART_QUALITY: ${{ github.event_name == 'workflow_dispatch' && inputs.quality || 'smoke' }}
         run: |
           set -euo pipefail
@@ -146,7 +146,7 @@ jobs:
       - name: Verify complete native art evidence before upload
         shell: bash
         env:
-          ART_SPECIES: ${{ github.event_name == 'workflow_dispatch' && inputs.species || 'puffino' }}
+          ART_SPECIES: ${{ github.event_name == 'workflow_dispatch' && inputs.species || 'all' }}
           EXPECTED_ART_SHA: ${{ steps.approved_art.outputs.sha }}
         run: |
           set -euo pipefail
