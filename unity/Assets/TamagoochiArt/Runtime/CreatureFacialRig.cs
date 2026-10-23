@@ -50,10 +50,20 @@ namespace Tamagoochi.Art
             if (eyeRight) rightRest = eyeRight.localScale;
             if (!face || !face.sharedMesh) return;
             Mesh mesh = face.sharedMesh;
-            smile = mesh.GetBlendShapeIndex("Smile");
-            pout = mesh.GetBlendShapeIndex("Pout");
-            cheeks = mesh.GetBlendShapeIndex("CheekPuff");
-            curious = mesh.GetBlendShapeIndex("Curious");
+            smile = FindMorph(mesh, "Smile");
+            pout = FindMorph(mesh, "Pout");
+            cheeks = FindMorph(mesh, "CheekPuff");
+            curious = FindMorph(mesh, "Curious");
+        }
+
+        private static int FindMorph(Mesh mesh, string name)
+        {
+            int index = mesh.GetBlendShapeIndex(name);
+            if (index >= 0) return index;
+            for (int i = 0; i < mesh.blendShapeCount; i++)
+                if (mesh.GetBlendShapeName(i).EndsWith("." + name, System.StringComparison.Ordinal))
+                    return i;
+            return -1;
         }
 
         public void SetExpression(CreatureMood mood) => expression = mood;
