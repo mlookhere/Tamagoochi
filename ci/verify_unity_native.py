@@ -118,10 +118,15 @@ def _valid_dex(contents: bytes) -> bool:
             int.from_bytes(contents[32:36], "little") == len(contents))
 
 
+def _is_elf(archive: zipfile.ZipFile, path: str) -> bool:
+    with archive.open(path) as binary:
+        return binary.read(4) == b"\x7fELF"
+
+
 def _validate_unity_payload(archive: zipfile.ZipFile, names: list) -> None:
     runtime = [name for name in names if name.startswith("lib/") and name.endswith("/libunity.so")]
     data = [name for name in names if name.startswith("assets/bin/Data/") and not name.endswith("/")]
-    if not runtime or not data or not any(archive.read(path).startswith(b"\x7fELF") for path in runtime):
+    if not runtime or not data or not any(_is_elf(archive, path) for path in runtime):
         raise ValueError("Android APK is missing a Unity engine binary or packaged player data")
     if not any(archive.getinfo(path).file_size > 0 for path in data):
         raise ValueError("Android APK contains no nonempty Unity player data")
@@ -132,6 +137,8 @@ def _validate_apk(apk: Path) -> None:
         raise ValueError("Native Android APK missing, empty or invalid")
     with zipfile.ZipFile(apk) as archive:
         names = archive.namelist()
+        if len(names) != len(set(names)):
+            raise ValueError("Android APK archive has ambiguous duplicate ZIP entries")
         if archive.testzip() is not None or not {"AndroidManifest.xml", "classes.dex"} <= set(names):
             raise ValueError("Android APK archive is damaged or missing runtime entries")
         if not _valid_android_manifest(archive.read("AndroidManifest.xml")):
