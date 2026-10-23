@@ -222,6 +222,34 @@ jobs:
                       with path.open("rb") as model:
                           if model.read(len(magic)) != magic:
                               raise SystemExit(f"Invalid native model format: {path}")
+          # Package the observed proof images into one human-reviewable gallery.
+          review = [
+              "# Tamagoochi creature visual review", "",
+              f"Reviewed art source: \`{os.environ['EXPECTED_ART_SHA']}\`", "",
+              "This is native mechanical evidence, not creative approval. Review each",
+              "species at full size and phone scale before accepting final artwork.", "",
+          ]
+          for row in report["species"]:
+              name = row["species"]
+              width, _, height = row["silhouette_dimensions"]["Body"]
+              review.extend([
+                  f"## {name.title()}", "",
+                  f"Body width/height: {width / height:.3f} · "
+                  f"Mobile triangles: {row['mobile_triangles']:,} / {row['mobile_budget']:,}", "",
+              ])
+              for labels, keys in (
+                  (("Front", "Three-quarter", "Side", "Back"),
+                   ("front", "three_quarter", "side", "back")),
+                  (("Smile", "Pout", "Curious", "256px phone"),
+                   ("face_smile", "face_pout", "face_curious", "phone_256")),
+              ):
+                  review.extend([
+                      "| " + " | ".join(labels) + " |",
+                      "| " + " | ".join("---" for _ in keys) + " |",
+                      "| " + " | ".join(f"![{name} {key}]({name}_{key}.png)" for key in keys) + " |",
+                      "",
+                  ])
+          (root / "proof/REVIEW.md").write_text("\\n".join(review) + "\\n")
           print("All requested native models and eight PNG proofs per species validated")
           PY
 
