@@ -21,7 +21,7 @@ def petal_ear(name, location, dimensions, material, side, species):
 
     for row in range(rings + 1):
         t = row / rings
-        fullness = max(0.035, math.sin(math.pi * t) ** 0.66)
+        fullness = max(0.035, math.sin(math.pi * t) ** (0.32 if species == "bubblin" else 0.66))
         for column in range(sides):
             angle = math.tau * column / sides
             taper = width * (0.12 + 0.88 * fullness)
@@ -29,9 +29,15 @@ def petal_ear(name, location, dimensions, material, side, species):
             lean = side * (0.10 * t * t + 0.025 * math.sin(math.pi * t))
             fold = -0.045 * math.sin(math.pi * t)
             if species == "sproutle":
-                lean += side * 0.095 * t
-            if species == "lunari":
+                lean += side * 0.23 * t
+                taper *= 1.15
+            elif species == "lunari":
+                lean -= side * 0.06 * math.sin(math.pi * t)
+                taper *= 0.65
                 radius *= 0.77
+            elif species == "bubblin":
+                lean += side * 0.24 * t * t
+                taper *= 1.20
             vertices.append((
                 taper * math.cos(angle) + lean,
                 radius * math.sin(angle) + fold,
@@ -131,7 +137,7 @@ def configure_fur_albedo(material, base, texture_dir=None):
         node.outputs["Color"], surface.inputs["Base Color"])
 
 
-def configure_tail_bands(material, cream, accent, texture_dir=None):
+def configure_tail_bands(material, cream, accent, texture_dir=None, pattern="puffino"):
     """Exportable UV albedo stripes. Do not rely on Blender-only wave shaders."""
     size = 256
     name = material.name + "_Albedo"
@@ -142,8 +148,15 @@ def configure_tail_bands(material, cream, accent, texture_dir=None):
         for column in range(size):
             u = column / max(1, size - 1)
             warp = 0.055 * math.sin(math.tau * (u * 2.0 + v * 0.7))
-            wave = math.sin(math.tau * (3.5 * v + warp))
-            blend = max(0.0, min(1.0, 0.5 + wave * 2.2))
+            if pattern == "lunari":
+                blend = 0.35 + 0.50 * (0.5 + 0.5 * math.sin(math.tau * (u * 1.2 + v * 0.30)))
+            elif pattern == "sproutle":
+                blend = 0.20 + 0.65 * max(0.0, 1.0 - abs(u - 0.5) * 1.8)
+            elif pattern == "bubblin":
+                blend = 0.50 + 0.30 * math.sin(math.tau * u * 2.0) * math.sin(math.tau * v * 1.5)
+            else:
+                wave = math.sin(math.tau * (3.5 * v + warp))
+                blend = max(0.0, min(1.0, 0.5 + wave * 2.2))
             grain = 0.975 + 0.025 * math.sin(191.0 * u + 173.0 * v)
             pixels.extend((
                 (cream[channel] * (1.0 - blend) + accent[channel] * blend) * grain
