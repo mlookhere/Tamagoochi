@@ -136,7 +136,7 @@ def face_keys(head: bpy.types.Object) -> None:
         key = head.shape_key_add(name=name, from_mix=False)
         for vertex in key.data:
             co = vertex.co
-                    front = max(0.0, min(1.0, (-co.y - 0.23) / 0.30))
+            front = max(0.0, min(1.0, (-co.y - 0.23) / 0.30))
             lower = max(0.0, 1.0 - abs(co.z + 0.17) / 0.28)
             mouth = max(0.0, 1.0 - abs(co.x) / 0.38)
             cheek = max(0.0, 1.0 - abs(abs(co.x) - 0.31) / 0.23)
