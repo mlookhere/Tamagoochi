@@ -24,9 +24,11 @@ namespace Tamagoochi.Art.Editor
             internal Preset(string id, string start, string end, float life, float speed, int count)
             {
                 Id = id;
-                if (!ColorUtility.TryParseHtmlString(start, out Start) ||
-                    !ColorUtility.TryParseHtmlString(end, out End))
+                if (!ColorUtility.TryParseHtmlString(start, out Color startColor) ||
+                    !ColorUtility.TryParseHtmlString(end, out Color endColor))
                     throw new ArgumentException("Invalid particle color");
+                Start = startColor;
+                End = endColor;
                 Life = life;
                 Speed = speed;
                 Count = count;
