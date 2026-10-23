@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 from ci.verify_unity_mobile_evidence import verify
+from ci.verify_unity_native import MINIMUM_EDITMODE_CASES
 
 MIGRATION = "a" * 40
 WORKFLOW = "b" * 40
@@ -26,7 +27,14 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
         apk = self.android / "unity" / "Builds" / "Tamagoochi.apk"
         report.parent.mkdir(parents=True)
         apk.parent.mkdir(parents=True)
-        report.write_bytes(b"<test-run result='Passed'/>")
+        cases = "".join(
+            f'<test-case name="Case{i}" result="Passed"/>' for i in range(MINIMUM_EDITMODE_CASES)
+        )
+        report.write_text(
+            f'<test-run result="Passed" total="{MINIMUM_EDITMODE_CASES}" '
+            f'passed="{MINIMUM_EDITMODE_CASES}" failed="0" skipped="0" inconclusive="0">'
+            f'<test-suite>{cases}</test-suite></test-run>'
+        )
         apk.write_bytes(b"synthetic-apk")
         (self.android / "unity-native-provenance.txt").write_text(
             f"migration_sha={MIGRATION}\nworkflow_sha={WORKFLOW}\nrun_id=101\n"
@@ -56,6 +64,35 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
             "result=unsigned_xcode_compile_only\nXcode 16.0\nBuild version synthetic\n"
             + "\n".join(records) + "\n"
         )
+
+    def _replace_archived_report(self, original: str, replacement: str) -> None:
+        report = self.android / "unity-test-results" / "results.xml"
+        old_hash = _digest(report.read_bytes())
+        contents = report.read_text()
+        self.assertIn(original, contents)
+        report.write_text(contents.replace(original, replacement, 1))
+        provenance = self.android / "unity-native-provenance.txt"
+        provenance.write_text(provenance.read_text().replace(old_hash, _digest(report.read_bytes())))
+
+    def test_failed_nunit_report_with_matching_digest_fails(self):
+        self._replace_archived_report('result="Passed" total=', 'result="Failed" total=')
+        with self.assertRaisesRegex(ValueError, "fully passing"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
+
+    def test_missing_nunit_case_with_matching_digest_fails(self):
+        self._replace_archived_report('<test-case name="Case0" result="Passed"/>', "")
+        with self.assertRaisesRegex(ValueError, "inconsistent"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
+
+    def test_duplicate_nunit_case_identity_with_matching_digest_fails(self):
+        self._replace_archived_report('name="Case1"', 'name="Case0"')
+        with self.assertRaisesRegex(ValueError, "duplicated"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
+
+    def test_invalid_xml_with_matching_digest_fails(self):
+        self._replace_archived_report("</test-run>", "")
+        with self.assertRaisesRegex(Exception, "no element found"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
 
     def test_matching_unsigned_cross_platform_evidence(self):
         verify(self.android, self.ios, MIGRATION, WORKFLOW)
