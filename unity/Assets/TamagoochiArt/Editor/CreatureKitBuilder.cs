@@ -73,6 +73,7 @@ namespace Tamagoochi.Art.Editor
                 CreateCreature(species);
 
             CreateProps();
+            CreateCatalog();
             foreach (string action in Actions)
                 CreateClip(action);
 
@@ -107,6 +108,11 @@ namespace Tamagoochi.Art.Editor
                 string path = Clips + "/" + action + ".anim";
                 if (!AssetDatabase.LoadAssetAtPath<AnimationClip>(path)) missing.Add(path);
             }
+
+            CreatureCatalog catalog = AssetDatabase.LoadAssetAtPath<CreatureCatalog>(
+                Root + "/CreatureCatalog.asset");
+            if (!catalog || catalog.CreatureCount != Starters.Length || catalog.PropCount != 5)
+                missing.Add(Root + "/CreatureCatalog.asset");
 
             if (missing.Count > 0)
                 throw new InvalidOperationException("Missing/invalid generated assets:\n" +
@@ -304,6 +310,36 @@ namespace Tamagoochi.Art.Editor
                 Sphere("ChestGem", visual, detail, 0f, 0.65f, 0.64f,
                     0.20f, 0.23f, 0.09f);
             }
+        }
+
+        private static void CreateCatalog()
+        {
+            string path = Root + "/CreatureCatalog.asset";
+            CreatureCatalog catalog = AssetDatabase.LoadAssetAtPath<CreatureCatalog>(path);
+            if (!catalog)
+            {
+                catalog = ScriptableObject.CreateInstance<CreatureCatalog>();
+                AssetDatabase.CreateAsset(catalog, path);
+            }
+
+            CreatureCatalog.Entry[] entries = new CreatureCatalog.Entry[Starters.Length];
+            for (int i = 0; i < Starters.Length; i++)
+            {
+                entries[i] = new CreatureCatalog.Entry
+                {
+                    speciesId = Starters[i].Id,
+                    prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                        Prefabs + "/" + Starters[i].Id + ".prefab")
+                };
+            }
+
+            string[] names = { "berry", "play_ball", "sleep_cushion", "flower_pot", "food_bowl" };
+            GameObject[] props = new GameObject[names.Length];
+            for (int i = 0; i < names.Length; i++)
+                props[i] = AssetDatabase.LoadAssetAtPath<GameObject>(
+                    Prefabs + "/prop_" + names[i] + ".prefab");
+            catalog.Configure(entries, props);
+            EditorUtility.SetDirty(catalog);
         }
 
         private static void SaveProp(GameObject gameObject, string id)
