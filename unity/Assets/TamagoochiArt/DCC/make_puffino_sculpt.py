@@ -1,11 +1,4 @@
-"""Blender 4.x sculpt-authoring studies for the original Tamagoochi creature families.
-
-Usage (Blender installed separately):
-    blender --background --python make_puffino_sculpt.py -- --output /path/to/output
-
-Outputs are a real editable .blend and optional .glb (not pre-generated in GitHub).
-The mesh is a quad-based sculpt blockout, not a finished artist-painted character.
-"""
+"""Editable Blender sculpt studies for original Tamagoochi creatures."""
 from __future__ import annotations
 
 import argparse
@@ -73,6 +66,18 @@ def sculpt_part(
         modifier.levels = subdivisions
         modifier.render_levels = subdivisions
         bpy.ops.object.modifier_apply(modifier=modifier.name)
+    if name in ("Body", "Head"):
+        peak = 0.0
+        for vertex in obj.data.vertices:
+            x, y, z = vertex.co
+            phase = math.atan2(y / dimensions[1], x / dimensions[0])
+            back = min(1.0, max(0.0, (y + 0.05) / (0.65 * dimensions[1])))
+            side = min(1.0, max(0.0, (abs(x) / dimensions[0] - 0.63) / 0.37))
+            tuft = max(0.0, math.cos(7 * phase + 3 * z / dimensions[2]))**4
+            amount = (0.035 if name == "Head" else 0.025) * max(back, 0.6 * side) * tuft
+            vertex.co += vertex.normal * amount
+            peak = max(peak, amount)
+        obj["fur_surface_relief"] = peak
     return obj
 
 
@@ -304,7 +309,6 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
         "sproutle": (0.23, 0.10, 0.47),
         "bubblin": (0.27, 0.17, 0.28),
     }[species]
-
     silhouette = {
         "puffino": ((0.49, 0.42, 0.57), (0.57, 0.49, 0.48), (0.42, 0.32, 0.37)),
         "lunari": ((0.40, 0.36, 0.67), (0.54, 0.46, 0.54), (0.24, 0.21, 0.62)),
@@ -327,7 +331,6 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     ]
     for name, location, scale, mat, bone, tip in parts:
         _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile, pink)
-
     details = [
         ("Horn_L", (-0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
         ("Horn_R", (0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
@@ -347,9 +350,7 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     def face_detail(name, location, dimensions, material, subdivisions=0):
         if profile == "sculpt":
             return sculpt_part(name, location, dimensions, material, subdivisions)
-        return sculpt_part(name, location, dimensions, material, 0,
-                           segments=12, rings=8)
-
+        return sculpt_part(name, location, dimensions, material, 0, segments=12, rings=8)
     decorate_face(species, rig, face_detail, skin, (ivory, coral, pink, dark, shine, brown))
 
 def studio() -> None:
@@ -405,7 +406,6 @@ def main() -> None:
     report = validate(exported)
     print("Validated GLB geometry, morphs, skinning and albedo:", report)
 
-    # Unity natively imports FBX without a third-party glTF package.
     bpy.ops.object.select_all(action="DESELECT")
     for obj in bpy.data.objects:
         if obj.type in {"ARMATURE", "MESH"}:
