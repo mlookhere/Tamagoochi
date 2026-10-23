@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "editor": "Unity 6000.0.62f1",
+  "description": "Stylized 3D original animal-adjacent evolution-ready creature kit",
+  "generatedByEditor": true,
+  "creatures": [
+    "puffino",
+    "lunari",
+    "sproutle",
+    "bubblin",
+    "puffino_forest",
+    "puffino_lunar",
+    "puffino_ember"
+  ],
+  "props": [
+    "berry",
+    "play_ball",
+    "sleep_cushion",
+    "flower_pot",
+    "food_bowl"
+  ],
+  "environment": [
+    "env_starter_nursery"
+  ],
+  "vfx": [
+    "fx_happy",
+    "fx_sleepy",
+    "fx_evolution"
+  ],
+  "audio": [
+    "pet_chirp",
+    "pet_purr",
+    "happy_hop",
+    "food_munch",
+    "sleepy_sigh",
+    "evolution_chime"
+  ],
+  "actions": [
+    "Idle",
+    "Wiggle",
+    "Walk",
+    "Run",
+    "Hop",
+    "Eat",
+    "Sleep",
+    "Play",
+    "Happy",
+    "Sad",
+    "Curious",
+    "Startled",
+    "Pickup",
+    "Return",
+    "Nuzzle",
+    "Evolution"
+  ],
+  "creatureFamilies": [
+    {
+      "id": "puffino",
+      "features": [
+        "petal ears",
+        "horn buds",
+        "ringed tail"
+      ],
+      "evolutions": [
+        "forest",
+        "lunar",
+        "ember"
+      ]
+    },
+    {
+      "id": "lunari",
+      "features": [
+        "finned ears",
+        "orb antennae",
+        "moon marking"
+      ],
+      "evolutions": []
+    },
+    {
+      "id": "sproutle",
+      "features": [
+        "leaf ears",
+        "sprout crown"
+      ],
+      "evolutions": []
+    },
+    {
+      "id": "bubblin",
+      "features": [
+        "cloud tufts",
+        "floating orbs"
+      ],
+      "evolutions": []
+    }
+  ],
+  "status": {
+    "allMeshGeometry": "procedural-prototype",
+    "animationClips": "transform-blockouts",
+    "audio": "synthesized-placeholder",
+    "unityEditorTest": "not-run",
+    "androidBuild": "not-run",
+    "iosBuild": "not-run",
+    "deviceQA": "not-run"
+  },
+  "productionStillRequired": [
+    "hand-sculpted retopologized meshes",
+    "UV texture maps and LODs",
+    "skinned rigs and facial blends",
+    "authored animation performances",
+    "production environments and furniture",
+    "hand-designed VFX",
+    "creature Foley/music",
+    "mobile UI icons/portraits"
+  ]
+}
