@@ -90,19 +90,30 @@ def _validate_textures(document: dict) -> int:
     return textured
 
 
+def _has_complete_face_morphs(mesh: dict) -> bool:
+    names = mesh.get("extras", {}).get("targetNames", [])
+    if not isinstance(names, list) or not REQUIRED_MORPHS.issubset(names):
+        return False
+    indices = [names.index(name) for name in REQUIRED_MORPHS]
+    for primitive in mesh.get("primitives", []):
+        attributes = primitive.get("attributes", {})
+        targets = primitive.get("targets", [])
+        if not all(key in attributes for key in ("JOINTS_0", "WEIGHTS_0", "TEXCOORD_0")):
+            continue
+        if all(index < len(targets) and "POSITION" in targets[index] for index in indices):
+            return True
+    return False
+
+
 def _validate_mesh_attributes(meshes: list) -> tuple[int, int]:
-    morph_names: set[str] = set()
     weighted = 0
     uv_count = 0
-    targets = 0
     for mesh in meshes:
-        morph_names.update(mesh.get("extras", {}).get("targetNames", []))
         for primitive in mesh.get("primitives", []):
             attributes = primitive.get("attributes", {})
             weighted += int("JOINTS_0" in attributes and "WEIGHTS_0" in attributes)
             uv_count += int("TEXCOORD_0" in attributes)
-            targets += len(primitive.get("targets", []))
-    if not REQUIRED_MORPHS.issubset(morph_names) or targets < 4:
+    if not any(_has_complete_face_morphs(mesh) for mesh in meshes):
         raise ValueError("Head facial morph names or target frames missing")
     if weighted < 5 or uv_count < 5:
         raise ValueError("Expected skinned, UV-mapped creature parts missing")
