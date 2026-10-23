@@ -153,58 +153,25 @@ def face_keys(head: bpy.types.Object) -> None:
                 co.z += 0.05 * front
 
 
-def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile):
-    if name.startswith("Ear"):
-        side = -1 if name.endswith("_L") else 1
-        obj = petal_ear(name, location,
-                        (scale[0], scale[1], scale[2] * 2), mat, side, species)
-    else:
-        subdivisions = 1 if profile == "sculpt" else 0
-        segments, rings = (48, 32) if profile == "sculpt" else (32, 20)
-        obj = sculpt_part(name, location, scale, mat, subdivisions,
-                          segments=segments, rings=rings)
-    if name == "Head":
-        face_keys(obj)
-    if name.startswith("Ear"):
-        skin(obj, rig, bone, tip, start=-0.28, end=0.31)
-    elif name == "Tail":
-        skin(obj, rig, bone, tip, axis=0, start=-0.37, end=0.37)
-    else:
-        skin(obj, rig, bone)
-
-
-def _add_species_extras(species, rig, ivory, coral, pink):
-    extras = []
-    if species == "lunari":
-        extras = [
-            ("Antenna_L", (-0.22, 0.04, 1.85), (0.055, 0.055, 0.25), coral),
-            ("Antenna_R", (0.22, 0.04, 1.85), (0.055, 0.055, 0.25), coral),
-            ("StarOrb_L", (-0.22, 0.04, 2.08), (0.13, 0.13, 0.13), pink),
-            ("StarOrb_R", (0.22, 0.04, 2.08), (0.13, 0.13, 0.13), pink),
-        ]
-    elif species == "sproutle":
-        extras = [
-            ("LeafCrown_L", (-0.16, 0.01, 1.84), (0.12, 0.07, 0.29), coral),
-            ("LeafCrown_R", (0.16, 0.01, 1.84), (0.12, 0.07, 0.29), pink),
-            ("BloomBud", (0, -0.01, 2.08), (0.10, 0.10, 0.14), ivory),
-        ]
-    elif species == "bubblin":
-        extras = [
-            ("CloudOrb_A", (-0.33, 0.04, 1.75), (0.17, 0.17, 0.17), pink),
-            ("CloudOrb_B", (0.14, 0.10, 1.88), (0.19, 0.19, 0.19), coral),
-            ("CloudOrb_C", (0.43, 0.07, 1.70), (0.14, 0.14, 0.14), pink),
-        ]
-    for name, location, scale, mat in extras:
-        ornament = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
-        skin(ornament, rig, "head")
-
-
 def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_dir=None) -> None:
     palettes = {
         "puffino": ((0.95, 0.82, 0.71, 1), (0.95, 0.48, 0.32, 1),
                     (1.0, 0.64, 0.60, 1), (0.17, 0.10, 0.15, 1)),
-        "lu    for name, location, scale, mat, bone, tip in parts:
-        _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile)ent_color)
+        "lunari": ((0.94, 0.91, 0.99, 1), (0.56, 0.68, 0.95, 1),
+                   (0.73, 0.64, 0.99, 1), (0.14, 0.18, 0.42, 1)),
+        "sproutle": ((0.95, 0.93, 0.75, 1), (0.49, 0.70, 0.32, 1),
+                     (0.70, 0.85, 0.49, 1), (0.16, 0.28, 0.15, 1)),
+        "bubblin": ((0.98, 0.89, 0.92, 1), (0.94, 0.58, 0.78, 1),
+                    (0.74, 0.53, 0.91, 1), (0.28, 0.15, 0.34, 1)),
+    }
+    body_color, accent_color, fin_color, eye_color = palettes[species]
+    ivory = material(species + "_Body", body_color)
+    coral = material(species + "_Accent", accent_color)
+    pink = material(species + "_Fin", fin_color)
+    dark = material(species + "_Eyes", eye_color)
+    shine = material(species + "_Light", (1.0, 0.98, 0.92, 1))
+    brown = material(species + "_Nubs", (0.63, 0.30, 0.18, 1))
+    tail_bands = material(species + "_TailBands", accent_color)
     configure_tail_bands(tail_bands, body_color, accent_color, texture_dir)
     for fur, color in ((ivory, body_color), (coral, accent_color),
                        (pink, fin_color)):
@@ -249,8 +216,22 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
 
     details = [
         ("Inner_L", (-0.55, -0.11, 1.82), (0.13, 0.05, 0.24), pink, "ear_root_L"),
-      _add_species_extras(species, rig, ivory, coral, pink)
-)]
+        ("Inner_R", (0.55, -0.11, 1.82), (0.13, 0.05, 0.24), pink, "ear_root_R"),
+        ("Horn_L", (-0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
+        ("Horn_R", (0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
+        ("Eye_L", (-0.24, -0.50, 1.20), (0.15, 0.075, 0.18), dark, "head"),
+        ("Eye_R", (0.24, -0.50, 1.20), (0.15, 0.075, 0.18), dark, "head"),
+        ("Glint_L", (-0.28, -0.57, 1.26), (0.038, 0.025, 0.045), shine, "head"),
+        ("Glint_R", (0.20, -0.57, 1.26), (0.038, 0.025, 0.045), shine, "head"),
+        ("Paw_L", (-0.50, -0.25, 0.56), (0.20, 0.20, 0.20), ivory, "body"),
+        ("Paw_R", (0.50, -0.25, 0.56), (0.20, 0.20, 0.20), ivory, "body"),
+        ("Foot_L", (-0.32, -0.25, 0.16), (0.23, 0.25, 0.12), coral, "body"),
+        ("Foot_R", (0.32, -0.25, 0.16), (0.23, 0.25, 0.12), coral, "body"),
+        ("Nose", (0, -0.54, 1.02), (0.07, 0.05, 0.05), brown, "head"),
+        ("Mouth", (0, -0.48, 0.93), (0.12, 0.07, 0.08), dark, "jaw"),
+    ]
+    if species != "puffino":
+        details = [detail for detail in details if not detail[0].startswith("Horn_")]
     for name, location, scale, mat, bone in details:
         obj = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
         skin(obj, rig, bone)
