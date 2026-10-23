@@ -143,6 +143,57 @@ jobs:
           printf '## Tamagoochi model proofs\n\n- Species: %s\n- Quality: %s\n- Art source: %s\n\nCreative approval is still required.\n' \
             "$ART_SPECIES" "$ART_QUALITY" "$(git rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Verify complete native art evidence before upload
+        shell: bash
+        env:
+          ART_SPECIES: ${{ github.event_name == 'workflow_dispatch' && inputs.species || 'puffino' }}
+          EXPECTED_ART_SHA: ${{ steps.approved_art.outputs.sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path("artifacts/blender")
+          report = json.loads((root / "proof/quality_report.json").read_text())
+          species = ("puffino", "lunari", "sproutle", "bubblin")
+          requested = species if os.environ["ART_SPECIES"] == "all" else (os.environ["ART_SPECIES"],)
+          if not set(requested) <= set(species):
+              raise SystemExit("Unexpected species in native art evidence")
+          if (report.get("schema") != 1 or report.get("technical_checks_pass") is not True
+                  or report.get("creative_review") != "required"
+                  or report.get("production_ready") is not False
+                  or {row.get("species") for row in report.get("species", [])} != set(requested)
+                  or len(report.get("species", [])) != len(requested)):
+              raise SystemExit("Native art report is incomplete or claims unapproved production status")
+          if (root / "source-commit.txt").read_text().strip() != os.environ["EXPECTED_ART_SHA"]:
+              raise SystemExit("Art evidence does not match the approved source commit")
+          expected_proofs = {"front", "three_quarter", "side", "back",
+                             "face_Smile", "face_Pout", "face_Curious", "phone_256"}
+          for row in report["species"]:
+              name = row["species"]
+              if set(row.get("proof_images", {})) != expected_proofs or row.get("mechanical_pass") is not True:
+                  raise SystemExit(f"Missing native proof angles or failed mechanical QA: {name}")
+              for key, recorded_size in row["proof_images"].items():
+                  path = root / "proof" / f"{name}_{key.lower() if key.startswith('face_') else key}.png"
+                  # Expression files are named face_smile/face_pout/face_curious.
+                  if not path.is_file() or path.stat().st_size != recorded_size:
+                      raise SystemExit(f"Missing or mismatched native proof: {path}")
+                  with path.open("rb") as source:
+                      if source.read(8) != b"\\x89PNG\\r\\n\\x1a\\n":
+                          raise SystemExit(f"Invalid PNG proof: {path}")
+              for profile in ("sculpt", "mobile"):
+                  for ext, magic in (("blend", b"BLENDER"), ("glb", b"glTF")):
+                      path = root / "models" / f"{name}_{profile}.{ext}"
+                      if not path.is_file() or path.stat().st_size < 64:
+                          raise SystemExit(f"Missing native model: {path}")
+                      with path.open("rb") as model:
+                          if model.read(len(magic)) != magic:
+                              raise SystemExit(f"Invalid native model format: {path}")
+          print("All requested native models and eight PNG proofs per species validated")
+          PY
+
       - name: Upload model source, exported geometry, textures and proof renders
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
