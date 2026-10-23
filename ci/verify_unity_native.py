@@ -30,6 +30,12 @@ REQUIRED_TESTS = frozenset({
 
 def _expected_unity_tests(project: Path):
     folder = project / "Assets" / "Tests" / "EditMode"
+    authored = {folder / f"{name}.cs" for name in SUITE_FILES}
+    for path in folder.rglob("*.cs"):
+        if path not in authored:
+            source = path.read_text()
+            if TEST_ATTRIBUTES.search(source) or CASE_ATTRIBUTES.search(source):
+                raise ValueError(f"Untracked Unity EditMode test suite: {path}")
     methods = {}
     art = []
     for name in SUITE_FILES:
