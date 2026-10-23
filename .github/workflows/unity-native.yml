@@ -133,7 +133,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 .unity-ci-control/ci/verify_unity_sources.py \
+          python3 -I -B .unity-ci-control/ci/verify_unity_sources.py \
             --repository . --control .unity-ci-control \
             --migration-sha "$MIGRATION_SHA" --workflow-sha "$WORKFLOW_SHA"
 
