@@ -87,8 +87,9 @@ def _ios_build_evidence(ios: Path, provenance: str) -> None:
         raise ValueError("Archived iOS Xcode version evidence is missing or invalid")
     if version not in provenance:
         raise ValueError("Archived Xcode version does not match iOS provenance")
-    if "** BUILD SUCCEEDED **" not in build_log:
-        raise ValueError("iOS Xcode build log does not report successful compilation")
+    outcomes = re.findall(r"^\*\* BUILD (?:SUCCEEDED|FAILED) \*\*$", build_log, re.MULTILINE)
+    if not outcomes or outcomes[-1] != "** BUILD SUCCEEDED **":
+        raise ValueError("iOS Xcode build log does not end with a successful build outcome")
 
 
 def verify(android: Path, ios: Path, migration_sha: str, workflow_sha: str,
