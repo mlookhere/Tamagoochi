@@ -163,7 +163,9 @@ class UnitySourceIntegrityTests(unittest.TestCase):
             self.verify()
 
     def test_generated_untracked_packages_lock_is_allowed(self):
-        _git(self.migration, "rm", "-q", "--cached", "unity/Packages/packages-lock.json")
+        _git(self.migration, "rm", "-q", "unity/Packages/packages-lock.json")
+        self.migration_sha = _commit(self.migration)
+        self.package_lock.write_text('{"dependencies": {}}')
         self.verify()
 
     def test_changed_editor_version_fails(self):
