@@ -177,6 +177,20 @@ class NativeEvidenceTests(unittest.TestCase):
         path.write_text(path.read_text() + "\n[TestCase(true)]\n")
         self.assert_rejected()
 
+    def test_alternate_case_generators_in_reviewed_suite_fail(self):
+        path = self.project / "Assets" / "Tests" / "EditMode" / "ExpeditionTests.cs"
+        original = path.read_text()
+        for attribute in ["UnityTest", "Theory", 'TestCaseSource("Cases")', "Values(1, 2)"]:
+            with self.subTest(attribute=attribute):
+                path.write_text(original + f"\n[{attribute}]\npublic void UnreviewedCase() {{}}\n")
+                self.assert_rejected()
+                path.write_text(original)
+
+    def test_unreviewed_unity_test_in_new_suite_fails(self):
+        path = self.project / "Assets" / "Tests" / "EditMode" / "NewFixture.cs"
+        path.write_text("[UnityTest]\npublic void NewUnityCase() {}\n")
+        self.assert_rejected()
+
     def test_untracked_editmode_suite_fails(self):
         path = self.project / "Assets" / "Tests" / "EditMode" / "AdditionalTests.cs"
         path.write_text("[Test]\npublic void AdditionalTest() {}\n")
