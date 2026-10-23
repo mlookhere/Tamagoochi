@@ -73,6 +73,8 @@ namespace Tamagoochi.Art.Editor
                 CreateCreature(species);
 
             CreateProps();
+            CreatureWorldBuilder.GenerateWorld();
+            CreatureAudioBuilder.GenerateAudio(Root);
             CreateCatalog();
             foreach (string action in Actions)
                 CreateClip(action);
@@ -109,6 +111,19 @@ namespace Tamagoochi.Art.Editor
                 if (!AssetDatabase.LoadAssetAtPath<AnimationClip>(path)) missing.Add(path);
             }
 
+            foreach (string id in new[] { "env_starter_nursery", "fx_happy", "fx_sleepy", "fx_evolution" })
+            {
+                string path = Prefabs + "/" + id + ".prefab";
+                if (!AssetDatabase.LoadAssetAtPath<GameObject>(path)) missing.Add(path);
+            }
+
+            foreach (string id in new[] { "pet_chirp", "pet_purr", "happy_hop",
+                "food_munch", "sleepy_sigh", "evolution_chime" })
+            {
+                string path = Root + "/Audio/" + id + ".wav";
+                if (!AssetDatabase.LoadAssetAtPath<AudioClip>(path)) missing.Add(path);
+            }
+
             CreatureCatalog catalog = AssetDatabase.LoadAssetAtPath<CreatureCatalog>(
                 Root + "/CreatureCatalog.asset");
             if (!catalog || catalog.CreatureCount != Starters.Length || catalog.PropCount != 5)
@@ -117,7 +132,7 @@ namespace Tamagoochi.Art.Editor
             if (missing.Count > 0)
                 throw new InvalidOperationException("Missing/invalid generated assets:\n" +
                     string.Join("\n", missing));
-            Debug.Log("Tamagoochi art audit: 7 creature prefabs, 5 prop prefabs, 16 prototype clips present.");
+            Debug.Log("Tamagoochi art audit: 7 creature prefabs, 5 props, 1 nursery, 3 VFX, 6 WAVs, 16 clips present.");
         }
 
         private static void EnsureFolder(string path)
