@@ -78,6 +78,57 @@ def petal_ear(name, location, dimensions, material, side, species):
     return obj
 
 
+
+def curled_puffino_tail(material, profile):
+    """Swept, plush quad-ring tail rooted inside the body, not a detached ball."""
+    from mathutils import Vector
+
+    rings, sides = (32, 20) if profile == "sculpt" else (18, 12)
+    pivot = Vector((0.53, 0.32, 0.75))
+    vertices, faces, uv = [], [], []
+    for i in range(rings + 1):
+        t = i / rings
+        phase = math.pi * t
+        center = Vector((
+            0.17 + 0.66 * t + 0.05 * math.sin(phase),
+            0.30 + 0.10 * t,
+            0.60 + 0.34 * math.sin(0.75 * phase),
+        ))
+        tangent = Vector((
+            0.66 + 0.05 * math.pi * math.cos(phase),
+            0.10,
+            0.255 * math.pi * math.cos(0.75 * phase),
+        )).normalized()
+        across = Vector((-tangent.z, 0, tangent.x)).normalized()
+        depth = tangent.cross(across).normalized()
+        radius = (0.09 + 0.21 * math.sin(phase) ** 0.72) * (1 - 0.4 * t**8)
+        for j in range(sides):
+            angle = math.tau * j / sides
+            tuft = 1 + 0.035 * math.sin(5 * angle + 7 * t)
+            point = center + radius * tuft * (
+                math.cos(angle) * across + math.sin(angle) * depth
+            )
+            vertices.append(tuple(point - pivot))
+            uv.append((j / sides, t))
+            if i < rings:
+                nxt = i * sides + (j + 1) % sides
+                faces.append((i * sides + j, nxt, nxt + sides, (i + 1) * sides + j))
+    faces.extend((tuple(reversed(range(sides))), tuple(rings * sides + j for j in range(sides))))
+    mesh = bpy.data.meshes.new("PuffinoTailQuads")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    layer = mesh.uv_layers.new(name="UVMap")
+    for face in mesh.polygons:
+        face.use_smooth = True
+        for loop in face.loop_indices:
+            layer.data[loop].uv = uv[mesh.loops[loop].vertex_index]
+    obj = bpy.data.objects.new("Tail", mesh)
+    bpy.context.collection.objects.link(obj)
+    obj.location = pivot
+    obj.data.materials.append(material)
+    return obj
+
+
 def configure_fur_shader(material):
     """Subtle micro-roughness/bump; no heavy realtime strand simulation."""
     if not material.use_nodes:
