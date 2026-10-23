@@ -20,7 +20,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from sculpt_details import petal_ear, configure_fur_shader, configure_tail_bands, decorate_face
+from sculpt_details import petal_ear, configure_fur_shader, configure_fur_albedo, configure_tail_bands, decorate_face
 
 
 def parse_args() -> argparse.Namespace:
@@ -172,7 +172,9 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     brown = material(species + "_Nubs", (0.63, 0.30, 0.18, 1))
     tail_bands = material(species + "_TailBands", accent_color)
     configure_tail_bands(tail_bands, body_color, accent_color, texture_dir)
-    for fur in (ivory, coral, pink):
+    for fur, color in ((ivory, body_color), (coral, accent_color),
+                       (pink, fin_color)):
+        configure_fur_albedo(fur, color, texture_dir)
         configure_fur_shader(fur)
     eye_node = dark.node_tree.nodes.get("Principled BSDF")
     eye_node.inputs["Roughness"].default_value = 0.12
