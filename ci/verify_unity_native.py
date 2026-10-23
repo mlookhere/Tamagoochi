@@ -16,6 +16,9 @@ SUITE_FILES = (
 DIRECT_TEST = re.compile(r"(?m)^[ \t]*\[Test\][ \t]*\r?\n[ \t]*public void ([A-Za-z]\w*)\(")
 TEST_ATTRIBUTES = re.compile(r"(?m)^[ \t]*\[Test\]")
 CASE_ATTRIBUTES = re.compile(r"(?m)^[ \t]*\[TestCase\b")
+UNSUPPORTED_TEST_ATTRIBUTES = re.compile(
+    r"(?m)^[ \t]*\[(?:UnityTest|Theory|TestCaseSource|TestFixtureSource|Values|ValueSource|Range|Random)\b"
+)
 ART_CASE = re.compile(r'(?m)^[ \t]*\[TestCase\("([^"]+)",\s*(\d+)\)\]')
 REQUIRED_TESTS = frozenset({
     "GeneratedUiFilesLiveInsideTheSelectedUnityProject",
@@ -33,7 +36,8 @@ def _reject_untracked_suites(folder: Path) -> None:
     for path in folder.rglob("*.cs"):
         if path not in authored:
             source = path.read_text()
-            if TEST_ATTRIBUTES.search(source) or CASE_ATTRIBUTES.search(source):
+            attributes = (TEST_ATTRIBUTES, CASE_ATTRIBUTES, UNSUPPORTED_TEST_ATTRIBUTES)
+            if any(pattern.search(source) for pattern in attributes):
                 raise ValueError(f"Untracked Unity EditMode test suite: {path}")
 
 
@@ -44,6 +48,8 @@ def _expected_unity_tests(project: Path):
     art = []
     for name in SUITE_FILES:
         source = (folder / f"{name}.cs").read_text()
+        if UNSUPPORTED_TEST_ATTRIBUTES.search(source):
+            raise ValueError(f"Unrecognized test-case generator in {name}")
         found = DIRECT_TEST.findall(source)
         if not found or len(found) != len(TEST_ATTRIBUTES.findall(source)):
             raise ValueError(f"Unrecognized or missing NUnit [Test] method in {name}")
