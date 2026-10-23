@@ -47,11 +47,11 @@ def reset(species: str):
     studio()
     scene = bpy.context.scene
 
-    # EEVEE supports CPU/offscreen operation for common Blender installations.
-    engines = {enum.identifier for enum in
-               scene.bl_rna.properties["render"].fixed_type.properties["engine"].enum_items}
-    scene.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in engines else (
-        "BLENDER_EEVEE" if "BLENDER_EEVEE" in engines else "BLENDER_WORKBENCH")
+    # Never fall back silently to flat Workbench renders for art approval.
+    try:
+        scene.render.engine = "BLENDER_EEVEE_NEXT"
+    except TypeError:
+        scene.render.engine = "BLENDER_EEVEE"
     scene.render.image_settings.file_format = "PNG"
     scene.render.film_transparent = False
     return rig
@@ -152,6 +152,11 @@ def species_review(species: str, target: Path, resolution: int) -> dict:
         expression(face)
         path = target / (species + "_face_" + face.lower() + ".png")
         screenshots["face_" + face] = save_render(path, resolution)
+    # Native phone-scale capture: beautiful closeups alone are insufficient.
+    move_camera(0)
+    expression("Smile")
+    phone = target / (species + "_phone_256.png")
+    screenshots["phone_256"] = save_render(phone, 256)
     metrics["proof_images"] = screenshots
 
     failures = (
@@ -163,7 +168,8 @@ def species_review(species: str, target: Path, resolution: int) -> dict:
         metrics["skinned_parts"] < 5 or
         metrics["mesh_objects"] < 20 or
         metrics["triangles"] < 12000 or
-        any(size < 15000 for size in screenshots.values())
+        any(size < (3000 if name == "phone_256" else 15000)
+            for name, size in screenshots.items())
     )
     metrics["mechanical_pass"] = not failures
     return metrics
@@ -193,7 +199,8 @@ def main() -> None:
         json.dumps(report, indent=2) + "\n", encoding="utf-8")
     if not passed:
         raise RuntimeError("Mechanical art checks failed; inspect quality_report.json")
-    print("Generated 28 proof renders. Creative approval is still required.")
+    print("Generated 32 proof renders, including phone-scale images.")
+    print("Creative approval is still required.")
 
 
 if __name__ == "__main__":
