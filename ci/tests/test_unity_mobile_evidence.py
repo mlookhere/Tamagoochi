@@ -47,6 +47,10 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
             record = f"{_digest(binary.read_bytes())}  {binary.relative_to(self.ios).as_posix()}"
             (self.ios / name).write_text(record + "\n")
             records.append(record)
+        (self.ios / "unity-ios-xcode-version.txt").write_text(
+            "Xcode 16.0\nBuild version synthetic\n"
+        )
+        (self.ios / "unity-ios-xcode-build.log").write_text("** BUILD SUCCEEDED **\n")
         (self.ios / "unity-ios-provenance.txt").write_text(
             f"migration_sha={MIGRATION}\nworkflow_sha={WORKFLOW}\nrun_id=102\n"
             "result=unsigned_xcode_compile_only\nXcode 16.0\nBuild version synthetic\n"
@@ -55,6 +59,21 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
 
     def test_matching_unsigned_cross_platform_evidence(self):
         verify(self.android, self.ios, MIGRATION, WORKFLOW)
+
+    def test_missing_or_unsuccessful_xcode_build_log_fails(self):
+        path = self.ios / "unity-ios-xcode-build.log"
+        path.unlink()
+        with self.assertRaises(FileNotFoundError):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
+        path.write_text("** BUILD FAILED **\n")
+        with self.assertRaisesRegex(ValueError, "successful compilation"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
+
+    def test_mismatched_xcode_version_provenance_fails(self):
+        version = self.ios / "unity-ios-xcode-version.txt"
+        version.write_text("Xcode 16.1\nBuild version other\n")
+        with self.assertRaisesRegex(ValueError, "does not match"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
 
     def test_migration_revision_mismatch_fails(self):
         with self.assertRaisesRegex(ValueError, "reviewed migration SHA"):
