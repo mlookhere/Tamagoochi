@@ -48,10 +48,10 @@ def parse_args() -> argparse.Namespace:
 
 
 def reset(species: str, profile: str = "sculpt", engine: str = "cycles",
-          samples: int = 32):
+          samples: int = 32, texture_dir=None):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     rig = create_armature()
-    build_creature(rig, species, profile)
+    build_creature(rig, species, profile, texture_dir)
     studio()
     scene = bpy.context.scene
 
@@ -154,7 +154,7 @@ def save_render(path: Path, resolution: int) -> int:
 
 def species_review(species: str, target: Path, resolution: int,
                    engine: str, samples: int) -> dict:
-    reset(species, engine=engine, samples=samples)
+    reset(species, engine=engine, samples=samples, texture_dir=target)
     metrics = mesh_metrics(species)
     screenshots = {}
     for angle, degrees in ANGLES.items():
@@ -168,7 +168,7 @@ def species_review(species: str, target: Path, resolution: int,
         path = target / (species + "_face_" + face.lower() + ".png")
         screenshots["face_" + face] = save_render(path, resolution)
     # Review both genuine sculpt study and optimized mobile topology.
-    reset(species, "mobile", engine=engine, samples=samples)
+    reset(species, "mobile", engine=engine, samples=samples, texture_dir=target)
     metrics["mobile_triangles"] = mesh_metrics(species)["triangles"]
     metrics["mobile_budget"] = 30000
 
