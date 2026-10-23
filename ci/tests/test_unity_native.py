@@ -361,7 +361,9 @@ class NativeWorkflowPolicyTests(unittest.TestCase):
         self.assertLess(build, guard)
         self.assertLess(guard, verify)
         self.assertIn('git -C .unity-ci-control rev-parse HEAD', source)
-        self.assertIn('git -C .unity-ci-control diff --quiet HEAD -- ci/verify_unity_native.py', source)
+        self.assertIn('git -C .unity-ci-control status --porcelain=v1', source)
+        self.assertIn('--ignored=matching --untracked-files=all', source)
+        self.assertNotIn('git -C .unity-ci-control diff --quiet HEAD -- ci/verify_unity_native.py', source)
         self.assertIn('WORKFLOW_SHA: ${{ github.workflow_sha }}', source)
 
     def test_native_platforms_require_distinct_execution_evidence(self):
