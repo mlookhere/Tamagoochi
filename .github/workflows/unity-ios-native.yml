@@ -28,6 +28,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Check out trusted Unity integrity verifier separately
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: .unity-ci-control
+          persist-credentials: false
+
       - name: Verify reviewed Unity source and protected activation
         env:
           MIGRATION_SHA: ${{ inputs.migration_sha }}
@@ -87,6 +94,17 @@ jobs:
           test -s unity-ios-xcode-version.txt
           test -d unity/Builds/Tamagoochi-iOS/Unity-iPhone.xcodeproj
           test -s unity/Builds/Tamagoochi-iOS/Unity-iPhone.xcodeproj/project.pbxproj
+
+      - name: Reject modified or injected Unity executable source after Editor export
+        env:
+          MIGRATION_SHA: ${{ inputs.migration_sha }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .unity-ci-control/ci/verify_unity_sources.py \
+            --repository . --control .unity-ci-control \
+            --migration-sha "$MIGRATION_SHA" --workflow-sha "$WORKFLOW_SHA"
 
       - name: Compile iOS device player with Xcode (unsigned)
         shell: bash
