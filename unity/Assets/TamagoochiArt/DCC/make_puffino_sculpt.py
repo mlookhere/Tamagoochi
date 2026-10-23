@@ -152,7 +152,7 @@ def face_keys(head: bpy.types.Object) -> None:
                 co.z += 0.05 * front
 
 
-def build_creature(rig: bpy.types.Object, species: str, profile: str) -> None:
+def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_dir=None) -> None:
     palettes = {
         "puffino": ((0.95, 0.82, 0.71, 1), (0.95, 0.48, 0.32, 1),
                     (1.0, 0.64, 0.60, 1), (0.17, 0.10, 0.15, 1)),
@@ -171,7 +171,7 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str) -> None:
     shine = material(species + "_Light", (1.0, 0.98, 0.92, 1))
     brown = material(species + "_Nubs", (0.63, 0.30, 0.18, 1))
     tail_bands = material(species + "_TailBands", accent_color)
-    configure_tail_bands(tail_bands, body_color, accent_color)
+    configure_tail_bands(tail_bands, body_color, accent_color, texture_dir)
     for fur in (ivory, coral, pink):
         configure_fur_shader(fur)
     eye_node = dark.node_tree.nodes.get("Principled BSDF")
@@ -289,7 +289,7 @@ def main() -> None:
     output.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     rig = create_armature()
-    build_creature(rig, args.species, args.profile)
+    build_creature(rig, args.species, args.profile, output)
     studio()
     bpy.context.scene["artifact_status"] = "SCULPT_STUDY_NOT_FINAL"
     bpy.context.scene["source_species"] = args.species
