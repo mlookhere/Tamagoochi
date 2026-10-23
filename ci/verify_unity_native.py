@@ -123,6 +123,12 @@ def _validate_apk(apk: Path) -> None:
             raise ValueError("Android manifest is not well-formed compiled binary XML")
         if not _valid_dex(archive.read("classes.dex")):
             raise ValueError("Android DEX header or declared file size is invalid")
+        runtime = [name for name in names if name.startswith("lib/") and name.endswith("/libunity.so")]
+        data = [name for name in names if name.startswith("assets/bin/Data/") and not name.endswith("/")]
+        if not runtime or not data or not any(archive.read(path).startswith(b"\x7fELF") for path in runtime):
+            raise ValueError("Android APK is missing a Unity engine binary or packaged player data")
+        if not any(archive.getinfo(path).file_size > 0 for path in data):
+            raise ValueError("Android APK contains no nonempty Unity player data")
 
 
 def validate(project: Path, tests: Path, apk: Path) -> None:
