@@ -338,5 +338,20 @@ class NativeWorkflowPolicyTests(unittest.TestCase):
             self.assertIn(required, ios)
 
 
+    def test_ios_artifacts_preserve_compiled_binaries_and_provenance(self):
+        ios = (self.WORKFLOWS / "unity-ios-native.yml").read_text()
+        upload = ios.split("      - name: Preserve iOS export, Xcode logs and compile evidence\n", 1)
+        self.assertEqual(len(upload), 2)
+        self.assertIn("        if: always()\n", upload[1])
+        for path in [
+            "unity/Builds/iOS-derived/Build/Products/Release-iphoneos/",
+            "unity/Builds/Tamagoochi-iOS/",
+            "unity-ios-executable.sha256",
+            "unity-ios-framework.sha256",
+            "unity-ios-provenance.txt",
+        ]:
+            self.assertIn(f"            {path}\n", upload[1])
+
+
 if __name__ == "__main__":
     unittest.main()
