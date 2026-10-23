@@ -166,6 +166,54 @@ def mesh_metrics(species: str) -> dict:
         "missing_skin_weights": weight_failures,
     }
 
+def _evaluated_points(obj) -> list[Vector]:
+    evaluated = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    mesh = evaluated.to_mesh()
+    try:
+        stride = max(1, len(mesh.vertices) // 64)
+        return [evaluated.matrix_world @ mesh.vertices[i].co
+                for i in range(0, len(mesh.vertices), stride)]
+    finally:
+        evaluated.to_mesh_clear()
+
+
+def joint_deformation_metrics() -> dict[str, float]:
+    """Measure actual skinned-mesh motion at both +/-30 degree joint poses."""
+    rig = bpy.data.objects.get("PuffinoRig")
+    if rig is None or rig.type != "ARMATURE":
+        raise RuntimeError("Native creature armature is missing")
+    results = {}
+    for bone_name, mesh_name in (
+        ("ear_tip_L", "Ear_L"), ("ear_tip_R", "Ear_R"),
+        ("tail_tip", "Tail"),
+    ):
+        obj = bpy.data.objects.get(mesh_name)
+        bone = rig.pose.bones.get(bone_name)
+        if obj is None or obj.type != "MESH" or bone is None:
+            raise RuntimeError("Missing deformation part " + mesh_name)
+        bone.rotation_mode = "XYZ"
+        bpy.context.view_layer.update()
+        neutral = _evaluated_points(obj)
+        original = bone.rotation_euler.copy()
+        displacements = []
+        try:
+            for degrees in (-30, 30):
+                bone.rotation_euler[1] = math.radians(degrees)
+                bpy.context.view_layer.update()
+                posed = _evaluated_points(obj)
+                if len(posed) != len(neutral):
+                    raise RuntimeError("Deformation topology changed: " + mesh_name)
+                distances = [(a - b).length for a, b in zip(neutral, posed)]
+                if not all(math.isfinite(value) for value in distances):
+                    raise RuntimeError("Nonfinite deformation: " + mesh_name)
+                displacements.append(max(distances, default=0.0))
+        finally:
+            bone.rotation_euler = original
+            bpy.context.view_layer.update()
+        results[bone_name] = round(min(displacements), 4)
+    return results
+
+
 def move_camera(degrees: float) -> None:
     angle = math.radians(degrees)
     camera = bpy.context.scene.camera
@@ -211,6 +259,13 @@ def _mechanical_pass(metrics: dict, screenshots: dict[str, int]) -> bool:
     )
     if not all(sufficient_geometry):
         return False
+    expected_joints = {"ear_tip_L", "ear_tip_R", "tail_tip"}
+    for profile in ("sculpt_joint_motion", "mobile_joint_motion"):
+        motion = metrics.get(profile, {})
+        if (set(motion) != expected_joints
+                or any(not 0.01 <= displacement <= 1.5
+                       for displacement in motion.values())):
+            return False
     return all(
         size >= (3000 if name == "phone_256" else 15000)
         for name, size in screenshots.items()
@@ -222,6 +277,7 @@ def species_review(species: str, target: Path, resolution: int,
     reset(species, engine=engine, samples=samples, texture_dir=target,
           device=device, gpu_name=gpu_name)
     metrics = mesh_metrics(species)
+    metrics["sculpt_joint_motion"] = joint_deformation_metrics()
     metrics["render_backend"] = bpy.context.scene["tamagoochi_render_backend"]
     metrics["selected_gpus"] = bpy.context.scene["tamagoochi_selected_gpus"]
     screenshots = {}
@@ -239,6 +295,7 @@ def species_review(species: str, target: Path, resolution: int,
     reset(species, "mobile", engine=engine, samples=samples, texture_dir=target,
           device=device, gpu_name=gpu_name)
     metrics["mobile_triangles"] = mesh_metrics(species)["triangles"]
+    metrics["mobile_joint_motion"] = joint_deformation_metrics()
     metrics["mobile_budget"] = 30000
 
     # Phone-scale proof must use the optimized mobile mesh, not sculpt geometry.
