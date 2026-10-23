@@ -41,6 +41,14 @@ jobs:
           ref: work/35-stylized-3d-assets
           persist-credentials: false
 
+      - name: Require all art-generator and validation source files
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in make_puffino_sculpt.py render_quality_review.py sculpt_details.py validate_glb.py test_validate_glb.py; do
+            test -s "unity/Assets/TamagoochiArt/DCC/$file"
+          done
+
       - name: Install verified official Blender 4.5.14 LTS
         shell: bash
         run: |
