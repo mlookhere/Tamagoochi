@@ -1,0 +1,118 @@
+name: Tamagoochi Blender creature art
+
+on:
+  workflow_dispatch:
+    inputs:
+      species:
+        description: Original creature to generate and review
+        required: true
+        type: choice
+        default: puffino
+        options: [puffino, lunari, sproutle, bubblin, all]
+      quality:
+        description: Quick render or higher-resolution full evidence
+        required: true
+        type: choice
+        default: smoke
+        options: [smoke, review]
+  # First-run smoke test only for this workflow branch; no untrusted PR trigger.
+  push:
+    branches: [work/37-blender-render-pipeline]
+    paths: [.github/workflows/blender-creature-art.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: blender-creatures-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  blender-prototype:
+    name: Generate and review real Blender models
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout asset source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: work/35-stylized-3d-assets
+          persist-credentials: false
+
+      - name: Install verified official Blender 4.5.14 LTS
+        shell: bash
+        run: |
+          set -euo pipefail
+          release="https://download.blender.org/release/Blender4.5"
+          archive="blender-4.5.14-linux-x64.tar.xz"
+          curl --fail --silent --show-error --location --retry 3 \
+            "$release/blender-4.5.14.sha256" -o "$RUNNER_TEMP/blender-4.5.14.sha256"
+          curl --fail --silent --show-error --location --retry 3 \
+            "$release/$archive" -o "$RUNNER_TEMP/$archive"
+          grep -F " $archive" "$RUNNER_TEMP/blender-4.5.14.sha256" > "$RUNNER_TEMP/selected.sha256"
+          test -s "$RUNNER_TEMP/selected.sha256"
+          (cd "$RUNNER_TEMP" && sha256sum --check selected.sha256)
+          tar -xf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/blender-4.5.14-linux-x64" >> "$GITHUB_PATH"
+
+      - name: Confirm Blender binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --factory-startup --python-exit-code 1 --python-expr 'import bpy; assert bpy.app.version[:2] == (4, 5); print("BLENDER_OK", bpy.app.version_string)'
+
+      - name: Check GLB validator regression cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s unity/Assets/TamagoochiArt/DCC -p 'test_validate_glb.py' -v
+
+      - name: Generate meshes and render actual model proof
+        shell: bash
+        env:
+          ART_SPECIES: ${{ github.event_name == 'workflow_dispatch' && inputs.species || 'puffino' }}
+          ART_QUALITY: ${{ github.event_name == 'workflow_dispatch' && inputs.quality || 'smoke' }}
+        run: |
+          set -euo pipefail
+          case "$ART_SPECIES" in
+            puffino|lunari|sproutle|bubblin) species=("$ART_SPECIES") ;;
+            all) species=(puffino lunari sproutle bubblin) ;;
+            *) echo "Unsupported species" >&2; exit 1 ;;
+          esac
+          case "$ART_QUALITY" in
+            smoke) resolution=512; samples=8 ;;
+            review) resolution=960; samples=32 ;;
+            *) echo "Unsupported render quality" >&2; exit 1 ;;
+          esac
+          mkdir -p artifacts/blender/models artifacts/blender/proof
+          git rev-parse HEAD > artifacts/blender/source-commit.txt
+          script=unity/Assets/TamagoochiArt/DCC/make_puffino_sculpt.py
+          for creature in "${species[@]}"; do
+            blender --background --factory-startup --python-exit-code 1 \
+              --python "$script" -- --output "$PWD/artifacts/blender/models" \
+              --species "$creature" --profile sculpt
+            blender --background --factory-startup --python-exit-code 1 \
+              --python "$script" -- --output "$PWD/artifacts/blender/models" \
+              --species "$creature" --profile mobile
+            python3 unity/Assets/TamagoochiArt/DCC/validate_glb.py \
+              "artifacts/blender/models/${creature}_sculpt.glb" \
+              "artifacts/blender/models/${creature}_mobile.glb"
+          done
+          blender --background --factory-startup --python-exit-code 1 \
+            --python unity/Assets/TamagoochiArt/DCC/render_quality_review.py -- \
+            --output "$PWD/artifacts/blender/proof" --species "$ART_SPECIES" \
+            --engine cycles --samples "$samples" --resolution "$resolution"
+          test -s artifacts/blender/proof/quality_report.json
+          printf '## Tamagoochi model proofs\n\n- Species: %s\n- Quality: %s\n- Art source: %s\n\nCreative approval is still required.\n' \
+            "$ART_SPECIES" "$ART_QUALITY" "$(git rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload model source, exported geometry, textures and proof renders
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: blender-creatures-${{ github.run_id }}
+          path: artifacts/blender/
+          if-no-files-found: warn
+          retention-days: 14
