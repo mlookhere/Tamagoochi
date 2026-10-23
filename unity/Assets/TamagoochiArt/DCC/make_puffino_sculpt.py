@@ -214,7 +214,6 @@ def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profi
     else:
         skin(obj, rig, bone)
 
-
 def _add_species_extras(species, rig, ivory, coral, pink):
     extras = []
     if species == "lunari":
@@ -239,6 +238,35 @@ def _add_species_extras(species, rig, ivory, coral, pink):
     for name, location, scale, mat in extras:
         ornament = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
         skin(ornament, rig, "head")
+
+def _add_creature_details(rig, details, pink):
+    for name, location, scale, mat, bone in details:
+        obj = sculpt_part(name, location, scale, mat, 0,
+                          segments=24 if name.startswith("Foot_") else 16,
+                          rings=16 if name.startswith("Foot_") else 12)
+        if name.startswith("Eye_"):
+            layer = obj.data.uv_layers.active
+            for polygon in obj.data.polygons:
+                for loop_index in polygon.loop_indices:
+                    vertex = obj.data.vertices[obj.data.loops[loop_index].vertex_index]
+                    layer.data[loop_index].uv = (0.5 + vertex.co.x / (2 * scale[0]),
+                                                 0.5 + vertex.co.z / (2 * scale[2]))
+        if name.startswith("Paw_"):
+            for vertex in obj.data.vertices:
+                root = max(0.0, min(1.0, vertex.co.z / 0.19))
+                vertex.co.x *= 1.0 - 0.35 * root
+                vertex.co.y -= 0.045 * max(0.0, -vertex.co.z) / 0.19
+        if name.startswith("Foot_"):
+            obj.data.materials.append(pink)
+            for vertex in obj.data.vertices:
+                vertex.co.y -= 0.018 * max(0.0, -vertex.co.y / 0.25)**2
+            for polygon in obj.data.polygons:
+                c = polygon.center
+                if c.y < -0.12 and c.z < 0.025 and abs(c.x) < 0.18:
+                    polygon.material_index = 1
+        if name in ("Mouth", "Eye_L", "Eye_R"):
+            face_feature_keys(obj)
+        skin(obj, rig, bone)
 
 def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_dir=None) -> None:
     palettes = {
@@ -314,33 +342,7 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     ]
     if species != "puffino":
         details = [detail for detail in details if not detail[0].startswith("Horn_")]
-    for name, location, scale, mat, bone in details:
-        foot = name.startswith("Foot_")
-        obj = sculpt_part(name, location, scale, mat, 0,
-                          segments=24 if foot else 16, rings=16 if foot else 12)
-        if name.startswith("Eye_"):
-            layer = obj.data.uv_layers.active
-            for polygon in obj.data.polygons:
-                for loop_index in polygon.loop_indices:
-                    vertex = obj.data.vertices[obj.data.loops[loop_index].vertex_index]
-                    layer.data[loop_index].uv = (0.5 + vertex.co.x / (2 * scale[0]),
-                                                 0.5 + vertex.co.z / (2 * scale[2]))
-        if name.startswith("Paw_"):
-            for vertex in obj.data.vertices:
-                root = max(0.0, min(1.0, vertex.co.z / 0.19))
-                vertex.co.x *= 1.0 - 0.35 * root
-                vertex.co.y -= 0.045 * max(0.0, -vertex.co.z) / 0.19
-        if name.startswith("Foot_"):
-            obj.data.materials.append(pink)
-            for vertex in obj.data.vertices:
-                vertex.co.y -= 0.018 * max(0.0, -vertex.co.y / 0.25)**2
-            for polygon in obj.data.polygons:
-                c = polygon.center
-                if c.y < -0.12 and c.z < 0.025 and abs(c.x) < 0.18:
-                    polygon.material_index = 1
-        if name in ("Mouth", "Eye_L", "Eye_R"):
-            face_feature_keys(obj)
-        skin(obj, rig, bone)
+    _add_creature_details(rig, details, pink)
     _add_species_extras(species, rig, ivory, coral, pink)
     def face_detail(name, location, dimensions, material, subdivisions=0):
         if profile == "sculpt":
@@ -349,7 +351,6 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
                            segments=12, rings=8)
 
     decorate_face(species, rig, face_detail, skin, (ivory, coral, pink, dark, shine, brown))
-
 
 def studio() -> None:
     bpy.ops.object.camera_add(location=(2.75, -5.50, 2.65))
@@ -373,7 +374,6 @@ def studio() -> None:
         bpy.context.collection.objects.link(light)
         light.location = position
         light.rotation_euler = (Vector((0, 0, 1)) - light.location).to_track_quat("-Z", "Y").to_euler()
-
 
 def main() -> None:
     args = parse_args()
