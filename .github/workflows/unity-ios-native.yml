@@ -102,7 +102,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 .unity-ci-control/ci/verify_unity_sources.py \
+          [[ "$(git -C .unity-ci-control rev-parse HEAD)" == "$WORKFLOW_SHA" ]] || {
+            echo "Trusted iOS source verifier HEAD does not match the workflow revision" >&2
+            exit 1
+          }
+          [[ -z "$(git -C .unity-ci-control status --porcelain=v1 --ignored=matching --untracked-files=all)" ]] || {
+            echo "Trusted iOS source verifier was modified during Unity export" >&2
+            exit 1
+          }
+          python3 -I -B .unity-ci-control/ci/verify_unity_sources.py \
             --repository . --control .unity-ci-control \
             --migration-sha "$MIGRATION_SHA" --workflow-sha "$WORKFLOW_SHA"
 
