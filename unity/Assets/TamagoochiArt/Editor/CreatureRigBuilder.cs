@@ -118,6 +118,7 @@ namespace Tamagoochi.Art.Editor
 
             PrefabUtility.SaveAsPrefabAsset(actor, PrefabFolder + "/puffino_sculpt_study.prefab");
             UnityEngine.Object.DestroyImmediate(actor);
+            CreatureExpressionClipBuilder.GenerateClips();
             AssetDatabase.SaveAssets();
             Debug.Log("Puffino sculpt study: 5 authored UV-mesh components, 9+1 bones, " +
                 "four head blend shapes and synchronized gesture/expression controls created.");
@@ -147,6 +148,7 @@ namespace Tamagoochi.Art.Editor
             }
             if (blends != 4)
                 throw new InvalidOperationException("Expected 4 facial blend shapes; found " + blends);
+            CreatureExpressionClipBuilder.Audit();
             Debug.Log("Sculpt study audit passed: 5 UV meshes, bones, skin weights, 4 blend shapes.");
         }
 
