@@ -143,6 +143,10 @@ def mesh_metrics(species: str) -> dict:
     return {
         "species": species,
         "mesh_objects": sum(obj.type == "MESH" for obj in bpy.data.objects),
+        "silhouette_dimensions": {
+            name: [round(float(axis), 3) for axis in bpy.data.objects[name].dimensions]
+            for name in ("Body", "Head", "Tail")
+        },
         "triangles": triangles,
         "skinned_parts": skinned,
         "missing_signature_features": missing_details,
