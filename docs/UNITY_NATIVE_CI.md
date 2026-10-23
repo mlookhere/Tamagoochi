@@ -22,7 +22,7 @@ python3 ci/verify_unity_mobile_evidence.py \
   --migration-sha <reviewed-40-character-migration-SHA>
 ```
 
-The stdlib verifier rejects mismatched source commits, reused run IDs, missing or duplicated Android NUnit reports, altered APK/XML contents, missing iOS launcher/UnityFramework binaries, unsafe binary paths, or iOS executable digests missing from their run's provenance. It intentionally requires the iOS run result to be `unsigned_xcode_compile_only`. Its ten local synthetic regressions do **not** run Unity or replace signed iOS/device QA. Keep source GitHub run URLs and artifact IDs in the human release record; the local verifier cannot independently attest GitHub artifact authenticity or approval. Neither absent native artifacts nor a passing repository CI run constitutes success.
+The stdlib verifier rejects mismatched source commits, reused run IDs, missing or duplicated Android NUnit reports, altered APK/XML contents, missing iOS launcher/UnityFramework binaries, unsafe binary paths, or iOS executable digests missing from their run's provenance. It intentionally requires the iOS run result to be `unsigned_xcode_compile_only`. Its ten synthetic regressions are included alongside the existing native verifier tests in the required PR fast gate via the `test_unity_*.py` discovery pattern. They do **not** run Unity or replace signed iOS/device QA. Keep source GitHub run URLs and artifact IDs in the human release record; the local verifier cannot independently attest GitHub artifact authenticity or approval. Neither absent native artifacts nor a passing repository CI run constitutes success.
 
 ## Not yet satisfied
 
