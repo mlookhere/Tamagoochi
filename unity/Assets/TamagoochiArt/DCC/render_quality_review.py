@@ -110,11 +110,36 @@ def _morph_metrics() -> tuple[list[str], list[str]]:
     return missing, weak
 
 
+def _expression_feature_metrics() -> tuple[list[str], list[str]]:
+    """Verify exported eyes/mouth morphs change actual feature geometry."""
+    missing = []
+    weak = []
+    for part in ("Mouth", "Eye_L", "Eye_R"):
+        obj = bpy.data.objects.get(part)
+        blocks = obj.data.shape_keys.key_blocks if obj and obj.data.shape_keys else None
+        if not blocks or "Basis" not in blocks:
+            missing.append(part)
+            continue
+        for name in ("Smile", "Pout", "Curious"):
+            target = blocks.get(name)
+            if target is None:
+                missing.append(f"{part}:{name}")
+                continue
+            movement = max(
+                (original.co - revised.co).length
+                for original, revised in zip(blocks["Basis"].data, target.data)
+            )
+            if movement < 0.025:
+                weak.append(f"{part}:{name}")
+    return missing, weak
+
+
 def mesh_metrics(species: str) -> dict:
     named = {obj.name for obj in bpy.data.objects}
     missing_details = sorted(set(DETAIL_SIGNATURES[species]) - named)
     skinned, triangles, uv_failures, weight_failures = _skin_metrics()
     missing_morphs, weak_morphs = _morph_metrics()
+    missing_features, weak_features = _expression_feature_metrics()
     return {
         "species": species,
         "mesh_objects": sum(obj.type == "MESH" for obj in bpy.data.objects),
@@ -123,6 +148,8 @@ def mesh_metrics(species: str) -> dict:
         "missing_signature_features": missing_details,
         "missing_morphs": missing_morphs,
         "weak_morphs": weak_morphs,
+        "missing_expression_features": missing_features,
+        "weak_expression_features": weak_features,
         "missing_uvs": uv_failures,
         "missing_skin_weights": weight_failures,
     }
@@ -186,6 +213,8 @@ def species_review(species: str, target: Path, resolution: int,
         metrics["missing_signature_features"] or
         metrics["missing_morphs"] or
         metrics["weak_morphs"] or
+        metrics["missing_expression_features"] or
+        metrics["weak_expression_features"] or
         metrics["missing_uvs"] or
         metrics["missing_skin_weights"] or
         metrics["skinned_parts"] < 5 or
