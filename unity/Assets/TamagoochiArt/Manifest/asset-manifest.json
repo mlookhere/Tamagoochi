@@ -165,5 +165,46 @@
     "particleLimitPerEmitter": 64,
     "status": "source-authored-not-Unity-executed",
     "note": "Budgeted particles with color/size gradients; hand-designed textures, trails and custom shaders pending"
+  },
+  "visualQualityGate": {
+    "source": "DCC/render_quality_review.py",
+    "acceptanceCriteria": "DCC/VISUAL_QUALITY_GATE.md",
+    "exportValidation": "DCC/validate_glb.py",
+    "detailGeometry": "DCC/sculpt_details.py",
+    "sourceFeatures": [
+      "tapered quad petal-ear topology",
+      "layered eye meshes and catchlights",
+      "facial cheek tufts and freckle detail",
+      "exportable UV fur albedo and tail bands",
+      "original four-species palettes and silhouette accessories"
+    ],
+    "requiredProof": {
+      "species": [
+        "puffino",
+        "lunari",
+        "sproutle",
+        "bubblin"
+      ],
+      "angles": [
+        "front",
+        "three_quarter",
+        "side",
+        "back"
+      ],
+      "facialExpressions": [
+        "Smile",
+        "Pout",
+        "Curious"
+      ],
+      "phoneView": "256px mobile-profile",
+      "imagesExpected": 32,
+      "maximumMobileTriangles": 30000
+    },
+    "nativeExecution": "not-run",
+    "generatedBlendAndGlb": "not-run",
+    "proofRenders": "not-generated",
+    "visualApproval": "required",
+    "productionReady": false,
+    "explanation": "Authored DCC source is not proof of model aesthetic quality. Review native rendered species against approved concept sheets before approval."
   }
 }
