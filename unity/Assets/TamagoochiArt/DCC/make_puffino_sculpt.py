@@ -153,6 +153,32 @@ def face_keys(head: bpy.types.Object) -> None:
                 co.z += 0.05 * front
 
 
+def face_feature_keys(feature: bpy.types.Object) -> None:
+    """Make separately modeled eyes and mouth respond to exported facial morphs."""
+    feature.shape_key_add(name="Basis", from_mix=False)
+    for name in ("Smile", "Pout", "Curious"):
+        key = feature.shape_key_add(name=name, from_mix=False)
+        for vertex in key.data:
+            co = vertex.co
+            if feature.name == "Mouth":
+                if name == "Smile":
+                    co.z += 0.12 * min(1.0, abs(co.x) / 0.1)
+                    co.x *= 1.18
+                elif name == "Pout":
+                    co.x *= 0.62
+                    co.y -= 0.10
+                else:
+                    co.z += 0.065 * co.x / 0.12
+            elif name == "Smile":
+                co.z *= 0.65
+            elif name == "Pout":
+                co.z *= 1.1
+            elif feature.name == "Eye_R":
+                co.z += 0.09
+            else:
+                co.z -= 0.045
+
+
 def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile):
     if name.startswith("Ear"):
         side = -1 if name.endswith("_L") else 1
@@ -263,6 +289,8 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
         details = [detail for detail in details if not detail[0].startswith("Horn_")]
     for name, location, scale, mat, bone in details:
         obj = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
+        if name in ("Mouth", "Eye_L", "Eye_R"):
+            face_feature_keys(obj)
         skin(obj, rig, bone)
     _add_species_extras(species, rig, ivory, coral, pink)
     # Keep full sculpt geometry while reducing ONLY mobile accessory topology.
