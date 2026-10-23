@@ -239,21 +239,6 @@ def decorate_face(species, rig, sculpt_part, skin, palette):
         return obj
 
     for side, suffix in ((-1, "L"), (1, "R")):
-        cheek_x = side * 0.43
-        for layer in range(2):
-            obj = detail(
-                "CheekTuft_" + suffix + "_" + str(layer),
-                (
-                    cheek_x + side * (0.014 + layer * 0.030),
-                    -0.35 + layer * 0.016,
-                    1.08 - layer * 0.080,
-                ),
-                (0.11 + layer * 0.005, 0.085, 0.055),
-                ivory,
-                "head",
-            )
-            obj.rotation_euler[1] = side * (0.26 + layer * 0.12)
-
         detail("LowerLid_" + suffix,
                (side * 0.24, -0.50, 1.085),
                (0.185, 0.022, 0.035), pink, "head")
