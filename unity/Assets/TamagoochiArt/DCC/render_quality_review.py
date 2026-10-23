@@ -182,6 +182,29 @@ def save_render(path: Path, resolution: int) -> int:
     return path.stat().st_size
 
 
+def _mechanical_pass(metrics: dict, screenshots: dict[str, int]) -> bool:
+    required_empty = (
+        "missing_signature_features", "missing_morphs", "weak_morphs",
+        "missing_expression_features", "weak_expression_features",
+        "missing_uvs", "missing_skin_weights",
+    )
+    if any(metrics[key] for key in required_empty):
+        return False
+    sufficient_geometry = (
+        metrics["skinned_parts"] >= 5,
+        metrics["mesh_objects"] >= 20,
+        metrics["triangles"] >= 12000,
+        metrics["mobile_triangles"] < metrics["triangles"],
+        metrics["mobile_triangles"] <= metrics["mobile_budget"],
+    )
+    if not all(sufficient_geometry):
+        return False
+    return all(
+        size >= (3000 if name == "phone_256" else 15000)
+        for name, size in screenshots.items()
+    )
+
+
 def species_review(species: str, target: Path, resolution: int,
                    engine: str, samples: int) -> dict:
     reset(species, engine=engine, samples=samples, texture_dir=target)
@@ -209,23 +232,7 @@ def species_review(species: str, target: Path, resolution: int,
     screenshots["phone_256"] = save_render(phone, 256)
     metrics["proof_images"] = screenshots
 
-    failures = (
-        metrics["missing_signature_features"] or
-        metrics["missing_morphs"] or
-        metrics["weak_morphs"] or
-        metrics["missing_expression_features"] or
-        metrics["weak_expression_features"] or
-        metrics["missing_uvs"] or
-        metrics["missing_skin_weights"] or
-        metrics["skinned_parts"] < 5 or
-        metrics["mesh_objects"] < 20 or
-        metrics["triangles"] < 12000 or
-        metrics["mobile_triangles"] >= metrics["triangles"] or
-        metrics["mobile_triangles"] > metrics["mobile_budget"] or
-        any(size < (3000 if name == "phone_256" else 15000)
-            for name, size in screenshots.items())
-    )
-    metrics["mechanical_pass"] = not failures
+    metrics["mechanical_pass"] = _mechanical_pass(metrics, screenshots)
     return metrics
 
 
