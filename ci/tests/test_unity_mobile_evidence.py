@@ -54,55 +54,65 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
         )
 
     def test_matching_unsigned_cross_platform_evidence(self):
-        verify(self.android, self.ios, MIGRATION)
+        verify(self.android, self.ios, MIGRATION, WORKFLOW)
 
     def test_migration_revision_mismatch_fails(self):
         with self.assertRaisesRegex(ValueError, "reviewed migration SHA"):
-            verify(self.android, self.ios, "c" * 40)
+            verify(self.android, self.ios, "c" * 40, WORKFLOW)
+
+    def test_reviewed_workflow_revision_mismatch_fails(self):
+        with self.assertRaisesRegex(ValueError, "trusted workflow SHA"):
+            verify(self.android, self.ios, MIGRATION, "c" * 40)
+
+    def test_platform_workflow_revision_mismatch_fails(self):
+        path = self.ios / "unity-ios-provenance.txt"
+        path.write_text(path.read_text().replace(f"workflow_sha={WORKFLOW}", f"workflow_sha={'c' * 40}"))
+        with self.assertRaisesRegex(ValueError, "trusted workflow SHA"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
 
     def test_android_digest_tampering_fails(self):
         (self.android / "unity" / "Builds" / "Tamagoochi.apk").write_bytes(b"replaced")
         with self.assertRaisesRegex(ValueError, "hash mismatch"):
-            verify(self.android, self.ios, MIGRATION)
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
 
     def test_duplicate_nunit_reports_fail(self):
         (self.android / "unity-test-results" / "another.xml").write_text("<test-run/>")
         with self.assertRaisesRegex(ValueError, "exactly one"):
-            verify(self.android, self.ios, MIGRATION)
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
 
     def test_ios_framework_digest_tampering_fails(self):
         self.framework.write_bytes(b"replaced")
         with self.assertRaisesRegex(ValueError, "hash mismatch"):
-            verify(self.android, self.ios, MIGRATION)
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
 
     def test_ios_missing_product_fails(self):
         self.launcher.unlink()
         with self.assertRaisesRegex(ValueError, "Missing or unsafe"):
-            verify(self.android, self.ios, MIGRATION)
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
 
     def test_ios_hash_not_in_provenance_fails(self):
         path = self.ios / "unity-ios-provenance.txt"
         path.write_text(path.read_text().replace("  " + PRODUCTS + "/Unity-iPhone.app", "  other"))
         with self.assertRaisesRegex(ValueError, "absent from run provenance"):
-            verify(self.android, self.ios, MIGRATION)
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
 
     def test_duplicate_run_identifier_fails(self):
         path = self.ios / "unity-ios-provenance.txt"
         path.write_text(path.read_text().replace("run_id=102", "run_id=101"))
         with self.assertRaisesRegex(ValueError, "independent Android"):
-            verify(self.android, self.ios, MIGRATION)
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
 
     def test_signed_claim_cannot_relabel_unsigned_evidence(self):
         path = self.ios / "unity-ios-provenance.txt"
         path.write_text(path.read_text().replace("unsigned_xcode_compile_only", "signed_release"))
         with self.assertRaisesRegex(ValueError, "unsigned iOS build"):
-            verify(self.android, self.ios, MIGRATION)
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
 
     def test_unsafe_ios_binary_path_fails(self):
         path = self.ios / "unity-ios-executable.sha256"
         path.write_text(path.read_text().replace(PRODUCTS, "../" + PRODUCTS))
         with self.assertRaisesRegex(ValueError, "Invalid iOS product path"):
-            verify(self.android, self.ios, MIGRATION)
+            verify(self.android, self.ios, MIGRATION, WORKFLOW)
 
 
 if __name__ == "__main__":
