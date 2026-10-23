@@ -117,10 +117,10 @@ jobs:
             echo "Native evidence verifier checkout is not the trusted workflow commit" >&2
             exit 1
           }
-          git -C .unity-ci-control diff --quiet HEAD -- ci/verify_unity_native.py || {
-            echo "Unity execution modified the trusted native evidence verifier" >&2
+          if [[ -n "$(git -C .unity-ci-control status --porcelain=v1 --ignored=matching --untracked-files=all)" ]]; then
+            echo "Unity execution changed or added files within the trusted verifier checkout" >&2
             exit 1
-          }
+          fi
           if [[ ! -f .unity-ci-control/ci/verify_unity_native.py ]]; then
             echo "Trusted native evidence verifier is absent" >&2
             exit 1
