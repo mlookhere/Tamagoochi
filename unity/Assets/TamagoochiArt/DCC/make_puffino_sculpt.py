@@ -1,4 +1,4 @@
-"""Blender 4.x sculpt-authoring starting scene for the original Puffino creature.
+"""Blender 4.x sculpt-authoring studies for the original Tamagoochi creature families.
 
 Usage (Blender installed separately):
     blender --background --python make_puffino_sculpt.py -- --output /path/to/output
@@ -17,12 +17,13 @@ import bpy
 from mathutils import Vector
 
 
-def parse_args() -> Path:
+def parse_args() -> argparse.Namespace:
     args = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True, type=Path)
-    parsed = parser.parse_args(args)
-    return parsed.output.resolve()
+    parser.add_argument("--species", choices=("puffino", "lunari", "sproutle", "bubblin"),
+                        default="puffino")
+    return parser.parse_args(args)
 
 
 def material(name: str, color: tuple[float, float, float, float]) -> bpy.types.Material:
@@ -142,19 +143,36 @@ def face_keys(head: bpy.types.Object) -> None:
                 co.z += 0.05 * front
 
 
-def build_creature(rig: bpy.types.Object) -> None:
-    ivory = material("Puffino_Ivory", (0.95, 0.82, 0.71, 1))
-    coral = material("Puffino_Coral", (0.95, 0.48, 0.32, 1))
-    pink = material("Puffino_InnerEar", (1.0, 0.64, 0.60, 1))
-    dark = material("Puffino_Eyes", (0.17, 0.10, 0.15, 1))
-    shine = material("Puffino_EyeLight", (1.0, 0.98, 0.92, 1))
-    brown = material("Puffino_Horns", (0.63, 0.30, 0.18, 1))
+def build_creature(rig: bpy.types.Object, species: str) -> None:
+    palettes = {
+        "puffino": ((0.95, 0.82, 0.71, 1), (0.95, 0.48, 0.32, 1),
+                    (1.0, 0.64, 0.60, 1), (0.17, 0.10, 0.15, 1)),
+        "lunari": ((0.94, 0.91, 0.99, 1), (0.56, 0.68, 0.95, 1),
+                   (0.73, 0.64, 0.99, 1), (0.14, 0.18, 0.42, 1)),
+        "sproutle": ((0.95, 0.93, 0.75, 1), (0.49, 0.70, 0.32, 1),
+                     (0.70, 0.85, 0.49, 1), (0.16, 0.28, 0.15, 1)),
+        "bubblin": ((0.98, 0.89, 0.92, 1), (0.94, 0.58, 0.78, 1),
+                    (0.74, 0.53, 0.91, 1), (0.28, 0.15, 0.34, 1)),
+    }
+    body_color, accent_color, fin_color, eye_color = palettes[species]
+    ivory = material(species + "_Body", body_color)
+    coral = material(species + "_Accent", accent_color)
+    pink = material(species + "_Fin", fin_color)
+    dark = material(species + "_Eyes", eye_color)
+    shine = material(species + "_Light", (1.0, 0.98, 0.92, 1))
+    brown = material(species + "_Nubs", (0.63, 0.30, 0.18, 1))
+    ear_scale = {
+        "puffino": (0.22, 0.13, 0.35),
+        "lunari": (0.26, 0.11, 0.45),
+        "sproutle": (0.18, 0.10, 0.43),
+        "bubblin": (0.30, 0.16, 0.32),
+    }[species]
 
     parts = [
         ("Body", (0, 0, 0.62), (0.49, 0.42, 0.57), ivory, "body", None),
         ("Head", (0, -0.04, 1.18), (0.57, 0.49, 0.48), ivory, "head", None),
-        ("Ear_L", (-0.55, 0, 1.80), (0.22, 0.13, 0.35), coral, "ear_root_L", "ear_tip_L"),
-        ("Ear_R", (0.55, 0, 1.80), (0.22, 0.13, 0.35), coral, "ear_root_R", "ear_tip_R"),
+        ("Ear_L", (-0.55, 0, 1.80), ear_scale, coral, "ear_root_L", "ear_tip_L"),
+        ("Ear_R", (0.55, 0, 1.80), ear_scale, coral, "ear_root_R", "ear_tip_R"),
         ("Tail", (0.77, 0.50, 0.76), (0.42, 0.32, 0.37), coral, "tail_root", "tail_tip"),
     ]
     for name, location, scale, mat, bone, tip in parts:
@@ -184,9 +202,34 @@ def build_creature(rig: bpy.types.Object) -> None:
         ("Nose", (0, -0.54, 1.02), (0.07, 0.05, 0.05), brown, "head"),
         ("Mouth", (0, -0.48, 0.93), (0.12, 0.07, 0.08), dark, "jaw"),
     ]
+    if species != "puffino":
+        details = [detail for detail in details if not detail[0].startswith("Horn_")]
     for name, location, scale, mat, bone in details:
         obj = sculpt_part(name, location, scale, mat, 0)
         skin(obj, rig, bone)
+    extras = []
+    if species == "lunari":
+        extras = [
+            ("Antenna_L", (-0.22, 0.04, 1.85), (0.055, 0.055, 0.25), coral),
+            ("Antenna_R", (0.22, 0.04, 1.85), (0.055, 0.055, 0.25), coral),
+            ("StarOrb_L", (-0.22, 0.04, 2.08), (0.13, 0.13, 0.13), pink),
+            ("StarOrb_R", (0.22, 0.04, 2.08), (0.13, 0.13, 0.13), pink),
+        ]
+    elif species == "sproutle":
+        extras = [
+            ("LeafCrown_L", (-0.16, 0.01, 1.84), (0.12, 0.07, 0.29), coral),
+            ("LeafCrown_R", (0.16, 0.01, 1.84), (0.12, 0.07, 0.29), pink),
+            ("BloomBud", (0, -0.01, 2.08), (0.10, 0.10, 0.14), ivory),
+        ]
+    elif species == "bubblin":
+        extras = [
+            ("CloudOrb_A", (-0.33, 0.04, 1.75), (0.17, 0.17, 0.17), pink),
+            ("CloudOrb_B", (0.14, 0.10, 1.88), (0.19, 0.19, 0.19), coral),
+            ("CloudOrb_C", (0.43, 0.07, 1.70), (0.14, 0.14, 0.14), pink),
+        ]
+    for name, location, scale, mat in extras:
+        ornament = sculpt_part(name, location, scale, mat, 0)
+        skin(ornament, rig, "head")
 
 
 def studio() -> None:
@@ -214,27 +257,28 @@ def studio() -> None:
 
 
 def main() -> None:
-    output = parse_args()
+    args = parse_args()
+    output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     rig = create_armature()
-    build_creature(rig)
+    build_creature(rig, args.species)
     studio()
     bpy.context.scene["artifact_status"] = "SCULPT_STUDY_NOT_FINAL"
-    bpy.context.scene["source_species"] = "puffino"
+    bpy.context.scene["source_species"] = args.species
     bpy.context.scene.render.resolution_x = 1024
     bpy.context.scene.render.resolution_y = 1024
     bpy.context.scene.render.resolution_percentage = 100
 
-    bpy.ops.wm.save_as_mainfile(filepath=str(output / "puffino_sculpt_study.blend"))
+    bpy.ops.wm.save_as_mainfile(filepath=str(output / (args.species + "_sculpt_study.blend")))
     bpy.ops.export_scene.gltf(
-        filepath=str(output / "puffino_sculpt_study.glb"),
+        filepath=str(output / (args.species + "_sculpt_study.glb")),
         export_format="GLB",
         export_skins=True,
         export_morph=True,
         export_animations=False,
     )
-    print("Prepared Puffino .blend and skinned GLB study:", output)
+    print("Prepared", args.species, ".blend and skinned GLB study:", output)
 
 
 if __name__ == "__main__":
