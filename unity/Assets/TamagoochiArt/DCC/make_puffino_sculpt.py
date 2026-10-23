@@ -333,8 +333,7 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
         return sculpt_part(name, location, dimensions, material, 0,
                            segments=12, rings=8)
 
-    decorate_face(species, rig, face_detail, skin,
-                  (ivory, coral, pink, dark, shine, brown))
+    decorate_face(species, rig, face_detail, skin, (ivory, coral, pink, dark, shine, brown))
 
 
 def studio() -> None:
