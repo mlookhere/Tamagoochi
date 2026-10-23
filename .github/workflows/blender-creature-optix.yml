@@ -1,0 +1,166 @@
+name: Tamagoochi private RTX 4090 creature review
+
+# This workflow must be approved into protected main before manual dispatch.
+# No PR, push or public-branch event ever targets the persistent GPU runner.
+on:
+  workflow_dispatch:
+    inputs:
+      species:
+        description: Creature to render
+        required: true
+        type: choice
+        default: all
+        options: [puffino, lunari, sproutle, bubblin, all]
+      quality:
+        description: Native OptiX proof quality
+        required: true
+        type: choice
+        default: review
+        options: [smoke, review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tamagoochi-optix-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  trusted-ref:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Reject non-production refs and disabled GPU access
+        shell: bash
+        env:
+          GPU_ENABLED: ${{ vars.TAMAGOOCHI_GPU_ENABLED }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" != "refs/heads/main" || "$GPU_ENABLED" != "true" ]]; then
+            echo "GPU review requires approved main and explicit TAMAGOOCHI_GPU_ENABLED=true." >&2
+            exit 1
+          fi
+
+  render-optix:
+    needs: trusted-ref
+    # The maintainer must provision this private Windows RTX 4090 label and
+    # protect tamagoochi-gpu with required reviewers before enabling the flag.
+    runs-on: [self-hosted, Windows, X64, tamagoochi-rtx4090]
+    environment: tamagoochi-gpu
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    env:
+      ART_SOURCE_SHA_GROUPED: c57e2624-8d1ff96a-d867fdd1-1baaa293-ea041705
+      ART_SPECIES: ${{ inputs.species }}
+      ART_QUALITY: ${{ inputs.quality }}
+    steps:
+      - name: Resolve immutable reviewed art source
+        id: approved-art
+        shell: pwsh
+        run: |
+          $sha = $env:ART_SOURCE_SHA_GROUPED.Replace('-', '')
+          if ($sha -cnotmatch '^[0-9a-f]{40}$') { throw 'Invalid approved art source SHA' }
+          "sha=$sha" >> $env:GITHUB_OUTPUT
+
+      - name: Checkout reviewed art (not a mutable public branch)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.approved-art.outputs.sha }}
+          persist-credentials: false
+
+      - name: Verify exact source, RTX 4090 and Blender LTS
+        shell: pwsh
+        env:
+          EXPECTED_ART_SHA: ${{ steps.approved-art.outputs.sha }}
+        run: |
+          if ((git rev-parse HEAD).Trim() -cne $env:EXPECTED_ART_SHA) { throw 'Art source SHA mismatch' }
+          $gpus = @(nvidia-smi --query-gpu=name --format=csv,noheader)
+          if ($LASTEXITCODE -ne 0 -or -not ($gpus | Where-Object { $_ -match 'RTX 4090' })) {
+            throw 'NVIDIA RTX 4090 not visible on the Windows runner'
+          }
+          $blender = if ($env:BLENDER_BIN) { $env:BLENDER_BIN } else {
+            (Get-Command blender.exe -ErrorAction Stop).Source
+          }
+          if (-not (Test-Path $blender)) { throw 'Blender executable missing on RTX runner' }
+          & $blender --background --factory-startup --python-exit-code 1 --python-expr 'import bpy; assert bpy.app.version[:3] == (4, 5, 14)'
+          if ($LASTEXITCODE -ne 0) { throw 'Blender 4.5.14 LTS required' }
+          "BLENDER_EXE=$blender" >> $env:GITHUB_ENV
+
+      - name: Generate skinned source models and real OptiX proof renders
+        shell: pwsh
+        run: |
+          $species = if ($env:ART_SPECIES -eq 'all') {
+            @('puffino', 'lunari', 'sproutle', 'bubblin')
+          } elseif ($env:ART_SPECIES -in @('puffino', 'lunari', 'sproutle', 'bubblin')) {
+            @($env:ART_SPECIES)
+          } else { throw 'Unsupported creature' }
+          switch ($env:ART_QUALITY) {
+            'smoke' { $resolution = 512; $samples = 8 }
+            'review' { $resolution = 960; $samples = 32 }
+            default { throw 'Unsupported render quality' }
+          }
+          $models = Join-Path $PWD 'artifacts/blender/models'
+          $proof = Join-Path $PWD 'artifacts/blender/proof'
+          New-Item -ItemType Directory -Force $models, $proof | Out-Null
+          (git rev-parse HEAD).Trim() | Set-Content 'artifacts/blender/source-commit.txt'
+          $dcc = 'unity/Assets/TamagoochiArt/DCC'
+          foreach ($creature in $species) {
+            foreach ($profile in @('sculpt', 'mobile')) {
+              & $env:BLENDER_EXE --background --factory-startup --python-exit-code 1 --python "$dcc/make_puffino_sculpt.py" -- --output $models --species $creature --profile $profile
+              if ($LASTEXITCODE -ne 0) { throw "Native model failed: $creature/$profile" }
+            }
+          }
+          & $env:BLENDER_EXE --background --factory-startup --python-exit-code 1 --python "$dcc/render_quality_review.py" -- --output $proof --species $env:ART_SPECIES --engine cycles --device optix --gpu-name 'RTX 4090' --samples $samples --resolution $resolution
+          if ($LASTEXITCODE -ne 0) { throw 'OptiX rendering failed; no CPU fallback allowed' }
+
+      - name: Require actual RTX provenance and complete proof bundle
+        shell: pwsh
+        env:
+          EXPECTED_ART_SHA: ${{ steps.approved-art.outputs.sha }}
+        run: |
+          $root = 'artifacts/blender'
+          $report = Get-Content "$root/proof/quality_report.json" -Raw | ConvertFrom-Json
+          if ($report.schema -ne 1 -or $report.technical_checks_pass -ne $true -or
+              $report.requested_render_device -ne 'optix' -or
+              $report.expected_gpu_name -ne 'RTX 4090' -or
+              $report.creative_review -ne 'required' -or
+              $report.production_ready -ne $false) { throw 'Invalid OptiX quality report' }
+          if ((Get-Content "$root/source-commit.txt" -Raw).Trim() -cne $env:EXPECTED_ART_SHA) {
+            throw 'Render source commit does not match reviewed code'
+          }
+          $species = if ($env:ART_SPECIES -eq 'all') {
+            @('puffino', 'lunari', 'sproutle', 'bubblin')
+          } else { @($env:ART_SPECIES) }
+          $rows = @($report.species)
+          if ($rows.Count -ne $species.Count) { throw 'Incomplete GPU results' }
+          foreach ($creature in $species) {
+            $matches = @($rows | Where-Object { $_.species -eq $creature })
+            if ($matches.Count -ne 1) { throw "No unique proof for $creature" }
+            $row = $matches[0]
+            if ($row.render_backend -ne 'OPTIX' -or $row.selected_gpus -notmatch 'RTX 4090' -or
+                $row.mechanical_pass -ne $true -or $row.mobile_triangles -gt $row.mobile_budget) {
+              throw "Missing real OptiX or failed mechanical QA: $creature"
+            }
+            foreach ($profile in @('sculpt','mobile')) {
+              foreach ($ext in @('blend','glb','fbx')) {
+                $file = Get-Item "$root/models/${creature}_${profile}.$ext" -ErrorAction Stop
+                if ($file.Length -lt 64) { throw "Missing real model: $file" }
+              }
+            }
+            foreach ($view in @('front','three_quarter','side','back','face_smile','face_pout','face_curious','phone_256')) {
+              $file = Get-Item "$root/proof/${creature}_$view.png" -ErrorAction Stop
+              if ($file.Length -lt 3000) { throw "Missing native proof: $file" }
+            }
+          }
+          Write-Output 'Exact-source RTX 4090 OptiX native evidence verified; creative sign-off is separate'
+
+      - name: Preserve GPU evidence and diagnostic partial outputs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: tamagoochi-optix-${{ github.run_id }}
+          path: artifacts/blender/
+          if-no-files-found: warn
+          retention-days: 14
