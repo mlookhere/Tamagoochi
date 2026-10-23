@@ -21,6 +21,61 @@ namespace Tamagoochi.Art.Editor
             Debug.Log("All eight Unity-imported FBX creatures have valid skinning, UVs and facial morphs. Visual/device approval still required.");
         }
 
+        [MenuItem("Tamagoochi/Art/Generate Imported Creature Previews")]
+        public static void GeneratePreviews()
+        {
+            Audit();
+            const string generated = "Assets/TamagoochiArt/Generated";
+            const string folder = generated + "/Imported";
+            if (!AssetDatabase.IsValidFolder(generated))
+                AssetDatabase.CreateFolder("Assets/TamagoochiArt", "Generated");
+            if (!AssetDatabase.IsValidFolder(folder))
+                AssetDatabase.CreateFolder(generated, "Imported");
+
+            var entries = new CreatureCatalog.Entry[Species.Length];
+            for (int i = 0; i < Species.Length; i++)
+            {
+                string species = Species[i];
+                GameObject imported = AssetDatabase.LoadAssetAtPath<GameObject>(
+                    Source + "/" + species + "_mobile.fbx");
+                var root = new GameObject(species + "_imported_preview");
+                try
+                {
+                    GameObject model = UnityEngine.Object.Instantiate(imported, root.transform);
+                    model.name = "SkinnedModel";
+                    root.AddComponent<CreatureIdentity>().Configure(species, species, "");
+                    var collider = root.AddComponent<CapsuleCollider>();
+                    collider.center = new Vector3(0f, 0.9f, 0f);
+                    collider.height = 1.8f;
+                    collider.radius = 0.65f;
+                    GameObject prefab = PrefabUtility.SaveAsPrefabAsset(
+                        root, folder + "/" + species + ".prefab");
+                    if (!prefab)
+                        throw new InvalidOperationException("Could not save imported preview: " + species);
+                    entries[i] = new CreatureCatalog.Entry
+                    {
+                        speciesId = species,
+                        prefab = prefab
+                    };
+                }
+                finally
+                {
+                    UnityEngine.Object.DestroyImmediate(root);
+                }
+            }
+            string catalogPath = folder + "/ImportedCreatureCatalog.asset";
+            CreatureCatalog catalog = AssetDatabase.LoadAssetAtPath<CreatureCatalog>(catalogPath);
+            if (!catalog)
+            {
+                catalog = ScriptableObject.CreateInstance<CreatureCatalog>();
+                AssetDatabase.CreateAsset(catalog, catalogPath);
+            }
+            catalog.Configure(entries, Array.Empty<GameObject>());
+            EditorUtility.SetDirty(catalog);
+            AssetDatabase.SaveAssets();
+            Debug.Log("Four imported mobile creature preview prefabs generated. These are not final art.");
+        }
+
         private static void AuditModel(string species, string profile)
         {
             string path = Source + "/" + species + "_" + profile + ".fbx";
