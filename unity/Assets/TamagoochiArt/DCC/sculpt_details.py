@@ -94,7 +94,7 @@ def curled_puffino_tail(material, profile):
                           0.255 * math.pi * math.cos(0.75 * phase))).normalized()
         across = Vector((-tangent.z, 0, tangent.x)).normalized()
         depth = tangent.cross(across).normalized()
-        radius = (0.09 + 0.21 * math.sin(phase) ** 0.72) * (1 - 0.4 * t**8)
+        radius = 0.012 + 0.34 * math.sin(phase) ** 0.8
         for j in range(sides):
             angle = math.tau * j / sides
             tuft = 1 + 0.035 * math.sin(5 * angle + 7 * t)
