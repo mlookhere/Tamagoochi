@@ -75,6 +75,26 @@ class UnitySourceIntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Injected.cs"):
             self.verify()
 
+    def test_ignored_untracked_csharp_still_fails(self):
+        hidden = self.migration / "unity/Assets/Editor/Hidden.cs"
+        hidden.parent.mkdir(parents=True, exist_ok=True)
+        hidden.write_text("class Hidden {}")
+        exclude = self.migration / ".git/info/exclude"
+        exclude.write_text(exclude.read_text() + "\nunity/Assets/Editor/Hidden.cs\n")
+        self.assertEqual(_git(self.migration, "status", "--short", "--", str(hidden)), "")
+        with self.assertRaisesRegex(ValueError, "Hidden.cs"):
+            self.verify()
+
+    def test_untracked_native_plugin_fails(self):
+        for filename in ["libunityhack.so", "unreviewed.aar", "plugin.jar"]:
+            with self.subTest(filename=filename):
+                plugin = self.migration / "unity/Assets/Plugins" / filename
+                plugin.parent.mkdir(parents=True, exist_ok=True)
+                plugin.write_bytes(b"synthetic plugin")
+                with self.assertRaisesRegex(ValueError, filename.replace(".", r"\.")):
+                    self.verify()
+                plugin.unlink()
+
     def test_changed_package_manifest_fails(self):
         self.manifest.write_text('{"dependencies":{"unreviewed":"latest"}}')
         with self.assertRaisesRegex(ValueError, "manifest.json"):
