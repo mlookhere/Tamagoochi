@@ -155,6 +155,7 @@ jobs:
           import json
           import math
           import os
+          import re
           import zlib
           from pathlib import Path
 
@@ -249,8 +250,19 @@ jobs:
                       "| " + " | ".join(f"![{name} {key}]({name}_{key}.png)" for key in keys) + " |",
                       "",
                   ])
-          (root / "proof/REVIEW.md").write_text("\n".join(review) + "\n")
-          print("All requested native models and eight PNG proofs per species validated")
+          review_path = root / "proof/REVIEW.md"
+          review_path.write_text("\n".join(review) + "\n")
+          review_text = review_path.read_text()
+          links = re.findall(r"!\[[^]]*\]\(([^)]+)\)", review_text)
+          expected_links = {
+              f"{name}_{key.lower() if key.startswith('face_') else key}.png"
+              for name in requested for key in expected_proofs
+          }
+          if (not review_text.startswith("# Tamagoochi creature visual review\n\n")
+                  or len(links) != len(expected_links) or set(links) != expected_links
+                  or any(not (review_path.parent / link).is_file() for link in links)):
+              raise SystemExit("Native visual review gallery is incomplete or malformed")
+          print("All requested native models, PNG proofs, and review gallery validated")
           PY
 
       - name: Upload model source, exported geometry, textures and proof renders
