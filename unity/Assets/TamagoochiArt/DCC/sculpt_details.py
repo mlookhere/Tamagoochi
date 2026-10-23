@@ -80,32 +80,32 @@ def petal_ear(name, location, dimensions, material, side, species):
 
 
 def curled_puffino_tail(material, profile):
-    """UV-mapped plush quad tail attached to the body."""
     from mathutils import Vector
     rings, sides = (32, 20) if profile == "sculpt" else (18, 12)
     pivot = Vector((0.53, 0.32, 0.75))
+    p0, p1 = Vector((0.25, 0.28, 0.61)), Vector((0.73, 0.35, 0.50))
+    p2, p3 = Vector((1.25, 0.50, 0.71)), Vector((0.82, 0.42, 0.92))
     vertices, faces, uv = [], [], []
     for i in range(rings + 1):
         t = i / rings
-        phase = math.pi * t
-        center = Vector((0.23 + 0.95 * t - 0.44 * t * t,
-                         0.28 + 0.12 * t + 0.03 * math.sin(phase),
-                         0.57 + 0.68 * math.sin(0.80 * phase) + 0.05 * t))
-        tangent = Vector((0.95 - 0.88 * t, 0.12 + 0.03 * math.pi * math.cos(phase),
-                          0.68 * 0.80 * math.pi * math.cos(0.80 * phase) + 0.05)).normalized()
+        u = 1 - t
+        center = u**3 * p0 + 3 * u*u*t * p1 + 3 * u*t*t * p2 + t**3 * p3
+        tangent = (3*u*u*(p1-p0) + 6*u*t*(p2-p1) + 3*t*t*(p3-p2)).normalized()
         across = Vector((-tangent.z, 0, tangent.x)).normalized()
         depth = tangent.cross(across).normalized()
-        radius = 0.008 + 0.11 * (1 - t)**4 + 0.29 * math.sin(phase)**0.8
+        fullness = math.sin(math.pi * t)**0.55
+        radius = 0.015 + 0.35 * fullness + 0.09 * u**7
         for j in range(sides):
             angle = math.tau * j / sides
-            tuft = 1 + 0.035 * math.sin(5 * angle + 7 * t)
-            point = center + radius * tuft * (math.cos(angle) * across + math.sin(angle) * depth)
-            vertices.append(tuple(point - pivot))
-            uv.append((j / sides, t))
+            scallop = 1 + fullness**2 * (0.04*math.sin(5*angle+7*t)
+                                          + 0.025*math.sin(9*angle-5*t))
+            point = center + radius * scallop * (math.cos(angle)*across + math.sin(angle)*depth)
+            vertices.append(tuple(point-pivot))
+            uv.append((j/sides, t))
             if i < rings:
-                nxt = i * sides + (j + 1) % sides
-                faces.append((i * sides + j, nxt, nxt + sides, (i + 1) * sides + j))
-    faces.extend((tuple(reversed(range(sides))), tuple(rings * sides + j for j in range(sides))))
+                nxt = i*sides + (j+1) % sides
+                faces.append((i*sides+j, nxt, nxt+sides, (i+1)*sides+j))
+    faces.extend((tuple(reversed(range(sides))), tuple(rings*sides+j for j in range(sides))))
     mesh = bpy.data.meshes.new("PuffinoTailQuads")
     mesh.from_pydata(vertices, [], faces)
     mesh.update()
