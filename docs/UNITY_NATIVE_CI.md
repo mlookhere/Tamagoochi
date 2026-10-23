@@ -11,6 +11,19 @@ This is a **separate prerequisite** of Unity migration Issue #31 / draft PR #32,
 5. Before accepting test results, the workflow checks `git diff HEAD` for the complete authored EditMode test directory and pinned Unity Editor version, and rejects any untracked EditMode source files. If the Editor or any build process mutates the reviewed fixture inputs, the evidence is invalid even when the checked-out commit SHA is unchanged. Generated scene, panel and other runtime assets may still be created by the legitimate editor build method.
 6. GameCI's optional test-results check publisher is disabled with `githubToken: ''`, preserving the workflow's read-only GitHub permissions; actual NUnit and APK evidence is validated in the explicit fail-closed step. The validator's stdlib synthetic self-tests run in **Fast deterministic gates**. They prove only validation logic, **not** a native Unity run.
 
+## Review both native artifact bundles together
+
+After **separately authorized, successful** Android and unsigned iOS workflow runs, download/extract each Actions artifact into separate directories and run:
+
+```bash
+python3 ci/verify_unity_mobile_evidence.py \
+  --android ./android-artifact \
+  --ios ./ios-artifact \
+  --migration-sha <reviewed-40-character-migration-SHA>
+```
+
+The stdlib verifier rejects mismatched source commits, reused run IDs, missing or duplicated Android NUnit reports, altered APK/XML contents, missing iOS launcher/UnityFramework binaries, unsafe binary paths, or iOS executable digests missing from their run's provenance. It intentionally requires the iOS run result to be `unsigned_xcode_compile_only`. Its ten local synthetic regressions do **not** run Unity or replace signed iOS/device QA. Keep source GitHub run URLs and artifact IDs in the human release record; the local verifier cannot independently attest GitHub artifact authenticity or approval. Neither absent native artifacts nor a passing repository CI run constitutes success.
+
 ## Not yet satisfied
 
 - This workflow has not run a Unity Editor, and GameCI activation / builder path behavior is not yet proven. No editor, NUnit, or Android artifacts are approved.
