@@ -159,6 +159,16 @@ class NativeEvidenceTests(unittest.TestCase):
         path.write_text(path.read_text() + "\n[TestCase(true)]\n")
         self.assert_rejected()
 
+    def test_untracked_editmode_suite_fails(self):
+        path = self.project / "Assets" / "Tests" / "EditMode" / "AdditionalTests.cs"
+        path.write_text("[Test]\\npublic void AdditionalTest() {}\\n")
+        self.assert_rejected()
+
+    def test_non_test_helper_source_is_allowed(self):
+        path = self.project / "Assets" / "Tests" / "EditMode" / "FixtureHelper.cs"
+        path.write_text("public static class FixtureHelper {}\\n")
+        validate(self.project, self.tests, self.apk)
+
     def test_missing_unity_source_suite_fails(self):
         (self.project / "Assets" / "Tests" / "EditMode" / "GameStoreTests.cs").unlink()
         self.assert_rejected()
