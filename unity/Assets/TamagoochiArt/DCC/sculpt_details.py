@@ -163,11 +163,11 @@ def configure_fur_albedo(material, base, texture_dir=None, eye=False):
                     color = (1.0, 0.98, 0.94)
                 pixels.extend((*color, 1.0))
                 continue
-            texture = 0.975 + 0.018 * math.sin(61.0 * u + 71.0 * v)
-            texture += 0.007 * math.sin(173.0 * u - 131.0 * v)
-            light = 0.98 + 0.035 * v
-            pixels.extend((min(1.0, base[c] * texture * light) for c in range(3)))
-            pixels.append(1.0)
+            fiber = abs(math.sin(math.tau * 24 * u + 0.45 * math.sin(math.tau * 4 * v)))**20
+            broken = abs(math.sin(math.tau * 35 * v + 5 * u))**6
+            strength = 0.10 if material.name.endswith("_Body") else 0.025
+            texture = 0.96 + strength * fiber * broken + 0.027 * math.sin(math.tau * (11 * u + 17 * v))
+            pixels.extend((*[min(1.0, max(0.0, base[c] * texture)) for c in range(3)], 1.0))
 
     image.pixels.foreach_set(pixels)
     image.update()
