@@ -144,9 +144,9 @@ def _expression_feature_metrics() -> tuple[list[str], list[str]]:
 def mesh_metrics(species: str) -> dict:
     named = {obj.name for obj in bpy.data.objects}
     missing_details = sorted(set(DETAIL_SIGNATURES[species]) - named)
-    for ear in ("Ear_L", "Ear_R"):
-        if not any(p.material_index == 1 for p in bpy.data.objects[ear].data.polygons):
-            missing_details.append(ear + ":IntegratedLining")
+    for part in ("Ear_L", "Ear_R", "Foot_L", "Foot_R"):
+        if not any(p.material_index == 1 for p in bpy.data.objects[part].data.polygons):
+            missing_details.append(part + ":IntegratedDetail")
     if species == "puffino" and not 0.025 <= bpy.data.objects["Head"].get("integrated_face_relief", 0) <= 0.12:
         missing_details.append("IntegratedCheekMuzzleSculpt")
     skinned, triangles, uv_failures, weight_failures = _skin_metrics()
