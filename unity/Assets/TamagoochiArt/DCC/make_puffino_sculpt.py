@@ -366,6 +366,25 @@ def main() -> None:
         raise RuntimeError("Blender GLB export did not finish.")
     report = validate(exported)
     print("Validated GLB geometry, morphs, skinning and albedo:", report)
+
+    # Unity natively imports FBX without a third-party glTF package.
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj in bpy.data.objects:
+        if obj.type in {"ARMATURE", "MESH"}:
+            obj.select_set(True)
+    bpy.context.view_layer.objects.active = rig
+    fbx = output / (name + ".fbx")
+    fbx_result = bpy.ops.export_scene.fbx(
+        filepath=str(fbx), use_selection=True, object_types={"ARMATURE", "MESH"},
+        axis_forward="-Z", axis_up="Y", add_leaf_bones=False,
+        use_mesh_modifiers=False, bake_anim=False,
+        path_mode="COPY", embed_textures=True,
+    )
+    if ("FINISHED" not in fbx_result or not fbx.is_file()
+            or fbx.stat().st_size < 1024
+            or fbx.open("rb").read(23) != b"Kaydara FBX Binary  \\x00\\x1a\\x00"):
+        raise RuntimeError("Blender Unity FBX export is missing or malformed.")
+    print("Unity FBX export staged for native Editor import:", fbx.name)
     print("Visual quality is NOT approved until native proof renders are reviewed.")
 
 
