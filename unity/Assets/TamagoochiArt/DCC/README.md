@@ -72,3 +72,24 @@ python -m unittest -v test_validate_glb.py
 ```
 
 The five synthetic contract tests passed locally when authored. These are parser tests; they do **not** generate, render, aesthetically evaluate, or import an actual creature mesh. The Blender export validator and rendered proof checks remain separate required gates.
+
+## RTX 4090 OptiX rendering (private Windows runner)
+
+The Blender proof script accepts `--device optix` to use your installed RTX 4090. CPU is still the default for the public GitHub-hosted runner.
+
+```powershell
+# On a computer with Blender 4.5.x installed and the RTX 4090 NVIDIA driver:
+blender.exe --background --factory-startup --python-exit-code 1 --python unity/Assets/TamagoochiArt/DCC/render_quality_review.py -- --output C:/tamagoochi-reviews --species puffino --engine cycles --device optix --gpu-name "RTX 4090" --samples 128 --resolution 960
+```
+
+Blender's headless Cycles preferences must set `compute_device_type = "OPTIX"`, call `get_devices()`, select the matching GPU and **disable CPU** before setting `scene.cycles.device = "GPU"`. This is implemented in `DCC/render_devices.py`. If the NVIDIA driver, Cycles add-on, or requested RTX 4090 is not available, the render job **fails** rather than silently switching to CPU. The resulting `quality_report.json` includes the requested backend, the discovered renderer and GPU name, but this does not replace actual GPU/visual inspection.
+
+Only launch GPU workflows from the private `mlookhere/Tamagoochi-GPU-Render` repository, using its dedicated self-hosted runner and an **immutable** commit SHA from the public art branch. Never attach a personal Windows workstation as a self-hosted runner to the public game repository. Do not run workflows from untrusted pull requests on the self-hosted runner.
+
+Run independent selection tests without Blender:
+
+```bash
+python -m unittest discover -s unity/Assets/TamagoochiArt/DCC -p 'test_render_devices.py' -v
+```
+
+These tests verify both CPU and OptiX selection logic using fake devices; actual RTX execution must be verified by the private GPU Actions job.
