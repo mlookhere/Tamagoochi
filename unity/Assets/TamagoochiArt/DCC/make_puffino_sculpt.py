@@ -20,6 +20,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+from validate_glb import validate
 from sculpt_details import petal_ear, configure_fur_shader, configure_fur_albedo, configure_tail_bands, decorate_face
 
 
@@ -302,14 +303,19 @@ def main() -> None:
 
     name = args.species + "_" + args.profile
     bpy.ops.wm.save_as_mainfile(filepath=str(output / (name + ".blend")))
-    bpy.ops.export_scene.gltf(
-        filepath=str(output / (name + ".glb")),
+    exported = output / (name + ".glb")
+    result = bpy.ops.export_scene.gltf(
+        filepath=str(exported),
         export_format="GLB",
         export_skins=True,
         export_morph=True,
         export_animations=False,
     )
-    print("Prepared", args.species, ".blend and skinned GLB study:", output)
+    if "FINISHED" not in result or not exported.is_file():
+        raise RuntimeError("Blender GLB export did not finish.")
+    report = validate(exported)
+    print("Validated GLB geometry, morphs, skinning and albedo:", report)
+    print("Visual quality is NOT approved until native proof renders are reviewed.")
 
 
 if __name__ == "__main__":
