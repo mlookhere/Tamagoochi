@@ -83,8 +83,8 @@ def curled_puffino_tail(material, profile):
     from mathutils import Vector
     rings, sides = (32, 20) if profile == "sculpt" else (18, 12)
     pivot = Vector((0.53, 0.32, 0.75))
-    p0, p1 = Vector((0.25, 0.28, 0.61)), Vector((0.73, 0.35, 0.50))
-    p2, p3 = Vector((1.25, 0.50, 0.71)), Vector((0.82, 0.42, 0.92))
+    p0, p1 = Vector((0.25, 0.28, 0.61)), Vector((0.62, 0.31, 0.52))
+    p2, p3 = Vector((1.10, 0.40, 0.72)), Vector((1.18, 0.43, 1.02))
     vertices, faces, uv = [], [], []
     for i in range(rings + 1):
         t = i / rings
