@@ -97,8 +97,8 @@ def curled_puffino_tail(material, profile):
         radius = 0.015 + 0.35 * fullness + 0.09 * u**7
         for j in range(sides):
             angle = math.tau * j / sides
-            scallop = 1 + fullness**2 * (0.085*math.sin(7*angle+10*t)
-                                          + 0.038*math.sin(13*angle-6*t))
+            scallop = 1 + fullness**2 * (0.085*math.sin(5*angle+10*t)
+                                          + 0.038*math.sin(7*angle-6*t))
             point = center + radius * scallop * (math.cos(angle)*across + math.sin(angle)*depth)
             vertices.append(tuple(point-pivot))
             if i < rings:
