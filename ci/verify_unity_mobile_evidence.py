@@ -60,15 +60,17 @@ def _ios_binary(root: Path, hash_name: str, provenance: str, suffix: str) -> Non
     _matched_file(root, relative, parts[0])
 
 
-def verify(android: Path, ios: Path, migration_sha: str) -> None:
-    if not SHA40.fullmatch(migration_sha):
-        raise ValueError("Expected migration commit must be a full 40-character SHA")
+def verify(android: Path, ios: Path, migration_sha: str, workflow_sha: str) -> None:
+    if not SHA40.fullmatch(migration_sha) or not SHA40.fullmatch(workflow_sha):
+        raise ValueError("Expected migration/workflow commits must be full 40-character SHAs")
     android_fields = {"migration_sha", "workflow_sha", "run_id", "nunit_sha256", "apk_sha256"}
     ios_fields = {"migration_sha", "workflow_sha", "run_id", "result"}
     a = _provenance(android / "unity-native-provenance.txt", android_fields)
     i = _provenance(ios / "unity-ios-provenance.txt", ios_fields)
     if a["migration_sha"] != migration_sha or i["migration_sha"] != migration_sha:
         raise ValueError("Android and iOS evidence must match the reviewed migration SHA")
+    if a["workflow_sha"] != workflow_sha or i["workflow_sha"] != workflow_sha:
+        raise ValueError("Android and iOS evidence must match the trusted workflow SHA")
     if a["run_id"] == i["run_id"] or i["result"] != "unsigned_xcode_compile_only":
         raise ValueError("Expected independent Android and unsigned iOS build runs")
     reports = list((android / "unity-test-results").rglob("*.xml"))
@@ -86,13 +88,14 @@ def main() -> int:
     parser.add_argument("--android", type=Path, required=True)
     parser.add_argument("--ios", type=Path, required=True)
     parser.add_argument("--migration-sha", required=True)
+    parser.add_argument("--workflow-sha", required=True)
     args = parser.parse_args()
     try:
-        verify(args.android, args.ios, args.migration_sha)
+        verify(args.android, args.ios, args.migration_sha, args.workflow_sha)
     except (OSError, ValueError) as error:
         print(f"UNITY MOBILE EVIDENCE REJECTED: {error}", file=sys.stderr)
         return 1
-    print("Android and unsigned iOS evidence match the reviewed migration SHA; signing/device QA not verified")
+    print("Native evidence matches reviewed migration and workflow SHAs; signing/device QA not verified")
     return 0
 
 
