@@ -313,6 +313,18 @@ class NativeEvidenceTests(unittest.TestCase):
                     archive.writestr("assets/bin/Data/globalgamemanagers", data)
                 self.assert_rejected()
 
+    def test_duplicate_apk_entries_fail(self):
+        for duplicate in ["AndroidManifest.xml", "classes.dex", "assets/bin/Data/globalgamemanagers"]:
+            with self.subTest(entry=duplicate):
+                with zipfile.ZipFile(self.apk, "a") as archive:
+                    with self.assertWarns(UserWarning):
+                        archive.writestr(duplicate, b"duplicate-entry")
+                self.assert_rejected()
+                with zipfile.ZipFile(self.apk, "w") as archive:
+                    archive.writestr("AndroidManifest.xml", _synthetic_manifest())
+                    archive.writestr("classes.dex", _synthetic_dex())
+                    _add_synthetic_unity_payload(archive)
+
     def test_apk_without_android_manifest_fails(self):
         with zipfile.ZipFile(self.apk, "w") as archive:
             archive.writestr("other.txt", "not a manifest")
