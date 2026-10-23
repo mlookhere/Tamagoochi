@@ -255,16 +255,6 @@ def decorate_face(species, rig, sculpt_part, skin, palette):
                (side * 0.25, -0.45, 1.40),
                (0.16, 0.034, 0.035), ivory, "head")
 
-        for pad in range(3):
-            detail(
-                "ToePad_" + suffix + "_" + str(pad),
-                (
-                    side * (0.29 + pad * 0.040),
-                    -0.465,
-                    0.105,
-                ),
-                (0.043, 0.020, 0.024), pink, "body")
-
     for tuft in range(3):
         detail("ForelockPetal_" + str(tuft),
                ((tuft - 1) * 0.18, -0.205, 1.605 + (tuft == 1) * 0.055),
