@@ -192,7 +192,7 @@ def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profi
         obj = sculpt_part(name, location, scale, mat, sculpt_subdiv,
                           segments=segments, rings=rings)
     if name == "Head" and species == "puffino":
-        # Sculpt the skull surface before shape keys, not add detachable cheek beads.
+        relief = 0.0
         for vertex in obj.data.vertices:
             x, y, z = vertex.co
             front = min(1.0, max(0.0, (-y - 0.20) / 0.20))
@@ -201,8 +201,11 @@ def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profi
             eye = math.hypot((abs(x) - 0.24) / 0.16, z / 0.19)
             socket = math.exp(-(eye / 0.63)**4)
             rim = math.exp(-((eye - 1.15) / 0.27)**2)
-            vertex.co.y += front * (0.032 * socket - 0.042 * cheek
+            displacement = front * (0.032 * socket - 0.042 * cheek
                                     - 0.053 * muzzle - 0.018 * rim)
+            vertex.co.y += displacement
+            relief = max(relief, abs(displacement))
+        obj["integrated_face_relief"] = relief
     if name == "Head":
         face_keys(obj)
     if name.startswith("Ear"):
