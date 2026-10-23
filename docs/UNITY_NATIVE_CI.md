@@ -20,10 +20,12 @@ python3 ci/verify_unity_mobile_evidence.py \
   --android ./android-artifact \
   --ios ./ios-artifact \
   --migration-sha <reviewed-40-character-migration-SHA> \
-  --workflow-sha <trusted-40-character-native-workflow-SHA>
+  --workflow-sha <trusted-40-character-native-workflow-SHA> \
+  --android-run-id <reviewed-successful-android-run-ID> \
+  --ios-run-id <reviewed-successful-ios-run-ID>
 ```
 
-The stdlib verifier requires **both** Android and iOS bundles to match the independently reviewed migration **and trusted workflow** commit SHAs. It rejects mismatched source commits, unreviewed workflow commits, reused run IDs, missing or duplicated Android NUnit reports, reports with failed/skipped/inconclusive cases or missing/duplicate NUnit identities (even when SHA-256 hashes agree), altered APK/XML contents, missing iOS launcher/UnityFramework binaries, unsafe binary paths, missing/failed Xcode build logs, mismatched recorded Xcode compiler versions, or iOS executable digests missing from their run's provenance. It intentionally requires the iOS run result to be `unsigned_xcode_compile_only`. Its eighteen synthetic regressions are included alongside the existing native verifier tests in the required PR fast gate via the `test_unity_*.py` discovery pattern. They do **not** run Unity or replace signed iOS/device QA. Keep source GitHub run URLs and artifact IDs in the human release record; the local verifier cannot independently attest GitHub artifact authenticity or approval. Neither absent native artifacts nor a passing repository CI run constitutes success.
+The stdlib verifier requires **both** Android and iOS bundles to match the independently reviewed migration **and trusted workflow** commit SHAs. It rejects mismatched source commits, unreviewed workflow commits, Actions run IDs differing from the two independently reviewed successful native run URLs, reused run IDs, missing or duplicated Android NUnit reports, reports with failed/skipped/inconclusive cases or missing/duplicate NUnit identities (even when SHA-256 hashes agree), altered APK/XML contents, missing iOS launcher/UnityFramework binaries, unsafe binary paths, missing/failed Xcode build logs, mismatched recorded Xcode compiler versions, or iOS executable digests missing from their run's provenance. It intentionally requires the iOS run result to be `unsigned_xcode_compile_only`. Its twenty-one synthetic regressions are included alongside the existing native verifier tests in the required PR fast gate via the `test_unity_*.py` discovery pattern. They do **not** run Unity or replace signed iOS/device QA. Keep source GitHub run URLs and artifact IDs in the human release record; the local verifier cannot independently attest GitHub artifact authenticity or approval. Neither absent native artifacts nor a passing repository CI run constitutes success.
 
 ## Not yet satisfied
 
