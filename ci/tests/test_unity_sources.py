@@ -33,10 +33,14 @@ class UnitySourceIntegrityTests(unittest.TestCase):
         self.script = self.migration / "unity/Assets/Scripts/Pet.cs"
         self.manifest = self.migration / "unity/Packages/manifest.json"
         self.version = self.migration / "unity/ProjectSettings/ProjectVersion.txt"
+        self.sprite = self.migration / "unity/Assets/Resources/Art/world/grove.png"
+        self.sprite_meta = self.sprite.with_suffix(".png.meta")
         for file, value in [
             (self.script, "class Pet {}"),
             (self.manifest, '{"dependencies": {}}'),
             (self.version, "m_EditorVersion: 6000.0.62f1"),
+            (self.sprite, "original sprite bytes"),
+            (self.sprite_meta, "reviewed sprite importer settings"),
         ]:
             file.parent.mkdir(parents=True, exist_ok=True)
             file.write_text(value)
@@ -74,6 +78,36 @@ class UnitySourceIntegrityTests(unittest.TestCase):
         created.write_text("class Injected {}")
         with self.assertRaisesRegex(ValueError, "Injected.cs"):
             self.verify()
+
+    def test_modified_reviewed_original_sprite_fails(self):
+        self.sprite.write_text("replaced sprite bytes")
+        with self.assertRaisesRegex(ValueError, "grove.png"):
+            self.verify()
+
+    def test_modified_reviewed_import_metadata_fails(self):
+        self.sprite_meta.write_text("changed sprite importer")
+        with self.assertRaisesRegex(ValueError, r"grove\.png\.meta"):
+            self.verify()
+
+    def test_untracked_original_art_png_fails(self):
+        extra = self.sprite.parent / "injected.png"
+        extra.write_bytes(b"unreviewed sprite")
+        with self.assertRaisesRegex(ValueError, "injected.png"):
+            self.verify()
+
+    def test_untracked_executable_metadata_fails(self):
+        extra = self.migration / "unity/Assets/Editor/Unreviewed.cs.meta"
+        extra.parent.mkdir(parents=True, exist_ok=True)
+        extra.write_text("unreviewed importer metadata")
+        with self.assertRaisesRegex(ValueError, r"Unreviewed\.cs\.meta"):
+            self.verify()
+
+    def test_generated_scene_and_metadata_do_not_fail(self):
+        scene = self.migration / "unity/Assets/Scenes/Home.unity"
+        scene.parent.mkdir(parents=True)
+        scene.write_text("generated Home scene")
+        scene.with_suffix(".unity.meta").write_text("generated scene importer")
+        self.verify()
 
     def test_ignored_untracked_csharp_still_fails(self):
         hidden = self.migration / "unity/Assets/Editor/Hidden.cs"
