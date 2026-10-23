@@ -23,6 +23,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from make_puffino_sculpt import build_creature, create_armature, studio
+from render_devices import configure_cycles
 
 
 SPECIES = ("puffino", "lunari", "sproutle", "bubblin")
@@ -42,30 +43,37 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--resolution", type=int, default=960)
     parser.add_argument("--engine", choices=("cycles", "eevee"), default="cycles")
+    parser.add_argument("--device", choices=("cpu", "optix"), default="cpu")
+    parser.add_argument("--gpu-name", default="RTX 4090")
     parser.add_argument("--samples", type=int, default=32)
     parser.add_argument("--species", choices=("all",) + SPECIES, default="all")
     return parser.parse_args(arguments)
 
 
 def reset(species: str, profile: str = "sculpt", engine: str = "cycles",
-          samples: int = 32, texture_dir=None):
+          samples: int = 32, texture_dir=None, device: str = "cpu",
+          gpu_name: str = "RTX 4090"):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     rig = create_armature()
     build_creature(rig, species, profile, texture_dir)
     studio()
     scene = bpy.context.scene
 
-    # CPU Cycles works on headless render farms without an EEVEE GPU context.
     if engine == "cycles":
-        scene.render.engine = "CYCLES"
-        scene.cycles.device = "CPU"
-        scene.cycles.samples = samples
-        scene.cycles.use_denoising = True
+        selection = configure_cycles(
+            scene, bpy.context.preferences, device, gpu_name, samples
+        )
+        scene["tamagoochi_render_backend"] = selection["compute_type"]
+        scene["tamagoochi_selected_gpus"] = ", ".join(selection["selected_gpus"])
     else:
+        if device != "cpu":
+            raise ValueError("OptiX is a Cycles backend; use --engine cycles")
         version = bpy.app.version
         scene.render.engine = ("BLENDER_EEVEE_NEXT"
                                if (4, 2, 0) <= version < (5, 0, 0)
                                else "BLENDER_EEVEE")
+        scene["tamagoochi_render_backend"] = "EEVEE"
+        scene["tamagoochi_selected_gpus"] = ""
     scene.render.image_settings.file_format = "PNG"
     scene.render.film_transparent = False
     return rig
@@ -210,9 +218,12 @@ def _mechanical_pass(metrics: dict, screenshots: dict[str, int]) -> bool:
 
 
 def species_review(species: str, target: Path, resolution: int,
-                   engine: str, samples: int) -> dict:
-    reset(species, engine=engine, samples=samples, texture_dir=target)
+                   engine: str, samples: int, device: str, gpu_name: str) -> dict:
+    reset(species, engine=engine, samples=samples, texture_dir=target,
+          device=device, gpu_name=gpu_name)
     metrics = mesh_metrics(species)
+    metrics["render_backend"] = bpy.context.scene["tamagoochi_render_backend"]
+    metrics["selected_gpus"] = bpy.context.scene["tamagoochi_selected_gpus"]
     screenshots = {}
     for angle, degrees in ANGLES.items():
         move_camera(degrees)
@@ -225,7 +236,8 @@ def species_review(species: str, target: Path, resolution: int,
         path = target / (species + "_face_" + face.lower() + ".png")
         screenshots["face_" + face] = save_render(path, resolution)
     # Review both genuine sculpt study and optimized mobile topology.
-    reset(species, "mobile", engine=engine, samples=samples, texture_dir=target)
+    reset(species, "mobile", engine=engine, samples=samples, texture_dir=target,
+          device=device, gpu_name=gpu_name)
     metrics["mobile_triangles"] = mesh_metrics(species)["triangles"]
     metrics["mobile_budget"] = 30000
 
@@ -252,12 +264,15 @@ def main() -> None:
     selected = SPECIES if args.species == "all" else (args.species,)
     for species in selected:
         results.append(species_review(species, directory, args.resolution,
-                                      args.engine, args.samples))
+                                      args.engine, args.samples,
+                                      args.device, args.gpu_name))
 
     passed = all(row["mechanical_pass"] for row in results)
     report = {
         "schema": 1,
         "art_standard": "original stylized 3D creature; sculpt-quality review",
+        "requested_render_device": args.device,
+        "expected_gpu_name": args.gpu_name if args.device == "optix" else None,
         "technical_checks_pass": passed,
         "creative_review": "required",
         "production_ready": False,
