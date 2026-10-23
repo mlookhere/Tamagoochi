@@ -60,6 +60,17 @@ def _ios_binary(root: Path, hash_name: str, provenance: str, suffix: str) -> Non
     _matched_file(root, relative, parts[0])
 
 
+def _ios_build_evidence(ios: Path, provenance: str) -> None:
+    version = (ios / "unity-ios-xcode-version.txt").read_text().strip()
+    build_log = (ios / "unity-ios-xcode-build.log").read_text()
+    if not version.startswith("Xcode ") or "\nBuild version " not in version:
+        raise ValueError("Archived iOS Xcode version evidence is missing or invalid")
+    if version not in provenance:
+        raise ValueError("Archived Xcode version does not match iOS provenance")
+    if "** BUILD SUCCEEDED **" not in build_log:
+        raise ValueError("iOS Xcode build log does not report successful compilation")
+
+
 def verify(android: Path, ios: Path, migration_sha: str, workflow_sha: str) -> None:
     if not SHA40.fullmatch(migration_sha) or not SHA40.fullmatch(workflow_sha):
         raise ValueError("Expected migration/workflow commits must be full 40-character SHAs")
@@ -79,6 +90,7 @@ def verify(android: Path, ios: Path, migration_sha: str, workflow_sha: str) -> N
     _matched_file(android, reports[0].relative_to(android).as_posix(), a["nunit_sha256"])
     _matched_file(android, "unity/Builds/Tamagoochi.apk", a["apk_sha256"])
     provenance = (ios / "unity-ios-provenance.txt").read_text()
+    _ios_build_evidence(ios, provenance)
     _ios_binary(ios, "unity-ios-executable.sha256", provenance, "/Unity-iPhone.app/Unity-iPhone")
     _ios_binary(ios, "unity-ios-framework.sha256", provenance, "/UnityFramework.framework/UnityFramework")
 
