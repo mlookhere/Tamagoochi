@@ -88,3 +88,11 @@ Before an asset may be called high-detail/game-ready:
 4. Validate imports and actual skinned animation in the Unity Editor, then verify the target phones. **The existing repository CI is not this visual gate.**
 
 Neither Blender nor the licensed Unity Editor is installed here. Therefore these sources are committed, but **no real model render, generated GLB or aesthetic approval can honestly be reported yet**. PR #36 remains draft. Do not substitute concept images for imported game asset screenshots.
+
+## Native FBX import gate (Unity 6)
+
+The Blender renderer produces both sculpt and mobile FBX files for every starter. Download the actual reviewed workflow artifact and copy its eight `models/<species>_<profile>.fbx` files into `Assets/TamagoochiArt/Imported/` inside the combined Unity project. Keep the artifact's source revision and checksum in the review record; do not use untrusted models.
+
+In Unity 6000.0.62f1, let ModelImporter process those files and select **Tamagoochi > Art > Audit Imported FBX Creatures**. For headless validation after preparing the imported assets, execute the same public method using `-batchmode -quit -executeMethod Tamagoochi.Art.Editor.ImportedCreatureAudit.Audit`.
+
+The audit fails closed unless all eight real Unity-imported models contain skinned meshes, UVs, a head with Smile/Pout/CheekPuff/Curious blend shapes and a mobile geometry count at or below 30,000 triangles. Passing the Blender re-import does **not** replace this Unity Editor audit. Real Unity Editor compilation, animation, materials, axis/scale, Android/iOS builds and on-device creative/performance testing are separately required.
