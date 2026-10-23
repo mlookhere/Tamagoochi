@@ -94,6 +94,19 @@ jobs:
           artifactsPath: unity-test-results
           coverageEnabled: false
 
+      - name: Reject mutation of reviewed Unity test sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet HEAD -- unity/Assets/Tests/EditMode unity/ProjectSettings/ProjectVersion.txt; then
+            echo "Unity test fixtures or pinned Editor version changed during native execution" >&2
+            exit 1
+          fi
+          if [[ -n "$(git ls-files --others --exclude-standard -- unity/Assets/Tests/EditMode)" ]]; then
+            echo "Unity native run introduced unreviewed EditMode source files" >&2
+            exit 1
+          fi
+
       - name: Reject missing/failed NUnit reports or Android APK
         run: python3 .unity-ci-control/ci/verify_unity_native.py --project unity --tests unity-test-results --apk unity/Builds/Tamagoochi.apk
 
