@@ -16,7 +16,7 @@ namespace Tamagoochi.Art
         [SerializeField] private Transform rightEye;
         [SerializeField] private bool reducedMotion;
 
-        private Vector3 bodyStart;
+        private Vector3 bodyStart, bodyScaleStart;
         private Quaternion headStart, leftEarStart, rightEarStart, tailStart;
         private Vector3 leftEyeStart, rightEyeStart;
         private float elapsed, nextBlink, blinkUntil, reactionUntil;
@@ -44,6 +44,7 @@ namespace Tamagoochi.Art
         {
             if (!visualRoot || !head) return;
             bodyStart = visualRoot.localPosition;
+            bodyScaleStart = visualRoot.localScale;
             headStart = head.localRotation;
             if (leftEar) leftEarStart = leftEar.localRotation;
             if (rightEar) rightEarStart = rightEar.localRotation;
@@ -82,8 +83,9 @@ namespace Tamagoochi.Art
             float pulse = Mathf.Sin(elapsed * speed * Mathf.PI * 2f);
             float happy = mood == CreatureMood.Happy || mood == CreatureMood.Playing ? 1.7f : 1f;
             visualRoot.localPosition = bodyStart + Vector3.up * (0.028f * strength * happy * pulse);
-            visualRoot.localScale = new Vector3(1f + 0.025f * strength * pulse,
-                1f - 0.018f * strength * pulse, 1f + 0.025f * strength * pulse);
+            visualRoot.localScale = Vector3.Scale(bodyScaleStart,
+                new Vector3(1f + 0.025f * strength * pulse,
+                    1f - 0.018f * strength * pulse, 1f + 0.025f * strength * pulse));
             head.localRotation = headStart * Quaternion.Euler(0f, 0f,
                 3.5f * strength * Mathf.Sin(elapsed * 2.0f));
             if (leftEar) leftEar.localRotation = leftEarStart *
@@ -108,7 +110,7 @@ namespace Tamagoochi.Art
             if (visualRoot)
             {
                 visualRoot.localPosition = bodyStart;
-                visualRoot.localScale = Vector3.one;
+                visualRoot.localScale = bodyScaleStart;
             }
             if (head) head.localRotation = headStart;
             if (leftEar) leftEar.localRotation = leftEarStart;
