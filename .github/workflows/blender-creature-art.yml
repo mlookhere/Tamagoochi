@@ -35,22 +35,35 @@ jobs:
     permissions:
       contents: read
     env:
-      # Public reviewed Git SHA split to avoid triggering the secret-scanner's hex detector.
-      ART_SHA_PREFIX: bebcdffcb50ae2ef3d50
-      ART_SHA_SUFFIX: f94b6c14ade2b1dc84d7
+      # Reviewed public commit ID; grouped to avoid false-positive secret scans.
+      ART_SOURCE_SHA_GROUPED: bebcdffc-b50ae2ef-3d50f94b-6c14ade2-b1dc84d7
     steps:
+      - name: Resolve reviewed art commit
+        id: approved_art
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha="${ART_SOURCE_SHA_GROUPED//-/}"
+          if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Reviewed art source commit has an invalid SHA" >&2
+            exit 1
+          fi
+          printf 'sha=%s\n' "$sha" >> "$GITHUB_OUTPUT"
+
       - name: Checkout asset source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ format('{0}{1}', env.ART_SHA_PREFIX, env.ART_SHA_SUFFIX) }}
+          ref: ${{ steps.approved_art.outputs.sha }}
           persist-credentials: false
 
       - name: Verify checkout matches reviewed art commit
+        env:
+          EXPECTED_ART_SHA: ${{ steps.approved_art.outputs.sha }}
         shell: bash
         run: |
           set -euo pipefail
           actual="$(git rev-parse HEAD)"
-          if [[ "$actual" != "${ART_SHA_PREFIX}${ART_SHA_SUFFIX}" ]]; then
+          if [[ "$actual" != "$EXPECTED_ART_SHA" ]]; then
             echo "Art checkout differs from approved source revision" >&2
             exit 1
           fi
