@@ -10,7 +10,7 @@ From Blender 4.x with the bundled glTF exporter enabled:
 blender --background --python unity/Assets/TamagoochiArt/DCC/make_puffino_sculpt.py -- --output /absolute/output/directory --species puffino --profile sculpt
 ```
 
-The script stages an editable `<species>_<profile>.blend`, a skinned + morph-target `<species>_<profile>.glb`, and four exportable UV albedo PNGs in `Textures/`, *if execution succeeds*. Valid species: `puffino`, `lunari`, `sproutle`, `bubblin`. These are not pre-rendered or verified in this repository.
+The script stages an editable `<species>_<profile>.blend`, a validated skinned/morph-target `<species>_<profile>.glb`, a Unity-native-importable `<species>_<profile>.fbx` (skin, shape keys, embedded textures), and UV albedo PNGs in `Textures/`, *if execution succeeds*. Unity FBX import, rig deformation, materials, scale/orientation and blend shapes still require a real Unity 6000.0.62f1 Editor audit. Valid species: `puffino`, `lunari`, `sproutle`, `bubblin`. These are not pre-rendered or verified in this repository.
 
 Run the command separately for each starter species. Shapes share an armature convention but differ in ear-fin silhouette, colors and species-defining accessories (horn nubs, lunar antennas, sprout crown or cloud orbs). This is an **artist base**, not four polished final sculpts.
 
@@ -20,7 +20,7 @@ Run the command separately for each starter species. Shapes share an armature co
 - Creates per-species original pastel material palettes, stylized eyes, ears, paws, muzzle details and accessory silhouettes.
 - Adds an armature with 10 named bones (`root`, `body`, `head`, ear roots/tips, tail root/tip and `jaw`), associated skin weights, and four named facial morphs.
 - Prepares soft three-point studio lighting and an orthographic preview camera.
-- Exports both Blender-native source and glTF binary. Blender's Z-up and glTF's coordinate conversion differ from Unity's Y-up; inspect axes, pose/rest transforms, eye direction and unit scale in Unity before use.
+- Exports Blender source, glTF binary and a separate Y-up/-Z-forward FBX with leaf bones disabled and preserved shape keys for Unity's built-in ModelImporter. Verify the actual Unity import: vertex weights, four blend shapes, materials, handedness, scale and face-forward direction.
 
 ### Next artist pass
 
