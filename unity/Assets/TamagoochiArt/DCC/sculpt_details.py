@@ -10,73 +10,72 @@ from pathlib import Path
 import bpy
 
 
-def petal_ear(name, location, dimensions, material, side, species):
-    """Create a softly swept, tapered quad-ring ear rather than a scaled sphere."""
+def petal_ear(name, location, dimensions, material, side, species, inner_material):
+    """Folded petal with an inset, colored front surface in one deformable mesh."""
     width, depth, height = dimensions
-    rings = 18
-    sides = 16
-    vertices = []
-    faces = []
-    uvs = []
-
+    rings, sides = 20, 20
+    vertices, faces = [], []
     for row in range(rings + 1):
         t = row / rings
-        fullness = max(0.035, math.sin(math.pi * t) ** (0.32 if species == "bubblin" else 0.66))
+        fullness = max(0.035, math.sin(math.pi * t)**0.55)
+        taper = width * (0.09 + 0.91 * fullness)
+        radius = depth * (0.18 + 0.82 * fullness)
+        lean = side * (0.13 * t*t + 0.035 * math.sin(math.pi*t))
+        if species == "puffino":
+            taper *= 1.22
+        elif species == "sproutle":
+            lean += side * 0.23*t
+            taper *= 1.15
+        elif species == "lunari":
+            lean -= side * 0.06 * math.sin(math.pi*t)
+            taper *= 0.65
+            radius *= 0.77
+        elif species == "bubblin":
+            lean += side * 0.24*t*t
+            taper *= 1.20
         for column in range(sides):
             angle = math.tau * column / sides
-            taper = width * (0.12 + 0.88 * fullness)
-            radius = depth * (0.20 + 0.80 * fullness)
-            lean = side * (0.10 * t * t + 0.025 * math.sin(math.pi * t))
-            fold = -0.045 * math.sin(math.pi * t)
-            if species == "sproutle":
-                lean += side * 0.23 * t
-                taper *= 1.15
-            elif species == "lunari":
-                lean -= side * 0.06 * math.sin(math.pi * t)
-                taper *= 0.65
-                radius *= 0.77
-            elif species == "bubblin":
-                lean += side * 0.24 * t * t
-                taper *= 1.20
-            vertices.append((
-                taper * math.cos(angle) + lean,
-                radius * math.sin(angle) + fold,
-                (t - 0.5) * height,
-            ))
-            uvs.append((column / sides, t))
-
-    for row in range(rings):
-        for column in range(sides):
-            a = row * sides + column
-            b = row * sides + (column + 1) % sides
-            c = a + sides
-            d = b + sides
-            faces.append((a, b, d, c))
-
-    faces.append(tuple(reversed(range(sides))))
-    offset = rings * sides
-    faces.append(tuple(offset + i for i in range(sides)))
-
+            front = max(0.0, -math.sin(angle))
+            cup = 0.045 * fullness * front**8
+            vertices.append((taper*math.cos(angle) + lean,
+                             radius*math.sin(angle) - 0.04*fullness + cup,
+                             (t-0.5)*height))
+            if row < rings:
+                a = row*sides + column
+                b = row*sides + (column+1) % sides
+                faces.append((a, b, b+sides, a+sides))
+    faces.extend((tuple(reversed(range(sides))),
+                  tuple(rings*sides+i for i in range(sides))))
     mesh = bpy.data.meshes.new(name + "Topology")
     mesh.from_pydata(vertices, [], faces)
     mesh.update()
-    uv_layer = mesh.uv_layers.new(name="UVMap")
+    layer = mesh.uv_layers.new(name="UVMap")
+    mesh.materials.append(material)
+    mesh.materials.append(inner_material)
     for face in mesh.polygons:
+        side_index = face.index % sides
+        row = face.index // sides
+        if face.index < rings*sides:
+            face.material_index = int(2 < row < rings-2
+                and math.sin(math.tau*(side_index+0.5)/sides) < -0.45)
+        face.use_smooth = face.index < rings*sides
         for loop in face.loop_indices:
-            uv_layer.data[loop].uv = uvs[mesh.loops[loop].vertex_index]
-
+            index = mesh.loops[loop].vertex_index
+            if face.index < rings*sides:
+                u = (side_index + int(index%sides != side_index))/sides
+                layer.data[loop].uv = (u, index//sides/rings)
+            else:
+                angle = math.tau*(index%sides)/sides
+                layer.data[loop].uv = (0.5+0.48*math.cos(angle),
+                                       0.5+0.48*math.sin(angle))
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
     obj.location = location
-    obj.data.materials.append(material)
-    for face in mesh.polygons:
-        face.use_smooth = True
     bevel = obj.modifiers.new("SoftPetalEdges", "BEVEL")
     bevel.width = 0.012
     bevel.segments = 2
-    normals = obj.modifiers.new("WeightedNormals", "WEIGHTED_NORMAL")
+    obj.modifiers.new("WeightedNormals", "WEIGHTED_NORMAL")
     return obj
-
 
 
 def curled_puffino_tail(material, profile):
