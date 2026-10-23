@@ -57,7 +57,6 @@ def reset(species: str, profile: str = "sculpt", engine: str = "cycles",
     build_creature(rig, species, profile, texture_dir)
     studio()
     scene = bpy.context.scene
-
     if engine == "cycles":
         selection = configure_cycles(
             scene, bpy.context.preferences, device, gpu_name, samples
@@ -149,6 +148,9 @@ def mesh_metrics(species: str) -> dict:
             missing_details.append(part + ":IntegratedDetail")
     if species == "puffino" and not 0.025 <= bpy.data.objects["Head"].get("integrated_face_relief", 0) <= 0.12:
         missing_details.append("IntegratedCheekMuzzleSculpt")
+    for part in ("Body", "Head"):
+        if not 0.01 <= bpy.data.objects[part].get("fur_surface_relief", 0) <= 0.05:
+            missing_details.append(part + ":SculptedFur")
     skinned, triangles, uv_failures, weight_failures = _skin_metrics()
     missing_morphs, weak_morphs = _morph_metrics()
     missing_features, weak_features = _expression_feature_metrics()
@@ -288,7 +290,6 @@ def species_review(species: str, target: Path, resolution: int,
         move_camera(degrees)
         path = target / (species + "_" + angle + ".png")
         screenshots[angle] = save_render(path, resolution)
-
     move_camera(0)
     for face in ("Smile", "Pout", "Curious"):
         expression(face)
@@ -307,7 +308,6 @@ def species_review(species: str, target: Path, resolution: int,
     phone = target / (species + "_phone_256.png")
     screenshots["phone_256"] = save_render(phone, 256)
     metrics["proof_images"] = screenshots
-
     metrics["mechanical_pass"] = _mechanical_pass(metrics, screenshots)
     return metrics
 
