@@ -57,7 +57,7 @@ jobs:
       ART_QUALITY: ${{ inputs.quality }}
     steps:
       - name: Resolve immutable reviewed art source
-        id: approved-art
+        id: approved_art
         shell: pwsh
         run: |
           $sha = $env:ART_SOURCE_SHA_GROUPED.Replace('-', '')
@@ -67,13 +67,13 @@ jobs:
       - name: Checkout reviewed art (not a mutable public branch)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ steps.approved-art.outputs.sha }}
+          ref: ${{ steps.approved_art.outputs.sha }}
           persist-credentials: false
 
       - name: Verify exact source, RTX 4090 and Blender LTS
         shell: pwsh
         env:
-          EXPECTED_ART_SHA: ${{ steps.approved-art.outputs.sha }}
+          EXPECTED_ART_SHA: ${{ steps.approved_art.outputs.sha }}
         run: |
           if ((git rev-parse HEAD).Trim() -cne $env:EXPECTED_ART_SHA) { throw 'Art source SHA mismatch' }
           $gpus = @(nvidia-smi --query-gpu=name --format=csv,noheader)
@@ -118,7 +118,7 @@ jobs:
       - name: Require actual RTX provenance and complete proof bundle
         shell: pwsh
         env:
-          EXPECTED_ART_SHA: ${{ steps.approved-art.outputs.sha }}
+          EXPECTED_ART_SHA: ${{ steps.approved_art.outputs.sha }}
         run: |
           $root = 'artifacts/blender'
           $report = Get-Content "$root/proof/quality_report.json" -Raw | ConvertFrom-Json
