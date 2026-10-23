@@ -33,12 +33,16 @@ class UnitySourceIntegrityTests(unittest.TestCase):
         self.script = self.migration / "unity/Assets/Scripts/Pet.cs"
         self.manifest = self.migration / "unity/Packages/manifest.json"
         self.version = self.migration / "unity/ProjectSettings/ProjectVersion.txt"
+        self.project_setting = self.migration / "unity/ProjectSettings/TagManager.asset"
+        self.package_lock = self.migration / "unity/Packages/packages-lock.json"
         self.sprite = self.migration / "unity/Assets/Resources/Art/world/grove.png"
         self.sprite_meta = self.sprite.with_suffix(".png.meta")
         for file, value in [
             (self.script, "class Pet {}"),
             (self.manifest, '{"dependencies": {}}'),
             (self.version, "m_EditorVersion: 6000.0.62f1"),
+            (self.project_setting, "reviewed project settings"),
+            (self.package_lock, '{"dependencies": {}}'),
             (self.sprite, "original sprite bytes"),
             (self.sprite_meta, "reviewed sprite importer settings"),
         ]:
@@ -134,6 +138,35 @@ class UnitySourceIntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "manifest.json"):
             self.verify()
 
+    def test_modified_reviewed_project_settings_fails(self):
+        self.project_setting.write_text("new scripting defines")
+        with self.assertRaisesRegex(ValueError, "TagManager.asset"):
+            self.verify()
+
+    def test_modified_tracked_packages_lock_fails(self):
+        self.package_lock.write_text('{"dependencies":{"replacement":"1.0"}}')
+        with self.assertRaisesRegex(ValueError, "packages-lock.json"):
+            self.verify()
+
+    def test_untracked_embedded_package_code_fails(self):
+        injected = self.migration / "unity/Packages/Embedded/Injected.cs"
+        injected.parent.mkdir(parents=True)
+        injected.write_text("class Injected {}")
+        with self.assertRaisesRegex(ValueError, "Injected.cs"):
+            self.verify()
+
+    def test_untracked_dependency_metadata_fails(self):
+        injected = self.migration / "unity/Packages/Unreviewed/package.json"
+        injected.parent.mkdir(parents=True)
+        injected.write_text('{"name":"unreviewed"}')
+        with self.assertRaisesRegex(ValueError, "package.json"):
+            self.verify()
+
+    def test_generated_untracked_packages_lock_is_allowed(self):
+        _git(self.migration, "rm", "-q", "--cached", "unity/Packages/packages-lock.json")
+        self.verify()
+
+    def test_changed_editor_version_fails(self):
     def test_changed_editor_version_fails(self):
         self.version.write_text("m_EditorVersion: 2022.3.0f1")
         with self.assertRaisesRegex(ValueError, "ProjectVersion.txt"):
