@@ -172,7 +172,7 @@ def face_feature_keys(feature: bpy.types.Object) -> None:
             elif name == "Smile":
                 co.z *= 0.65
             elif name == "Pout":
-                co.z *= 1.1
+                co.z *= 1.2
             elif feature.name == "Eye_R":
                 co.z += 0.09
             else:
