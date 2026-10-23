@@ -103,8 +103,20 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             verify(self.android, self.ios, MIGRATION, WORKFLOW, '101', '102')
         path.write_text("** BUILD FAILED **\n")
-        with self.assertRaisesRegex(ValueError, "successful compilation"):
+        with self.assertRaisesRegex(ValueError, "successful build outcome"):
             verify(self.android, self.ios, MIGRATION, WORKFLOW, '101', '102')
+
+    def test_failed_final_xcode_build_after_prior_success_fails(self):
+        log = self.ios / "unity-ios-xcode-build.log"
+        log.write_text("** BUILD SUCCEEDED **\nRetrying build\n** BUILD FAILED **\n")
+        with self.assertRaisesRegex(ValueError, "successful build outcome"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
+
+    def test_embedded_success_claim_without_xcode_status_fails(self):
+        log = self.ios / "unity-ios-xcode-build.log"
+        log.write_text("Warning: literal ** BUILD SUCCEEDED ** was found in unrelated output\n")
+        with self.assertRaisesRegex(ValueError, "successful build outcome"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
 
     def test_mismatched_xcode_version_provenance_fails(self):
         version = self.ios / "unity-ios-xcode-version.txt"
