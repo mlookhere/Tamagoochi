@@ -239,35 +239,35 @@ def decorate_face(species, rig, sculpt_part, skin, palette):
         return obj
 
     for side, suffix in ((-1, "L"), (1, "R")):
-        cheek_x = side * 0.49
-        for layer in range(4):
+        cheek_x = side * 0.43
+        for layer in range(2):
             obj = detail(
                 "CheekTuft_" + suffix + "_" + str(layer),
                 (
-                    cheek_x + side * (0.025 + layer * 0.035),
-                    -0.255 + layer * 0.035,
-                    1.08 - layer * 0.11,
+                    cheek_x + side * (0.014 + layer * 0.030),
+                    -0.35 + layer * 0.016,
+                    1.08 - layer * 0.080,
                 ),
-                (0.105 + layer * 0.009, 0.12, 0.075),
-                ivory if layer % 3 else pink,
+                (0.11 + layer * 0.005, 0.085, 0.055),
+                ivory,
                 "head",
             )
             obj.rotation_euler[1] = side * (0.26 + layer * 0.12)
 
         detail("LowerLid_" + suffix,
-               (side * 0.24, -0.53, 1.095),
-               (0.175, 0.025, 0.045), pink, "head")
+               (side * 0.24, -0.50, 1.085),
+               (0.185, 0.022, 0.035), pink, "head")
         detail("Brow_" + suffix,
                (side * 0.25, -0.45, 1.40),
                (0.16, 0.034, 0.035), ivory, "head")
         detail("Iris_" + suffix,
-               (side * 0.24, -0.573, 1.20),
-               (0.088, 0.02, 0.11), coral, "head")
+               (side * 0.24, -0.552, 1.20),
+               (0.107, 0.014, 0.14), coral, "head")
         detail("Pupil_" + suffix,
-               (side * 0.24, -0.595, 1.20),
-               (0.058, 0.012, 0.077), dark, "head")
+               (side * 0.24, -0.572, 1.20),
+               (0.073, 0.011, 0.092), dark, "head")
         detail("CatchlightSm_" + suffix,
-               (side * 0.18, -0.615, 1.14),
+               (side * 0.18, -0.591, 1.14),
                (0.022, 0.008, 0.026), shine, "head")
 
         for pad in range(3):
