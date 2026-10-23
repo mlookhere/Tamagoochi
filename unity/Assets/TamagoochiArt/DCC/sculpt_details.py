@@ -88,14 +88,14 @@ def curled_puffino_tail(material, profile):
     for i in range(rings + 1):
         t = i / rings
         phase = math.pi * t
-        center = Vector((0.23 + 0.92 * t - 0.42 * t * t,
-                         0.30 + 0.10 * t + 0.04 * t * t,
-                         0.56 + 0.58 * math.sin(0.66 * phase) - 0.10 * t))
-        tangent = Vector((0.92 - 0.84 * t, 0.10 + 0.08 * t,
-                          0.58 * 0.66 * math.pi * math.cos(0.66 * phase) - 0.10)).normalized()
+        center = Vector((0.23 + 0.95 * t - 0.44 * t * t,
+                         0.28 + 0.12 * t + 0.03 * math.sin(phase),
+                         0.57 + 0.68 * math.sin(0.80 * phase) + 0.05 * t))
+        tangent = Vector((0.95 - 0.88 * t, 0.12 + 0.03 * math.pi * math.cos(phase),
+                          0.68 * 0.80 * math.pi * math.cos(0.80 * phase) + 0.05)).normalized()
         across = Vector((-tangent.z, 0, tangent.x)).normalized()
         depth = tangent.cross(across).normalized()
-        radius = 0.012 + 0.34 * math.sin(phase) ** 0.8
+        radius = 0.008 + 0.11 * (1 - t)**4 + 0.29 * math.sin(phase)**0.8
         for j in range(sides):
             angle = math.tau * j / sides
             tuft = 1 + 0.035 * math.sin(5 * angle + 7 * t)
