@@ -123,8 +123,16 @@ jobs:
             echo "Unity migration head changed during native validation; evidence is stale" >&2
             exit 1
           fi
-          printf 'migration_sha=%s\nworkflow_sha=%s\nrun_id=%s\n' \
-            "$MIGRATION_SHA" "$WORKFLOW_SHA" "$GITHUB_RUN_ID" > unity-native-provenance.txt
+          report=$(find unity-test-results -type f -name '*.xml' -print -quit)
+          [[ -n "$report" && -s "$report" && -s unity/Builds/Tamagoochi.apk ]] || {
+            echo "Cannot record provenance without verified NUnit XML and APK" >&2
+            exit 1
+          }
+          read -r report_hash _ < <(sha256sum "$report")
+          read -r apk_hash _ < <(sha256sum unity/Builds/Tamagoochi.apk)
+          printf 'migration_sha=%s\nworkflow_sha=%s\nrun_id=%s\nnunit_sha256=%s\napk_sha256=%s\n' \
+            "$MIGRATION_SHA" "$WORKFLOW_SHA" "$GITHUB_RUN_ID" \
+            "$report_hash" "$apk_hash" > unity-native-provenance.txt
 
       - name: Preserve Unity build and test evidence
         if: always()
