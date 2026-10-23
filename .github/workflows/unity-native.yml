@@ -107,6 +107,25 @@ jobs:
             exit 1
           fi
 
+      - name: Verify trusted evidence verifier was not modified by Unity code
+        env:
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git -C .unity-ci-control rev-parse HEAD)" == "$WORKFLOW_SHA" ]] || {
+            echo "Native evidence verifier checkout is not the trusted workflow commit" >&2
+            exit 1
+          }
+          git -C .unity-ci-control diff --quiet HEAD -- ci/verify_unity_native.py || {
+            echo "Unity execution modified the trusted native evidence verifier" >&2
+            exit 1
+          }
+          if [[ ! -f .unity-ci-control/ci/verify_unity_native.py ]]; then
+            echo "Trusted native evidence verifier is absent" >&2
+            exit 1
+          fi
+
       - name: Reject missing/failed NUnit reports or Android APK
         run: python3 .unity-ci-control/ci/verify_unity_native.py --project unity --tests unity-test-results --apk unity/Builds/Tamagoochi.apk
 
