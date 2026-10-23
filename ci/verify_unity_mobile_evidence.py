@@ -4,7 +4,10 @@ import argparse
 import hashlib
 import re
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path, PurePosixPath
+
+from ci.verify_unity_native import MINIMUM_EDITMODE_CASES
 
 SHA40 = re.compile(r"[0-9a-f]{40}")
 SHA256 = re.compile(r"[0-9a-f]{64}")
@@ -60,6 +63,23 @@ def _ios_binary(root: Path, hash_name: str, provenance: str, suffix: str) -> Non
     _matched_file(root, relative, parts[0])
 
 
+def _nunit_report_passed(path: Path) -> None:
+    root = ET.parse(path).getroot()
+    attributes = root.attrib
+    required = {"result": "Passed", "failed": "0", "skipped": "0", "inconclusive": "0"}
+    if root.tag != "test-run" or any(attributes.get(k) != v for k, v in required.items()):
+        raise ValueError("Archived Unity NUnit report is not a fully passing test-run")
+    total = int(attributes.get("total", "0"))
+    passed = int(attributes.get("passed", "-1"))
+    cases = root.findall(".//test-case")
+    if (total < MINIMUM_EDITMODE_CASES or passed != total or len(cases) != total or
+            any(case.get("result") != "Passed" for case in cases)):
+        raise ValueError("Archived Unity NUnit report has missing, failed or inconsistent test cases")
+    names = [case.get("fullname") or case.get("name") for case in cases]
+    if len(set(names)) != total or any(not name for name in names):
+        raise ValueError("Archived Unity NUnit test identities are incomplete or duplicated")
+
+
 def _ios_build_evidence(ios: Path, provenance: str) -> None:
     version = (ios / "unity-ios-xcode-version.txt").read_text().strip()
     build_log = (ios / "unity-ios-xcode-build.log").read_text()
@@ -88,6 +108,7 @@ def verify(android: Path, ios: Path, migration_sha: str, workflow_sha: str) -> N
     if len(reports) != 1:
         raise ValueError("Expected exactly one archived Android NUnit XML report")
     _matched_file(android, reports[0].relative_to(android).as_posix(), a["nunit_sha256"])
+    _nunit_report_passed(reports[0])
     _matched_file(android, "unity/Builds/Tamagoochi.apk", a["apk_sha256"])
     provenance = (ios / "unity-ios-provenance.txt").read_text()
     _ios_build_evidence(ios, provenance)
@@ -104,7 +125,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         verify(args.android, args.ios, args.migration_sha, args.workflow_sha)
-    except (OSError, ValueError) as error:
+    except (OSError, ValueError, ET.ParseError) as error:
         print(f"UNITY MOBILE EVIDENCE REJECTED: {error}", file=sys.stderr)
         return 1
     print("Native evidence matches reviewed migration and workflow SHAs; signing/device QA not verified")
