@@ -152,7 +152,43 @@ jobs:
           assert any(obj.type == "ARMATURE" for obj in bpy.data.objects), "FBX skeleton missing"
           keys = set(head.data.shape_keys.key_blocks.keys()) if head.data.shape_keys else set()
           assert {"Smile", "Pout", "CheekPuff", "Curious"} <= keys, "FBX face morphs missing"
-          print("FBX_IMPORT_MORPHS_OK", os.environ["FBX_PATH"])
+          from math import isfinite, radians
+          rigs = [obj for obj in bpy.data.objects if obj.type == "ARMATURE"]
+          assert len(rigs) == 1, "FBX skeleton count changed"
+          rig = rigs[0]
+          def points(obj):
+              bpy.context.view_layer.update()
+              evaluated = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+              mesh = evaluated.to_mesh()
+              try:
+                  stride = max(1, len(mesh.vertices) // 64)
+                  return [evaluated.matrix_world @ mesh.vertices[i].co
+                          for i in range(0, len(mesh.vertices), stride)]
+              finally:
+                  evaluated.to_mesh_clear()
+          for joint, name in (("ear_tip_L", "Ear_L"), ("ear_tip_R", "Ear_R"),
+                              ("tail_tip", "Tail")):
+              bone = rig.pose.bones.get(joint)
+              part = bpy.data.objects.get(name)
+              assert bone is not None and part is not None, "FBX lost joint or mesh: " + name
+              assert any(mod.type == "ARMATURE" and mod.object == rig
+                         for mod in part.modifiers), "FBX lost armature skin: " + name
+              bone.rotation_mode = "XYZ"
+              neutral = points(part)
+              original = bone.rotation_euler.copy()
+              try:
+                  for angle in (-30, 30):
+                      bone.rotation_euler.y = radians(angle)
+                      posed = points(part)
+                      assert len(posed) == len(neutral), "FBX pose changed topology: " + name
+                      distance = max(((a - b).length for a, b in zip(neutral, posed)),
+                                     default=0.0)
+                      assert isfinite(distance) and 0.005 < distance < 1.5, (
+                          "FBX skinning did not deform safely: " + name)
+              finally:
+                  bone.rotation_euler = original
+                  bpy.context.view_layer.update()
+          print("FBX_IMPORT_SKIN_AND_MORPHS_OK", os.environ["FBX_PATH"])
           '
             done
           done
