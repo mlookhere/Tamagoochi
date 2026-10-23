@@ -81,11 +81,11 @@ def petal_ear(name, location, dimensions, material, side, species):
 
 def curled_puffino_tail(material, profile):
     from mathutils import Vector
-    rings, sides = (32, 20) if profile == "sculpt" else (18, 12)
+    rings, sides = (40, 24) if profile == "sculpt" else (24, 16)
     pivot = Vector((0.53, 0.32, 0.75))
     p0, p1 = Vector((0.25, 0.28, 0.61)), Vector((0.62, 0.31, 0.52))
     p2, p3 = Vector((1.10, 0.40, 0.72)), Vector((1.18, 0.43, 1.02))
-    vertices, faces, uv = [], [], []
+    vertices, faces = [], []
     for i in range(rings + 1):
         t = i / rings
         u = 1 - t
@@ -97,11 +97,10 @@ def curled_puffino_tail(material, profile):
         radius = 0.015 + 0.35 * fullness + 0.09 * u**7
         for j in range(sides):
             angle = math.tau * j / sides
-            scallop = 1 + fullness**2 * (0.04*math.sin(5*angle+7*t)
-                                          + 0.025*math.sin(9*angle-5*t))
+            scallop = 1 + fullness**2 * (0.085*math.sin(7*angle+10*t)
+                                          + 0.038*math.sin(13*angle-6*t))
             point = center + radius * scallop * (math.cos(angle)*across + math.sin(angle)*depth)
             vertices.append(tuple(point-pivot))
-            uv.append((j/sides, t))
             if i < rings:
                 nxt = i*sides + (j+1) % sides
                 faces.append((i*sides+j, nxt, nxt+sides, (i+1)*sides+j))
@@ -113,7 +112,8 @@ def curled_puffino_tail(material, profile):
     for face in mesh.polygons:
         face.use_smooth = True
         for loop in face.loop_indices:
-            layer.data[loop].uv = uv[mesh.loops[loop].vertex_index]
+            vi = mesh.loops[loop].vertex_index
+            layer.data[loop].uv = ((face.index%sides + int(vi%sides != face.index%sides))/sides, vi//sides/rings)
     obj = bpy.data.objects.new("Tail", mesh)
     bpy.context.collection.objects.link(obj)
     obj.location = pivot
