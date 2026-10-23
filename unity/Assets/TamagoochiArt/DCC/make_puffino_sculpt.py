@@ -153,6 +153,51 @@ def face_keys(head: bpy.types.Object) -> None:
                 co.z += 0.05 * front
 
 
+def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile):
+    if name.startswith("Ear"):
+        side = -1 if name.endswith("_L") else 1
+        obj = petal_ear(name, location,
+                        (scale[0], scale[1], scale[2] * 2), mat, side, species)
+    else:
+        sculpt_subdiv = 1 if profile == "sculpt" else 0
+        segments, rings = (48, 32) if profile == "sculpt" else (32, 20)
+        obj = sculpt_part(name, location, scale, mat, sculpt_subdiv,
+                          segments=segments, rings=rings)
+    if name == "Head":
+        face_keys(obj)
+    if name.startswith("Ear"):
+        skin(obj, rig, bone, tip, start=-0.28, end=0.31)
+    elif name == "Tail":
+        skin(obj, rig, bone, tip, axis=0, start=-0.37, end=0.37)
+    else:
+        skin(obj, rig, bone)
+
+
+def _add_species_extras(species, rig, ivory, coral, pink):
+    extras = []
+    if species == "lunari":
+        extras = [
+            ("Antenna_L", (-0.22, 0.04, 1.85), (0.055, 0.055, 0.25), coral),
+            ("Antenna_R", (0.22, 0.04, 1.85), (0.055, 0.055, 0.25), coral),
+            ("StarOrb_L", (-0.22, 0.04, 2.08), (0.13, 0.13, 0.13), pink),
+            ("StarOrb_R", (0.22, 0.04, 2.08), (0.13, 0.13, 0.13), pink),
+        ]
+    elif species == "sproutle":
+        extras = [
+            ("LeafCrown_L", (-0.16, 0.01, 1.84), (0.12, 0.07, 0.29), coral),
+            ("LeafCrown_R", (0.16, 0.01, 1.84), (0.12, 0.07, 0.29), pink),
+            ("BloomBud", (0, -0.01, 2.08), (0.10, 0.10, 0.14), ivory),
+        ]
+    elif species == "bubblin":
+        extras = [
+            ("CloudOrb_A", (-0.33, 0.04, 1.75), (0.17, 0.17, 0.17), pink),
+            ("CloudOrb_B", (0.14, 0.10, 1.88), (0.19, 0.19, 0.19), coral),
+            ("CloudOrb_C", (0.43, 0.07, 1.70), (0.14, 0.14, 0.14), pink),
+        ]
+    for name, location, scale, mat in extras:
+        ornament = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
+        skin(ornament, rig, "head")
+
 def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_dir=None) -> None:
     palettes = {
         "puffino": ((0.95, 0.82, 0.71, 1), (0.95, 0.48, 0.32, 1),
@@ -196,23 +241,7 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
         ("Tail", (0.77, 0.50, 0.76), (0.42, 0.32, 0.37), tail_bands, "tail_root", "tail_tip"),
     ]
     for name, location, scale, mat, bone, tip in parts:
-        if name.startswith("Ear"):
-            side = -1 if name.endswith("_L") else 1
-            obj = petal_ear(name, location,
-                            (scale[0], scale[1], scale[2] * 2), mat, side, species)
-        else:
-            sculpt_subdiv = 1 if profile == "sculpt" else 0
-            segments, rings = (48, 32) if profile == "sculpt" else (32, 20)
-            obj = sculpt_part(name, location, scale, mat, sculpt_subdiv,
-                              segments=segments, rings=rings)
-        if name == "Head":
-            face_keys(obj)
-        if name.startswith("Ear"):
-            skin(obj, rig, bone, tip, start=-0.28, end=0.31)
-        elif name == "Tail":
-            skin(obj, rig, bone, tip, axis=0, start=-0.37, end=0.37)
-        else:
-            skin(obj, rig, bone)
+        _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile)
 
     details = [
         ("Inner_L", (-0.55, -0.11, 1.82), (0.13, 0.05, 0.24), pink, "ear_root_L"),
@@ -235,29 +264,7 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     for name, location, scale, mat, bone in details:
         obj = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
         skin(obj, rig, bone)
-    extras = []
-    if species == "lunari":
-        extras = [
-            ("Antenna_L", (-0.22, 0.04, 1.85), (0.055, 0.055, 0.25), coral),
-            ("Antenna_R", (0.22, 0.04, 1.85), (0.055, 0.055, 0.25), coral),
-            ("StarOrb_L", (-0.22, 0.04, 2.08), (0.13, 0.13, 0.13), pink),
-            ("StarOrb_R", (0.22, 0.04, 2.08), (0.13, 0.13, 0.13), pink),
-        ]
-    elif species == "sproutle":
-        extras = [
-            ("LeafCrown_L", (-0.16, 0.01, 1.84), (0.12, 0.07, 0.29), coral),
-            ("LeafCrown_R", (0.16, 0.01, 1.84), (0.12, 0.07, 0.29), pink),
-            ("BloomBud", (0, -0.01, 2.08), (0.10, 0.10, 0.14), ivory),
-        ]
-    elif species == "bubblin":
-        extras = [
-            ("CloudOrb_A", (-0.33, 0.04, 1.75), (0.17, 0.17, 0.17), pink),
-            ("CloudOrb_B", (0.14, 0.10, 1.88), (0.19, 0.19, 0.19), coral),
-            ("CloudOrb_C", (0.43, 0.07, 1.70), (0.14, 0.14, 0.14), pink),
-        ]
-    for name, location, scale, mat in extras:
-        ornament = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
-        skin(ornament, rig, "head")
+    _add_species_extras(species, rig, ivory, coral, pink)
     # Keep full sculpt geometry while reducing ONLY mobile accessory topology.
     # This preserves original facial silhouettes and enforces the GLB triangle gate.
     def face_detail(name, location, dimensions, material, subdivisions=0):
