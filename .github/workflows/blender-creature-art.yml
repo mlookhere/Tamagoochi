@@ -225,7 +225,7 @@ jobs:
           # Package the observed proof images into one human-reviewable gallery.
           review = [
               "# Tamagoochi creature visual review", "",
-              f"Reviewed art source: \`{os.environ['EXPECTED_ART_SHA']}\`", "",
+              f"Reviewed art source: `{os.environ['EXPECTED_ART_SHA']}`", "",
               "This is native mechanical evidence, not creative approval. Review each",
               "species at full size and phone scale before accepting final artwork.", "",
           ]
@@ -249,7 +249,7 @@ jobs:
                       "| " + " | ".join(f"![{name} {key}]({name}_{key}.png)" for key in keys) + " |",
                       "",
                   ])
-          (root / "proof/REVIEW.md").write_text("\\n".join(review) + "\\n")
+          (root / "proof/REVIEW.md").write_text("\n".join(review) + "\n")
           print("All requested native models and eight PNG proofs per species validated")
           PY
 
