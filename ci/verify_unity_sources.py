@@ -7,7 +7,10 @@ import sys
 from pathlib import Path, PurePosixPath
 
 SHA = re.compile(r"[0-9a-f]{40}")
-CODE_EXTENSIONS = {".cs", ".asmdef", ".asmref", ".rsp", ".dll", ".shader", ".compute", ".hlsl", ".cginc"}
+CODE_EXTENSIONS = {
+    ".cs", ".asmdef", ".asmref", ".rsp", ".dll", ".shader", ".compute",
+    ".hlsl", ".cginc", ".so", ".dylib", ".a", ".aar", ".jar",
+}
 REVIEWED_FILES = {"unity/Packages/manifest.json", "unity/ProjectSettings/ProjectVersion.txt"}
 
 
@@ -34,7 +37,7 @@ def verify(repository: Path, control: Path, migration_sha: str, workflow_sha: st
         raise ValueError("Trusted verifier checkout is modified, ignored or contains injected files")
     scope = ("unity/Assets", "unity/Packages/manifest.json", "unity/ProjectSettings/ProjectVersion.txt")
     modified = _git(repository, "diff", "--name-only", "-z", "HEAD", "--", *scope)
-    untracked = _git(repository, "ls-files", "--others", "--exclude-standard", "-z", "--", *scope)
+    untracked = _git(repository, "ls-files", "--others", "-z", "--", *scope)
     changes = [p.decode("utf-8", "surrogateescape") for p in (modified + untracked).split(b"\0") if p]
     changed_sources = sorted({name for name in changes if _source_path(name)})
     if changed_sources:
