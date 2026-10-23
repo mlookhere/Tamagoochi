@@ -154,5 +154,6 @@ jobs:
             unity-ios-framework.sha256
             unity-ios-provenance.txt
             unity/Builds/Tamagoochi-iOS/
+            unity/Builds/iOS-derived/Build/Products/Release-iphoneos/
           if-no-files-found: warn
           retention-days: 14
