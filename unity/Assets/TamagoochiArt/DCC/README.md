@@ -63,3 +63,12 @@ blender --background --python unity/Assets/TamagoochiArt/DCC/render_quality_revi
 It emits front/three-quarter/side/back and expression renders for all four species, plus a real 256px **mobile-profile** image per species. Inspect the images, not just the mesh count, and record quality acceptance against `VISUAL_QUALITY_GATE.md`.
 
 **Current status:** neither Blender export nor the 32 proof renders could be executed from this conversation's environment. The source is available, the exported meshes/images are not yet verified.
+
+For a quick **Blender-independent** check of the GLB validator itself:
+
+```bash
+cd unity/Assets/TamagoochiArt/DCC
+python -m unittest -v test_validate_glb.py
+```
+
+The five synthetic contract tests passed locally when authored. These are parser tests; they do **not** generate, render, aesthetically evaluate, or import an actual creature mesh. The Blender export validator and rendered proof checks remain separate required gates.
