@@ -140,7 +140,7 @@ def configure_fur_shader(material):
     links.new(bump.outputs["Normal"], surface.inputs["Normal"])
 
 
-def configure_fur_albedo(material, base, texture_dir=None):
+def configure_fur_albedo(material, base, texture_dir=None, eye=False):
     """UV-friendly handoff color map that survives Blender-to-glTF export."""
     size = 256
     image = bpy.data.images.new(
@@ -150,14 +150,24 @@ def configure_fur_albedo(material, base, texture_dir=None):
         v = row / max(1, size - 1)
         for column in range(size):
             u = column / max(1, size - 1)
-            # Tonal variation reads softly at mobile scale, unlike hard random noise.
+            if eye:
+                x, y = 2 * u - 1, 2 * v - 1
+                radius = math.hypot(x, y)
+                if radius < 0.38:
+                    color = (0.055, 0.040, 0.065)
+                elif radius < 0.87:
+                    shade = 0.65 + 0.65 * (radius - 0.38) / 0.49
+                    color = tuple(min(1.0, base[c] * shade) for c in range(3))
+                else:
+                    color = (0.075, 0.052, 0.075)
+                if (x + 0.30) ** 2 + (y - 0.34) ** 2 < 0.028:
+                    color = (1.0, 0.98, 0.94)
+                pixels.extend((*color, 1.0))
+                continue
             texture = 0.975 + 0.018 * math.sin(61.0 * u + 71.0 * v)
             texture += 0.007 * math.sin(173.0 * u - 131.0 * v)
             light = 0.98 + 0.035 * v
-            pixels.extend((
-                min(1.0, max(0.0, base[channel] * texture * light))
-                for channel in range(3)
-            ))
+            pixels.extend((min(1.0, base[c] * texture * light) for c in range(3)))
             pixels.append(1.0)
 
     image.pixels.foreach_set(pixels)
@@ -245,15 +255,6 @@ def decorate_face(species, rig, sculpt_part, skin, palette):
         detail("Brow_" + suffix,
                (side * 0.25, -0.45, 1.40),
                (0.16, 0.034, 0.035), ivory, "head")
-        detail("Iris_" + suffix,
-               (side * 0.24, -0.547, 1.20),
-               (0.104, 0.004, 0.133), coral, "head")
-        detail("Pupil_" + suffix,
-               (side * 0.24, -0.553, 1.20),
-               (0.069, 0.003, 0.089), dark, "head")
-        detail("CatchlightSm_" + suffix,
-               (side * 0.18, -0.559, 1.14),
-               (0.022, 0.003, 0.026), shine, "head")
 
         for pad in range(3):
             detail(
@@ -269,14 +270,6 @@ def decorate_face(species, rig, sculpt_part, skin, palette):
         detail("ForelockPetal_" + str(tuft),
                ((tuft - 1) * 0.18, -0.205, 1.605 + (tuft == 1) * 0.055),
                (0.115, 0.135, 0.105), ivory, "head")
-
-    for spot in range(2):
-        detail("FaceFreckle_L_" + str(spot),
-               (-0.10 - spot * 0.12, -0.52 + spot * 0.055, 1.49),
-               (0.022, 0.009, 0.024), coral, "head")
-        detail("FaceFreckle_R_" + str(spot),
-               (0.10 + spot * 0.12, -0.52 + spot * 0.055, 1.49),
-               (0.022, 0.009, 0.024), coral, "head")
 
     if species == "sproutle":
         for side in (-1, 1):
