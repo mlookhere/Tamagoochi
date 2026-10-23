@@ -147,6 +147,7 @@ jobs:
         shell: bash
         env:
           ART_SPECIES: ${{ github.event_name == 'workflow_dispatch' && inputs.species || 'all' }}
+          ART_QUALITY: ${{ github.event_name == 'workflow_dispatch' && inputs.quality || 'smoke' }}
           EXPECTED_ART_SHA: ${{ steps.approved_art.outputs.sha }}
         run: |
           set -euo pipefail
@@ -154,12 +155,16 @@ jobs:
           import json
           import math
           import os
+          import zlib
           from pathlib import Path
 
           root = Path("artifacts/blender")
           report = json.loads((root / "proof/quality_report.json").read_text())
           species = ("puffino", "lunari", "sproutle", "bubblin")
           requested = species if os.environ["ART_SPECIES"] == "all" else (os.environ["ART_SPECIES"],)
+          render_resolution = {"smoke": 512, "review": 960}.get(os.environ["ART_QUALITY"])
+          if render_resolution is None:
+              raise SystemExit("Unexpected native art proof resolution setting")
           if not set(requested) <= set(species):
               raise SystemExit("Unexpected species in native art evidence")
           if (report.get("schema") != 1 or report.get("technical_checks_pass") is not True
@@ -197,8 +202,18 @@ jobs:
                   if not path.is_file() or path.stat().st_size != recorded_size:
                       raise SystemExit(f"Missing or mismatched native proof: {path}")
                   with path.open("rb") as source:
-                      if source.read(8) != bytes((137, 80, 78, 71, 13, 10, 26, 10)):
-                          raise SystemExit(f"Invalid PNG proof: {path}")
+                      header = source.read(33)
+                  signature = bytes((137, 80, 78, 71, 13, 10, 26, 10))
+                  if (len(header) != 33 or header[:8] != signature
+                          or int.from_bytes(header[8:12], "big") != 13
+                          or header[12:16] != b"IHDR"
+                          or zlib.crc32(header[12:29]) != int.from_bytes(header[29:33], "big")):
+                      raise SystemExit(f"Invalid PNG IHDR or header checksum: {path}")
+                  expected_px = 256 if key == "phone_256" else render_resolution
+                  width = int.from_bytes(header[16:20], "big")
+                  height = int.from_bytes(header[20:24], "big")
+                  if (width, height) != (expected_px, expected_px):
+                      raise SystemExit(f"Incorrect native PNG proof dimensions: {path}")
               for profile in ("sculpt", "mobile"):
                   for ext, magic in (("blend", b"BLENDER"), ("glb", b"glTF")):
                       path = root / "models" / f"{name}_{profile}.{ext}"
