@@ -54,3 +54,24 @@ These are goals, not measured results: aim for under 20k triangles per baby crea
 The concept art shown in the conversation is a **visual reference**, not a UV-unwrapped skinned mesh. Generated meshes use Unity primitives and cannot match the visual finish of the concept renders without further model creation.
 
 Review the asset-manifest.json and PRODUCTION_BACKLOG.md before marking an asset production-ready.
+
+## Sculpt, skeletal rig and facial performance studies (Issue #35 continuation)
+
+The original low-detail generator remains unchanged. New tools add a separately named, replaceable *deformation-capable study* for Puffino:
+
+1. Run **Tamagoochi > Art > Generate Sculpt-Ready Puffino Rig** to author five UV-mapped skinned mesh assets (48 x 32 parametric topology), 9 pose bones, four face blend shapes and a sculpt study prefab under `Generated/SculptReady/`.
+2. The sculpt generator automatically creates six additional expression clips (happy, pouty, curious, eating, sleepy, blink) with Unity's `blendShape.*` animation bindings.
+3. Use **Tamagoochi > Art > Audit Sculpt-Ready Puffino** and **Audit Facial Animation Clips**. The audit checks mesh/skin/blend-shape/clip identities; it is not a substitute for actual Editor render review.
+4. Run **Tamagoochi > Art > Generate Evolution VFX Studies** and **Audit Evolution VFX Studies** for five finite-burst pastel effect prototypes: heart burst, dream drift, forest growth, lunar evolve and ember evolve.
+5. Blender authoring source lives under `DCC/make_puffino_sculpt.py` and generates an editable `.blend` quad-mesh study plus an exported skinned/morph-target `.glb` *when run in Blender*. See `DCC/README.md`.
+
+### Animation ownership
+
+- `CreaturePerformance` synchronizes `CreatureMotion` with `CreatureFacialRig` and exposes pet/feed/play/sleep/wake interaction and reduced-motion control.
+- Live procedural face/bone motion and baked Animator animation must not write the same bones or blend shapes simultaneously. Disable the relevant procedural component when previewing authored clips, or use additive animation on a separate rig layer.
+- Rig hierarchy and shape-key naming contracts are in `Manifest/ART_PIPELINE.md`; preserve bone names and exposed shape keys across replacement meshes.
+- These studies increase geometric and animation fidelity *infrastructure*, but are not finished organic sculpts or professional effects. Blender and Unity imports/exports still require real tooling and validation.
+
+### Acceptance remains explicit
+
+Static source coverage and repository CI are not proof of Unity C# compilation, prefab generation, actual Blender execution, skinned deformation, or mobile performance. Record each real native/visual result in Issue #35 before claiming that stage complete.
