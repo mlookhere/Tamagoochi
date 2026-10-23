@@ -23,6 +23,12 @@ def _source_path(name: str) -> bool:
     if name in REVIEWED_FILES:
         return True
     path = PurePosixPath(name)
+    if name.startswith("unity/Packages/"):
+        return name != "unity/Packages/packages-lock.json" and (
+            path.suffix.lower() in CODE_EXTENSIONS | {".json", ".meta"}
+        )
+    if name.startswith("unity/ProjectSettings/"):
+        return path.suffix.lower() in CODE_EXTENSIONS
     if not name.startswith("unity/Assets/"):
         return False
     if path.suffix.lower() in CODE_EXTENSIONS:
@@ -41,7 +47,7 @@ def verify(repository: Path, control: Path, migration_sha: str, workflow_sha: st
         raise ValueError("Trusted evidence verifier checkout does not match the workflow SHA")
     if _git(control, "status", "--porcelain=v1", "--ignored=matching", "--untracked-files=all").strip():
         raise ValueError("Trusted verifier checkout is modified, ignored or contains injected files")
-    scope = ("unity/Assets", "unity/Packages/manifest.json", "unity/ProjectSettings/ProjectVersion.txt")
+    scope = ("unity/Assets", "unity/Packages", "unity/ProjectSettings")
     modified = _git(repository, "diff", "--name-only", "-z", "HEAD", "--", *scope)
     untracked = _git(repository, "ls-files", "--others", "-z", "--", *scope)
     reviewed_changes = [p.decode("utf-8", "surrogateescape") for p in modified.split(b"\0") if p]
