@@ -91,7 +91,8 @@ def _ios_build_evidence(ios: Path, provenance: str) -> None:
         raise ValueError("iOS Xcode build log does not report successful compilation")
 
 
-def verify(android: Path, ios: Path, migration_sha: str, workflow_sha: str) -> None:
+def verify(android: Path, ios: Path, migration_sha: str, workflow_sha: str,
+           android_run_id: str, ios_run_id: str) -> None:
     if not SHA40.fullmatch(migration_sha) or not SHA40.fullmatch(workflow_sha):
         raise ValueError("Expected migration/workflow commits must be full 40-character SHAs")
     android_fields = {"migration_sha", "workflow_sha", "run_id", "nunit_sha256", "apk_sha256"}
@@ -102,6 +103,10 @@ def verify(android: Path, ios: Path, migration_sha: str, workflow_sha: str) -> N
         raise ValueError("Android and iOS evidence must match the reviewed migration SHA")
     if a["workflow_sha"] != workflow_sha or i["workflow_sha"] != workflow_sha:
         raise ValueError("Android and iOS evidence must match the trusted workflow SHA")
+    if not all(re.fullmatch(r"[1-9][0-9]*", value) for value in (android_run_id, ios_run_id)):
+        raise ValueError("Expected positive GitHub Actions run IDs from reviewed run URLs")
+    if a["run_id"] != android_run_id or i["run_id"] != ios_run_id:
+        raise ValueError("Android/iOS evidence run IDs do not match the reviewed Actions runs")
     if a["run_id"] == i["run_id"] or i["result"] != "unsigned_xcode_compile_only":
         raise ValueError("Expected independent Android and unsigned iOS build runs")
     reports = list((android / "unity-test-results").rglob("*.xml"))
@@ -122,13 +127,16 @@ def main() -> int:
     parser.add_argument("--ios", type=Path, required=True)
     parser.add_argument("--migration-sha", required=True)
     parser.add_argument("--workflow-sha", required=True)
+    parser.add_argument("--android-run-id", required=True)
+    parser.add_argument("--ios-run-id", required=True)
     args = parser.parse_args()
     try:
-        verify(args.android, args.ios, args.migration_sha, args.workflow_sha)
+        verify(args.android, args.ios, args.migration_sha, args.workflow_sha,
+               args.android_run_id, args.ios_run_id)
     except (OSError, ValueError, ET.ParseError) as error:
         print(f"UNITY MOBILE EVIDENCE REJECTED: {error}", file=sys.stderr)
         return 1
-    print("Native evidence matches reviewed migration and workflow SHAs; signing/device QA not verified")
+    print("Native evidence matches reviewed SHAs and both Actions run IDs; signing/device QA not verified")
     return 0
 
 
