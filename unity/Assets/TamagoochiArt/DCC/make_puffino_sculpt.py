@@ -315,7 +315,9 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     if species != "puffino":
         details = [detail for detail in details if not detail[0].startswith("Horn_")]
     for name, location, scale, mat, bone in details:
-        obj = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
+        foot = name.startswith("Foot_")
+        obj = sculpt_part(name, location, scale, mat, 0,
+                          segments=24 if foot else 16, rings=16 if foot else 12)
         if name.startswith("Eye_"):
             layer = obj.data.uv_layers.active
             for polygon in obj.data.polygons:
@@ -328,6 +330,14 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
                 root = max(0.0, min(1.0, vertex.co.z / 0.19))
                 vertex.co.x *= 1.0 - 0.35 * root
                 vertex.co.y -= 0.045 * max(0.0, -vertex.co.z) / 0.19
+        if name.startswith("Foot_"):
+            obj.data.materials.append(pink)
+            for vertex in obj.data.vertices:
+                vertex.co.y -= 0.018 * max(0.0, -vertex.co.y / 0.25)**2
+            for polygon in obj.data.polygons:
+                c = polygon.center
+                if c.y < -0.12 and c.z < 0.025 and abs(c.x) < 0.18:
+                    polygon.material_index = 1
         if name in ("Mouth", "Eye_L", "Eye_R"):
             face_feature_keys(obj)
         skin(obj, rig, bone)
