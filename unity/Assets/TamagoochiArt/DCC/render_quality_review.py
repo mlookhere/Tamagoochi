@@ -30,12 +30,11 @@ SPECIES = ("puffino", "lunari", "sproutle", "bubblin")
 REQUIRED_MORPHS = ("Smile", "Pout", "CheekPuff", "Curious")
 ANGLES = {"front": 0.0, "three_quarter": 42.0, "side": 90.0, "back": 180.0}
 DETAIL_SIGNATURES = {
-    "puffino": ("Horn_L", "Horn_R", "ForelockPetal_1", "CheekTuft_L_0"),
+    "puffino": ("Horn_L", "Horn_R", "ForelockPetal_1", "LowerLid_L"),
     "lunari": ("Antenna_L", "StarOrb_L", "MoonSigil", "ForelockPetal_1"),
     "sproutle": ("LeafCrown_L", "BloomBud", "LeafFrill_1", "ForelockPetal_1"),
     "bubblin": ("CloudOrb_A", "CloudOrb_B", "BubbleNeck_0", "ForelockPetal_1"),
 }
-
 
 def parse_args() -> argparse.Namespace:
     arguments = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
@@ -145,6 +144,8 @@ def _expression_feature_metrics() -> tuple[list[str], list[str]]:
 def mesh_metrics(species: str) -> dict:
     named = {obj.name for obj in bpy.data.objects}
     missing_details = sorted(set(DETAIL_SIGNATURES[species]) - named)
+    if species == "puffino" and not 0.025 <= bpy.data.objects["Head"].get("integrated_face_relief", 0) <= 0.12:
+        missing_details.append("IntegratedCheekMuzzleSculpt")
     skinned, triangles, uv_failures, weight_failures = _skin_metrics()
     missing_morphs, weak_morphs = _morph_metrics()
     missing_features, weak_features = _expression_feature_metrics()
@@ -165,7 +166,6 @@ def mesh_metrics(species: str) -> dict:
         "missing_uvs": uv_failures,
         "missing_skin_weights": weight_failures,
     }
-
 def _evaluated_points(obj) -> list[Vector]:
     evaluated = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
     mesh = evaluated.to_mesh()
