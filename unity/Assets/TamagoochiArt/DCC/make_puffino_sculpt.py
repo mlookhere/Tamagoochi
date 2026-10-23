@@ -178,11 +178,11 @@ def face_feature_keys(feature: bpy.types.Object) -> None:
                 co.z -= 0.045
 
 
-def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile):
+def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile, lining):
     if name.startswith("Ear"):
         side = -1 if name.endswith("_L") else 1
         obj = petal_ear(name, location,
-                        (scale[0], scale[1], scale[2] * 2), mat, side, species)
+                        (scale[0], scale[1], scale[2] * 2), mat, side, species, lining)
     elif name == "Tail" and species == "puffino":
         obj = curled_puffino_tail(mat, profile)
     else:
@@ -298,11 +298,9 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
         ("Tail", tail_positions[species], tail_scale, tail_bands, "tail_root", "tail_tip"),
     ]
     for name, location, scale, mat, bone, tip in parts:
-        _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile)
+        _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile, pink)
 
     details = [
-        ("Inner_L", (-0.55, -0.11, 1.82), (0.13, 0.05, 0.24), pink, "ear_root_L"),
-        ("Inner_R", (0.55, -0.11, 1.82), (0.13, 0.05, 0.24), pink, "ear_root_R"),
         ("Horn_L", (-0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
         ("Horn_R", (0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
         ("Eye_L", (-0.24, -0.50, 1.20), (0.185, 0.05, 0.205), eyes, "head"),
