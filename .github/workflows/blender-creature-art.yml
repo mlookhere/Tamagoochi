@@ -181,7 +181,7 @@ jobs:
                   if not path.is_file() or path.stat().st_size != recorded_size:
                       raise SystemExit(f"Missing or mismatched native proof: {path}")
                   with path.open("rb") as source:
-                      if source.read(8) != b"\\x89PNG\\r\\n\\x1a\\n":
+                      if source.read(8) != bytes((137, 80, 78, 71, 13, 10, 26, 10)):
                           raise SystemExit(f"Invalid PNG proof: {path}")
               for profile in ("sculpt", "mobile"):
                   for ext, magic in (("blend", b"BLENDER"), ("glb", b"glTF")):
