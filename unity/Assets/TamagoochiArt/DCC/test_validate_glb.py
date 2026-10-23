@@ -8,13 +8,17 @@ from pathlib import Path
 from validate_glb import validate
 
 
-def fixture(path: Path, *, morphs=True, textures=True, triangles=18000) -> None:
+def fixture(path: Path, *, morphs=True, textures=True, triangles=18000,
+            morph_positions=True, split_morphs=False) -> None:
     attrs = {name: 1 for name in ("POSITION", "NORMAL", "TEXCOORD_0", "JOINTS_0", "WEIGHTS_0")}
     head = {"extras": {"targetNames": ["Smile", "Pout", "CheekPuff", "Curious"] if morphs else []},
             "primitives": [{"attributes": attrs, "indices": 0,
-                            "targets": [{"POSITION": 1} for _ in range(4)]}]}
+                            "targets": [{"POSITION": 1} if morph_positions else {} for _ in range(4)]}]}
     meshes = [head] + [{"primitives": [{"attributes": attrs, "indices": 0}]}
                        for _ in range(4)]
+    if split_morphs:
+        head["extras"]["targetNames"] = ["Smile", "Pout"]
+        meshes[1]["extras"] = {"targetNames": ["CheekPuff", "Curious"]}
     doc = {
         "asset": {"version": "2.0"}, "buffers": [{"byteLength": 4}],
         "accessors": [{"count": triangles * 3 // 5}, {"count": 5000}],
@@ -48,6 +52,16 @@ class GlbContractTests(unittest.TestCase):
 
     def test_missing_head_morphs_fail(self):
         fixture(self.path, morphs=False)
+        with self.assertRaisesRegex(ValueError, "morph"):
+            validate(self.path)
+
+    def test_morph_names_split_between_meshes_fail(self):
+        fixture(self.path, split_morphs=True)
+        with self.assertRaisesRegex(ValueError, "morph"):
+            validate(self.path)
+
+    def test_empty_head_morph_position_targets_fail(self):
+        fixture(self.path, morph_positions=False)
         with self.assertRaisesRegex(ValueError, "morph"):
             validate(self.path)
 
