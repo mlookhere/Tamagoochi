@@ -5,6 +5,7 @@ Keep the silhouette expressive and distinct at mobile camera distance.
 """
 
 import math
+from pathlib import Path
 
 import bpy
 
@@ -91,29 +92,48 @@ def configure_fur_shader(material):
     links.new(bump.outputs["Normal"], surface.inputs["Normal"])
 
 
-def configure_tail_bands(material, cream, accent):
-    """Smooth shader-defined ring markings that follow the modeled tail."""
+def configure_tail_bands(material, cream, accent, texture_dir=None):
+    """Exportable UV albedo stripes. Do not rely on Blender-only wave shaders."""
+    size = 256
+    name = material.name + "_Albedo"
+    image = bpy.data.images.new(name=name, width=size, height=size, alpha=True)
+    pixels = []
+    for row in range(size):
+        v = row / max(1, size - 1)
+        for column in range(size):
+            u = column / max(1, size - 1)
+            warp = 0.055 * math.sin(math.tau * (u * 2.0 + v * 0.7))
+            wave = math.sin(math.tau * (3.5 * v + warp))
+            blend = max(0.0, min(1.0, 0.5 + wave * 2.2))
+            grain = 0.975 + 0.025 * math.sin(191.0 * u + 173.0 * v)
+            pixels.extend((
+                (cream[channel] * (1.0 - blend) + accent[channel] * blend) * grain
+                for channel in range(3)
+            ))
+            pixels.append(1.0)
+
+    image.pixels.foreach_set(pixels)
+    image.update()
+    if texture_dir is not None:
+        destination = Path(texture_dir) / "Textures"
+        destination.mkdir(parents=True, exist_ok=True)
+        image.filepath_raw = str(destination / (name + ".png"))
+        image.file_format = "PNG"
+        image.save()
+    else:
+        # Keep a generated image in the source .blend for QA-only runs.
+        image.pack()
+
     material.use_nodes = True
     nodes = material.node_tree.nodes
     links = material.node_tree.links
     surface = nodes.get("Principled BSDF")
-    coordinates = nodes.new("ShaderNodeTexCoord")
-    wave = nodes.new("ShaderNodeTexWave")
-    wave.wave_type = "BANDS"
-    wave.bands_direction = "X"
-    wave.inputs["Scale"].default_value = 4.0
-    wave.inputs["Distortion"].default_value = 1.25
-    wave.inputs["Detail"].default_value = 3.0
-    color = nodes.new("ShaderNodeValToRGB")
-    color.color_ramp.elements[0].position = 0.40
-    color.color_ramp.elements[0].color = cream
-    color.color_ramp.elements[1].position = 0.62
-    color.color_ramp.elements[1].color = accent
-    links.new(coordinates.outputs["Generated"], wave.inputs["Vector"])
-    links.new(wave.outputs["Fac"], color.inputs["Fac"])
-    links.new(color.outputs["Color"], surface.inputs["Base Color"])
+    texture = nodes.new("ShaderNodeTexImage")
+    texture.name = "ExportableTailAlbedo"
+    texture.image = image
+    texture.interpolation = "Linear"
+    links.new(texture.outputs["Color"], surface.inputs["Base Color"])
     configure_fur_shader(material)
-
 
 def decorate_face(species, rig, sculpt_part, skin, palette):
     """Add geometry for framed eyes, cheek fur, brows and paw pads."""
