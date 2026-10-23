@@ -23,7 +23,13 @@ def _source_path(name: str) -> bool:
     if name in REVIEWED_FILES:
         return True
     path = PurePosixPath(name)
-    return name.startswith("unity/Assets/") and path.suffix.lower() in CODE_EXTENSIONS
+    if not name.startswith("unity/Assets/"):
+        return False
+    if path.suffix.lower() in CODE_EXTENSIONS:
+        return True
+    if name.startswith("unity/Assets/Resources/Art/") and path.suffix.lower() == ".png":
+        return True
+    return path.suffix.lower() == ".meta" and path.with_suffix("").suffix.lower() in CODE_EXTENSIONS
 
 
 def verify(repository: Path, control: Path, migration_sha: str, workflow_sha: str) -> None:
@@ -38,10 +44,11 @@ def verify(repository: Path, control: Path, migration_sha: str, workflow_sha: st
     scope = ("unity/Assets", "unity/Packages/manifest.json", "unity/ProjectSettings/ProjectVersion.txt")
     modified = _git(repository, "diff", "--name-only", "-z", "HEAD", "--", *scope)
     untracked = _git(repository, "ls-files", "--others", "-z", "--", *scope)
-    changes = [p.decode("utf-8", "surrogateescape") for p in (modified + untracked).split(b"\0") if p]
-    changed_sources = sorted({name for name in changes if _source_path(name)})
+    reviewed_changes = [p.decode("utf-8", "surrogateescape") for p in modified.split(b"\0") if p]
+    added_files = [p.decode("utf-8", "surrogateescape") for p in untracked.split(b"\0") if p]
+    changed_sources = sorted(set(reviewed_changes) | {name for name in added_files if _source_path(name)})
     if changed_sources:
-        raise ValueError("Reviewed Unity executable sources changed: " + ", ".join(changed_sources))
+        raise ValueError("Reviewed Unity assets or executable sources changed: " + ", ".join(changed_sources))
 
 
 def main() -> int:
