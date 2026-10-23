@@ -351,6 +351,19 @@ class NativeWorkflowPolicyTests(unittest.TestCase):
                     if "uses: " in line:
                         self.assertRegex(line.split("uses: ", 1)[1], r"^[^@ ]+@[0-9a-f]{40}(?:\s|$)")
 
+    def test_android_verifier_stays_trusted_after_running_unity(self):
+        source = (self.WORKFLOWS / "unity-native.yml").read_text()
+        build = source.index("      - name: Build and verify Android player via pinned Unity")
+        checkout = source.index("      - name: Check out trusted workflow verifier separately")
+        guard = source.index("      - name: Verify trusted evidence verifier was not modified by Unity code")
+        verify = source.index("      - name: Reject missing/failed NUnit reports or Android APK")
+        self.assertLess(checkout, build)
+        self.assertLess(build, guard)
+        self.assertLess(guard, verify)
+        self.assertIn('git -C .unity-ci-control rev-parse HEAD', source)
+        self.assertIn('git -C .unity-ci-control diff --quiet HEAD -- ci/verify_unity_native.py', source)
+        self.assertIn('WORKFLOW_SHA: ${{ github.workflow_sha }}', source)
+
     def test_native_platforms_require_distinct_execution_evidence(self):
         android = (self.WORKFLOWS / "unity-native.yml").read_text()
         ios = (self.WORKFLOWS / "unity-ios-native.yml").read_text()
