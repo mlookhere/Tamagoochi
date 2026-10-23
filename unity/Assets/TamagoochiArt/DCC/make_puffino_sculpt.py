@@ -15,12 +15,14 @@ from pathlib import Path
 
 import bpy
 from mathutils import Vector
+from sculpt_details import petal_ear, configure_fur_shader, configure_tail_bands, decorate_face
 
 
 def parse_args() -> argparse.Namespace:
     args = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--profile", choices=("sculpt", "mobile"), default="sculpt")
     parser.add_argument("--species", choices=("puffino", "lunari", "sproutle", "bubblin"),
                         default="puffino")
     return parser.parse_args(args)
@@ -45,10 +47,12 @@ def sculpt_part(
     dimensions: tuple[float, float, float],
     mat: bpy.types.Material,
     subdivisions: int = 1,
+    segments: int = 48,
+    rings: int = 32,
 ) -> bpy.types.Object:
     bpy.ops.mesh.primitive_uv_sphere_add(
-        segments=48,
-        ring_count=32,
+        segments=segments,
+        ring_count=rings,
         location=location,
     )
     obj = bpy.context.object
@@ -143,7 +147,7 @@ def face_keys(head: bpy.types.Object) -> None:
                 co.z += 0.05 * front
 
 
-def build_creature(rig: bpy.types.Object, species: str) -> None:
+def build_creature(rig: bpy.types.Object, species: str, profile: str) -> None:
     palettes = {
         "puffino": ((0.95, 0.82, 0.71, 1), (0.95, 0.48, 0.32, 1),
                     (1.0, 0.64, 0.60, 1), (0.17, 0.10, 0.15, 1)),
@@ -161,6 +165,14 @@ def build_creature(rig: bpy.types.Object, species: str) -> None:
     dark = material(species + "_Eyes", eye_color)
     shine = material(species + "_Light", (1.0, 0.98, 0.92, 1))
     brown = material(species + "_Nubs", (0.63, 0.30, 0.18, 1))
+    tail_bands = material(species + "_TailBands", accent_color)
+    configure_tail_bands(tail_bands, body_color, accent_color)
+    for fur in (ivory, coral, pink):
+        configure_fur_shader(fur)
+    eye_node = dark.node_tree.nodes.get("Principled BSDF")
+    eye_node.inputs["Roughness"].default_value = 0.12
+    if eye_node.inputs.get("Coat Weight") is not None:
+        eye_node.inputs["Coat Weight"].default_value = 0.4
     ear_scale = {
         "puffino": (0.22, 0.13, 0.35),
         "lunari": (0.26, 0.11, 0.45),
@@ -173,10 +185,18 @@ def build_creature(rig: bpy.types.Object, species: str) -> None:
         ("Head", (0, -0.04, 1.18), (0.57, 0.49, 0.48), ivory, "head", None),
         ("Ear_L", (-0.55, 0, 1.80), ear_scale, coral, "ear_root_L", "ear_tip_L"),
         ("Ear_R", (0.55, 0, 1.80), ear_scale, coral, "ear_root_R", "ear_tip_R"),
-        ("Tail", (0.77, 0.50, 0.76), (0.42, 0.32, 0.37), coral, "tail_root", "tail_tip"),
+        ("Tail", (0.77, 0.50, 0.76), (0.42, 0.32, 0.37), tail_bands, "tail_root", "tail_tip"),
     ]
     for name, location, scale, mat, bone, tip in parts:
-        obj = sculpt_part(name, location, scale, mat)
+        if name.startswith("Ear"):
+            side = -1 if name.endswith("_L") else 1
+            obj = petal_ear(name, location,
+                            (scale[0], scale[1], scale[2] * 2), mat, side, species)
+        else:
+            sculpt_subdiv = 1 if profile == "sculpt" else 0
+            segments, rings = (48, 32) if profile == "sculpt" else (32, 20)
+            obj = sculpt_part(name, location, scale, mat, sculpt_subdiv,
+                              segments=segments, rings=rings)
         if name == "Head":
             face_keys(obj)
         if name.startswith("Ear"):
@@ -205,7 +225,7 @@ def build_creature(rig: bpy.types.Object, species: str) -> None:
     if species != "puffino":
         details = [detail for detail in details if not detail[0].startswith("Horn_")]
     for name, location, scale, mat, bone in details:
-        obj = sculpt_part(name, location, scale, mat, 0)
+        obj = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
         skin(obj, rig, bone)
     extras = []
     if species == "lunari":
@@ -228,8 +248,10 @@ def build_creature(rig: bpy.types.Object, species: str) -> None:
             ("CloudOrb_C", (0.43, 0.07, 1.70), (0.14, 0.14, 0.14), pink),
         ]
     for name, location, scale, mat in extras:
-        ornament = sculpt_part(name, location, scale, mat, 0)
+        ornament = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
         skin(ornament, rig, "head")
+    decorate_face(species, rig, sculpt_part, skin,
+                  (ivory, coral, pink, dark, shine, brown))
 
 
 def studio() -> None:
@@ -262,17 +284,19 @@ def main() -> None:
     output.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     rig = create_armature()
-    build_creature(rig, args.species)
+    build_creature(rig, args.species, args.profile)
     studio()
     bpy.context.scene["artifact_status"] = "SCULPT_STUDY_NOT_FINAL"
     bpy.context.scene["source_species"] = args.species
+    bpy.context.scene["quality_profile"] = args.profile
     bpy.context.scene.render.resolution_x = 1024
     bpy.context.scene.render.resolution_y = 1024
     bpy.context.scene.render.resolution_percentage = 100
 
-    bpy.ops.wm.save_as_mainfile(filepath=str(output / (args.species + "_sculpt_study.blend")))
+    name = args.species + "_" + args.profile
+    bpy.ops.wm.save_as_mainfile(filepath=str(output / (name + ".blend")))
     bpy.ops.export_scene.gltf(
-        filepath=str(output / (args.species + "_sculpt_study.glb")),
+        filepath=str(output / (name + ".glb")),
         export_format="GLB",
         export_skins=True,
         export_morph=True,
