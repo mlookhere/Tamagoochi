@@ -45,6 +45,11 @@ def _synthetic_dex() -> bytes:
     return bytes(header)
 
 
+def _add_synthetic_unity_payload(archive: zipfile.ZipFile) -> None:
+    archive.writestr("lib/arm64-v8a/libunity.so", b"\x7fELF" + bytes(60))
+    archive.writestr("assets/bin/Data/globalgamemanagers", b"synthetic-player-data")
+
+
 PASS = (f'<test-run result="Passed" total="{MINIMUM_EDITMODE_CASES}" '
         f'passed="{MINIMUM_EDITMODE_CASES}" failed="0" skipped="0" inconclusive="0">'
         '<test-suite type="Assembly">'
@@ -81,6 +86,7 @@ class NativeEvidenceTests(unittest.TestCase):
         with zipfile.ZipFile(self.apk, "w") as archive:
             archive.writestr("AndroidManifest.xml", _synthetic_manifest())
             archive.writestr("classes.dex", _synthetic_dex())
+            _add_synthetic_unity_payload(archive)
 
     def assert_rejected(self):
         with self.assertRaises((ValueError, OSError, ET.ParseError, zipfile.BadZipFile)) as caught:
@@ -268,6 +274,30 @@ class NativeEvidenceTests(unittest.TestCase):
             archive.writestr("AndroidManifest.xml", contents)
             archive.writestr("classes.dex", _synthetic_dex())
         self.assert_rejected()
+
+    def test_apk_without_unity_runtime_fails(self):
+        with zipfile.ZipFile(self.apk, "w") as archive:
+            archive.writestr("AndroidManifest.xml", _synthetic_manifest())
+            archive.writestr("classes.dex", _synthetic_dex())
+            archive.writestr("assets/bin/Data/globalgamemanagers", b"player-data")
+        self.assert_rejected()
+
+    def test_apk_without_unity_player_data_fails(self):
+        with zipfile.ZipFile(self.apk, "w") as archive:
+            archive.writestr("AndroidManifest.xml", _synthetic_manifest())
+            archive.writestr("classes.dex", _synthetic_dex())
+            archive.writestr("lib/arm64-v8a/libunity.so", b"\x7fELF" + bytes(60))
+        self.assert_rejected()
+
+    def test_invalid_unity_runtime_or_empty_data_fails(self):
+        for runtime, data in [(b"not-an-elf", b"data"), (b"\x7fELF", b"")]:
+            with self.subTest(runtime=runtime, data_len=len(data)):
+                with zipfile.ZipFile(self.apk, "w") as archive:
+                    archive.writestr("AndroidManifest.xml", _synthetic_manifest())
+                    archive.writestr("classes.dex", _synthetic_dex())
+                    archive.writestr("lib/arm64-v8a/libunity.so", runtime)
+                    archive.writestr("assets/bin/Data/globalgamemanagers", data)
+                self.assert_rejected()
 
     def test_apk_without_android_manifest_fails(self):
         with zipfile.ZipFile(self.apk, "w") as archive:
