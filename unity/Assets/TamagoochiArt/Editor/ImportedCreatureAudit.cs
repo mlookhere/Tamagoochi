@@ -44,6 +44,18 @@ namespace Tamagoochi.Art.Editor
                     GameObject model = UnityEngine.Object.Instantiate(imported, root.transform);
                     model.name = "SkinnedModel";
                     root.AddComponent<CreatureIdentity>().Configure(species, species, "");
+                    SkinnedMeshRenderer face = Array.Find(
+                        model.GetComponentsInChildren<SkinnedMeshRenderer>(true),
+                        renderer => renderer.name == "Head");
+                    if (!face)
+                        throw new InvalidOperationException("Missing imported face: " + species);
+                    var facial = root.AddComponent<CreatureFacialRig>();
+                    facial.Configure(face, FindPart(model, "Eye_L"), FindPart(model, "Eye_R"));
+                    var motion = root.AddComponent<CreatureMotion>();
+                    motion.Configure(model.transform, FindPart(model, "head"),
+                        FindPart(model, "ear_tip_L"), FindPart(model, "ear_tip_R"),
+                        FindPart(model, "tail_tip"), null, null);
+                    root.AddComponent<CreaturePerformance>().Configure(motion, facial);
                     var collider = root.AddComponent<CapsuleCollider>();
                     collider.center = new Vector3(0f, 0.9f, 0f);
                     collider.height = 1.8f;
@@ -74,6 +86,15 @@ namespace Tamagoochi.Art.Editor
             EditorUtility.SetDirty(catalog);
             AssetDatabase.SaveAssets();
             Debug.Log("Four imported mobile creature preview prefabs generated. These are not final art.");
+        }
+
+        private static Transform FindPart(GameObject model, string name)
+        {
+            Transform part = Array.Find(model.GetComponentsInChildren<Transform>(true),
+                transform => transform.name == name);
+            if (!part)
+                throw new InvalidOperationException("Missing imported rig part: " + name);
+            return part;
         }
 
         private static void AuditModel(string species, string profile)
