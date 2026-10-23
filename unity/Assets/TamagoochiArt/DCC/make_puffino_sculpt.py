@@ -259,12 +259,20 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
         "bubblin": (0.30, 0.16, 0.32),
     }[species]
 
+    # Different proportions are visible even with all species rendered in silhouette.
+    silhouette = {
+        "puffino": ((0.49, 0.42, 0.57), (0.57, 0.49, 0.48), (0.42, 0.32, 0.37)),
+        "lunari": ((0.40, 0.36, 0.67), (0.54, 0.46, 0.54), (0.36, 0.28, 0.44)),
+        "sproutle": ((0.57, 0.46, 0.64), (0.54, 0.46, 0.50), (0.31, 0.27, 0.38)),
+        "bubblin": ((0.63, 0.49, 0.46), (0.66, 0.53, 0.49), (0.45, 0.35, 0.33)),
+    }
+    body_scale, head_scale, tail_scale = silhouette[species]
     parts = [
-        ("Body", (0, 0, 0.62), (0.49, 0.42, 0.57), ivory, "body", None),
-        ("Head", (0, -0.04, 1.18), (0.57, 0.49, 0.48), ivory, "head", None),
+        ("Body", (0, 0, 0.62), body_scale, ivory, "body", None),
+        ("Head", (0, -0.04, 1.18), head_scale, ivory, "head", None),
         ("Ear_L", (-0.55, 0, 1.80), ear_scale, coral, "ear_root_L", "ear_tip_L"),
         ("Ear_R", (0.55, 0, 1.80), ear_scale, coral, "ear_root_R", "ear_tip_R"),
-        ("Tail", (0.77, 0.50, 0.76), (0.42, 0.32, 0.37), tail_bands, "tail_root", "tail_tip"),
+        ("Tail", (0.77, 0.50, 0.76), tail_scale, tail_bands, "tail_root", "tail_tip"),
     ]
     for name, location, scale, mat, bone, tip in parts:
         _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile)
