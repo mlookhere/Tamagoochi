@@ -33,6 +33,18 @@ def _art_case(asset: str) -> str:
             f"fullname='{fixture}.{case}' result=\"Passed\"/>")
 
 
+def _synthetic_manifest() -> bytes:
+    body = b"synthetic-test-manifest"
+    return b"\x03\x00\x08\x00" + (len(body) + 8).to_bytes(4, "little") + body
+
+
+def _synthetic_dex() -> bytes:
+    header = bytearray(0x70)
+    header[:8] = b"dex\n035\x00"
+    header[32:36] = len(header).to_bytes(4, "little")
+    return bytes(header)
+
+
 PASS = (f'<test-run result="Passed" total="{MINIMUM_EDITMODE_CASES}" '
         f'passed="{MINIMUM_EDITMODE_CASES}" failed="0" skipped="0" inconclusive="0">'
         '<test-suite type="Assembly">'
@@ -67,8 +79,8 @@ class NativeEvidenceTests(unittest.TestCase):
         self.xml.write_text(PASS)
         self.apk = root / "Tamagoochi.apk"
         with zipfile.ZipFile(self.apk, "w") as archive:
-            archive.writestr("AndroidManifest.xml", b"\x03\x00\x08\x00" + b"synthetic")
-            archive.writestr("classes.dex", b"dex\n035\x00" + b"synthetic")
+            archive.writestr("AndroidManifest.xml", _synthetic_manifest())
+            archive.writestr("classes.dex", _synthetic_dex())
 
     def assert_rejected(self):
         with self.assertRaises((ValueError, OSError, ET.ParseError, zipfile.BadZipFile)) as caught:
@@ -234,17 +246,28 @@ class NativeEvidenceTests(unittest.TestCase):
     def test_uncompiled_manifest_fails(self):
         with zipfile.ZipFile(self.apk, "w") as archive:
             archive.writestr("AndroidManifest.xml", "not-binary-xml")
-            archive.writestr("classes.dex", b"dex\n035\x00")
+            archive.writestr("classes.dex", _synthetic_dex())
         self.assert_rejected()
 
     def test_missing_or_invalid_dex_fails(self):
-        for include_dex, contents in [(False, b""), (True, b"not-dex")]:
-            with self.subTest(include_dex=include_dex):
+        for include_dex, contents in [
+            (False, b""), (True, b"not-dex"), (True, b"dex\n"),
+            (True, _synthetic_dex()[:32] + b"\x00\x00\x00\x00" + _synthetic_dex()[36:]),
+        ]:
+            with self.subTest(dex_length=len(contents), present=include_dex):
                 with zipfile.ZipFile(self.apk, "w") as archive:
-                    archive.writestr("AndroidManifest.xml", b"\x03\x00\x08\x00")
+                    archive.writestr("AndroidManifest.xml", _synthetic_manifest())
                     if include_dex:
                         archive.writestr("classes.dex", contents)
                 self.assert_rejected()
+
+    def test_manifest_with_wrong_declared_length_fails(self):
+        contents = bytearray(_synthetic_manifest())
+        contents[4:8] = (len(contents) + 1).to_bytes(4, "little")
+        with zipfile.ZipFile(self.apk, "w") as archive:
+            archive.writestr("AndroidManifest.xml", contents)
+            archive.writestr("classes.dex", _synthetic_dex())
+        self.assert_rejected()
 
     def test_apk_without_android_manifest_fails(self):
         with zipfile.ZipFile(self.apk, "w") as archive:
