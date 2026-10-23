@@ -60,11 +60,11 @@ namespace Tamagoochi.Art.Editor
             if (facial.blendShapeCount != 4)
                 throw new InvalidOperationException("The facial mesh must expose exactly four shapes.");
 
-            SaveMesh(torso, "puffino_body");
-            SaveMesh(facial, "puffino_face");
-            SaveMesh(earLeft, "puffino_ear_left");
-            SaveMesh(earRight, "puffino_ear_right");
-            SaveMesh(tailMesh, "puffino_tail");
+            torso = SaveMesh(torso, "puffino_body");
+            facial = SaveMesh(facial, "puffino_face");
+            earLeft = SaveMesh(earLeft, "puffino_ear_left");
+            earRight = SaveMesh(earRight, "puffino_ear_right");
+            tailMesh = SaveMesh(tailMesh, "puffino_tail");
 
             Skin("BodyMesh", visual, torso, cream, new[] { body, head },
                 v => Mathf.SmoothStep(0f, 0.32f, Mathf.InverseLerp(0.76f, 1.16f, v.y)));
@@ -277,12 +277,20 @@ namespace Tamagoochi.Art.Editor
             }
         }
 
-        private static void SaveMesh(Mesh mesh, string filename)
+        private static Mesh SaveMesh(Mesh mesh, string filename)
         {
             string path = MeshFolder + "/" + filename + ".asset";
             Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-            if (existing) AssetDatabase.DeleteAsset(path);
+            if (existing)
+            {
+                // Preserve Unity GUIDs and prefab references during regeneration.
+                EditorUtility.CopySerialized(mesh, existing);
+                UnityEngine.Object.DestroyImmediate(mesh);
+                EditorUtility.SetDirty(existing);
+                return existing;
+            }
             AssetDatabase.CreateAsset(mesh, path);
+            return mesh;
         }
 
         private static SkinnedMeshRenderer Skin(string name, Transform parent, Mesh mesh,
