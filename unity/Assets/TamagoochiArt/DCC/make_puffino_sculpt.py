@@ -258,7 +258,15 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     for name, location, scale, mat in extras:
         ornament = sculpt_part(name, location, scale, mat, 0, segments=16, rings=12)
         skin(ornament, rig, "head")
-    decorate_face(species, rig, sculpt_part, skin,
+    # Keep full sculpt geometry while reducing ONLY mobile accessory topology.
+    # This preserves original facial silhouettes and enforces the GLB triangle gate.
+    def face_detail(name, location, dimensions, material, subdivisions=0):
+        if profile == "sculpt":
+            return sculpt_part(name, location, dimensions, material, subdivisions)
+        return sculpt_part(name, location, dimensions, material, 0,
+                           segments=12, rings=8)
+
+    decorate_face(species, rig, face_detail, skin,
                   (ivory, coral, pink, dark, shine, brown))
 
 
