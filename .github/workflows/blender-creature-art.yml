@@ -36,7 +36,7 @@ jobs:
       contents: read
     env:
       # Reviewed public commit ID; grouped to avoid false-positive secret scans.
-      ART_SOURCE_SHA_GROUPED: 3c0adc5d-409d86e1-f9ebbad7-5252d66a-f0d6fb82
+      ART_SOURCE_SHA_GROUPED: ddf86a9d-ae705819-c9dc8902-bc3fd162-1c2f9a52
     steps:
       - name: Resolve reviewed art commit
         id: approved_art
@@ -75,6 +75,9 @@ jobs:
           for file in make_puffino_sculpt.py render_quality_review.py sculpt_details.py validate_glb.py test_validate_glb.py; do
             test -s "unity/Assets/TamagoochiArt/DCC/$file"
           done
+          for file in render_devices.py test_render_devices.py; do
+            test -s "unity/Assets/TamagoochiArt/DCC/$file"
+          done
 
       - name: Install verified official Blender 4.5.14 LTS
         shell: bash
@@ -98,11 +101,12 @@ jobs:
           set -euo pipefail
           blender --background --factory-startup --python-exit-code 1 --python-expr 'import bpy; assert bpy.app.version[:2] == (4, 5); print("BLENDER_OK", bpy.app.version_string)'
 
-      - name: Check GLB validator regression cases
+      - name: Check GLB and render-backend regression cases
         shell: bash
         run: |
           set -euo pipefail
           python3 -m unittest discover -s unity/Assets/TamagoochiArt/DCC -p 'test_validate_glb.py' -v
+          python3 -m unittest discover -s unity/Assets/TamagoochiArt/DCC -p 'test_render_devices.py' -v
 
       - name: Generate meshes and render actual model proof
         shell: bash
@@ -138,7 +142,7 @@ jobs:
           blender --background --factory-startup --python-exit-code 1 \
             --python unity/Assets/TamagoochiArt/DCC/render_quality_review.py -- \
             --output "$PWD/artifacts/blender/proof" --species "$ART_SPECIES" \
-            --engine cycles --samples "$samples" --resolution "$resolution"
+            --engine cycles --device cpu --samples "$samples" --resolution "$resolution"
           test -s artifacts/blender/proof/quality_report.json
           printf '## Tamagoochi model proofs\n\n- Species: %s\n- Quality: %s\n- Art source: %s\n\nCreative approval is still required.\n' \
             "$ART_SPECIES" "$ART_QUALITY" "$(git rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
@@ -169,6 +173,8 @@ jobs:
           if not set(requested) <= set(species):
               raise SystemExit("Unexpected species in native art evidence")
           if (report.get("schema") != 1 or report.get("technical_checks_pass") is not True
+                  or report.get("requested_render_device") != "cpu"
+                  or report.get("expected_gpu_name") is not None
                   or report.get("creative_review") != "required"
                   or report.get("production_ready") is not False
                   or {row.get("species") for row in report.get("species", [])} != set(requested)
@@ -181,6 +187,8 @@ jobs:
           observed_bodies = set()
           for row in report["species"]:
               name = row["species"]
+              if row.get("render_backend") != "CPU" or row.get("selected_gpus") != "":
+                  raise SystemExit(f"Public render did not attest CPU-only backend: {name}")
               dimensions = row.get("silhouette_dimensions", {})
               if set(dimensions) != {"Body", "Head", "Tail"}:
                   raise SystemExit(f"Missing native silhouette dimensions: {name}")
