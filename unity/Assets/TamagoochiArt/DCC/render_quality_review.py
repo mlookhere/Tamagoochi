@@ -40,18 +40,18 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args(arguments)
 
 
-def reset(species: str):
+def reset(species: str, profile: str = "sculpt"):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     rig = create_armature()
-    build_creature(rig, species, "sculpt")
+    build_creature(rig, species, profile)
     studio()
     scene = bpy.context.scene
 
-    # Never fall back silently to flat Workbench renders for art approval.
-    try:
-        scene.render.engine = "BLENDER_EEVEE_NEXT"
-    except TypeError:
-        scene.render.engine = "BLENDER_EEVEE"
+    # Blender 4.2–4.x changed the EEVEE engine identifier.
+    version = bpy.app.version
+    engine = ("BLENDER_EEVEE_NEXT" if (4, 2, 0) <= version < (5, 0, 0)
+              else "BLENDER_EEVEE")
+    scene.render.engine = engine
     scene.render.image_settings.file_format = "PNG"
     scene.render.film_transparent = False
     return rig
@@ -159,6 +159,11 @@ def species_review(species: str, target: Path, resolution: int) -> dict:
     screenshots["phone_256"] = save_render(phone, 256)
     metrics["proof_images"] = screenshots
 
+    # Review both genuine sculpt study and optimized mobile topology.
+    reset(species, "mobile")
+    metrics["mobile_triangles"] = mesh_metrics(species)["triangles"]
+    metrics["mobile_budget"] = 30000
+
     failures = (
         metrics["missing_signature_features"] or
         metrics["missing_morphs"] or
@@ -168,6 +173,8 @@ def species_review(species: str, target: Path, resolution: int) -> dict:
         metrics["skinned_parts"] < 5 or
         metrics["mesh_objects"] < 20 or
         metrics["triangles"] < 12000 or
+        metrics["mobile_triangles"] >= metrics["triangles"] or
+        metrics["mobile_triangles"] > metrics["mobile_budget"] or
         any(size < (3000 if name == "phone_256" else 15000)
             for name, size in screenshots.items())
     )
