@@ -169,7 +169,6 @@ class UnitySourceIntegrityTests(unittest.TestCase):
         self.verify()
 
     def test_changed_editor_version_fails(self):
-    def test_changed_editor_version_fails(self):
         self.version.write_text("m_EditorVersion: 2022.3.0f1")
         with self.assertRaisesRegex(ValueError, "ProjectVersion.txt"):
             self.verify()
