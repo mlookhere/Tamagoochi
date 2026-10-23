@@ -71,14 +71,11 @@ def reset(species: str, profile: str = "sculpt", engine: str = "cycles",
     return rig
 
 
-def mesh_metrics(species: str) -> dict:
-    named = {obj.name for obj in bpy.data.objects}
-    missing_details = sorted(set(DETAIL_SIGNATURES[species]) - named)
-    skinned = []
+def _skin_metrics() -> tuple[int, int, list[str], list[str]]:
+    skinned = 0
     triangles = 0
     uv_failures = []
     weight_failures = []
-
     for obj in bpy.data.objects:
         if obj.type != "MESH":
             continue
@@ -87,42 +84,48 @@ def mesh_metrics(species: str) -> dict:
         triangles += len(mesh.loop_triangles)
         if not mesh.uv_layers:
             uv_failures.append(obj.name)
-
-        deforms = [modifier for modifier in obj.modifiers if modifier.type == "ARMATURE"]
-        if deforms:
-            skinned.append(obj.name)
+        if any(modifier.type == "ARMATURE" for modifier in obj.modifiers):
+            skinned += 1
             if len(obj.vertex_groups) == 0:
                 weight_failures.append(obj.name)
+    return skinned, triangles, uv_failures, weight_failures
 
+
+def _morph_metrics() -> tuple[list[str], list[str]]:
     heads = [obj for obj in bpy.data.objects if obj.name == "Head" and obj.type == "MESH"]
-    missing_morphs = []
-    weak_morphs = []
     if len(heads) != 1 or not heads[0].data.shape_keys:
-        missing_morphs = list(REQUIRED_MORPHS)
-    else:
-        blocks = heads[0].data.shape_keys.key_blocks
-        for name in REQUIRED_MORPHS:
-            if name not in blocks:
-                missing_morphs.append(name)
-                continue
-            base = blocks["Basis"].data
-            target = blocks[name].data
-            movement = max((a.co - b.co).length for a, b in zip(base, target))
-            if movement < 0.008:
-                weak_morphs.append(name)
+        return list(REQUIRED_MORPHS), []
+    blocks = heads[0].data.shape_keys.key_blocks
+    missing = []
+    weak = []
+    for name in REQUIRED_MORPHS:
+        if name not in blocks:
+            missing.append(name)
+            continue
+        base = blocks["Basis"].data
+        target = blocks[name].data
+        movement = max((a.co - b.co).length for a, b in zip(base, target))
+        if movement < 0.008:
+            weak.append(name)
+    return missing, weak
 
+
+def mesh_metrics(species: str) -> dict:
+    named = {obj.name for obj in bpy.data.objects}
+    missing_details = sorted(set(DETAIL_SIGNATURES[species]) - named)
+    skinned, triangles, uv_failures, weight_failures = _skin_metrics()
+    missing_morphs, weak_morphs = _morph_metrics()
     return {
         "species": species,
         "mesh_objects": sum(obj.type == "MESH" for obj in bpy.data.objects),
         "triangles": triangles,
-        "skinned_parts": len(skinned),
+        "skinned_parts": skinned,
         "missing_signature_features": missing_details,
         "missing_morphs": missing_morphs,
         "weak_morphs": weak_morphs,
         "missing_uvs": uv_failures,
         "missing_skin_weights": weight_failures,
     }
-
 
 def move_camera(degrees: float) -> None:
     angle = math.radians(degrees)
