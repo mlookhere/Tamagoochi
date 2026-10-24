@@ -63,8 +63,8 @@ MACHO_FAT = {
 def _thin_arm64(binary, expected_type: int) -> bool:
     magic = binary.read(4)
     endian = MACHO_THIN.get(magic)
-    header = binary.read(12)
-    return bool(endian and len(header) == 12 and
+    header = binary.read(28)
+    return bool(endian and len(header) == 28 and
                 int.from_bytes(header[:4], endian) == MACHO_ARM64 and
                 int.from_bytes(header[8:12], endian) == expected_type)
 
