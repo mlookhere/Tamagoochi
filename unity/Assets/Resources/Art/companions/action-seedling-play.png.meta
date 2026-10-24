@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: c90865072555e473e546f5f93fce42b7 # pragma: allowlist secret
+TextureImporter:
+  externalObjects: {}
+  mipmaps:
+    enableMipMap: 0
+  isReadable: 0
+  textureType: 8
+  spriteMode: 1
+  spritePixelsToUnits: 100
+  userData:
+  assetBundleName:
+  assetBundleVariant:
