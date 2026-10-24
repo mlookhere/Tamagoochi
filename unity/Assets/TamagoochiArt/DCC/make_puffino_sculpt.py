@@ -335,17 +335,19 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     ]
     for name, location, scale, mat, bone, tip in parts:
         _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile, pink)
+    eye_y, eye_depth = (-0.555, 0.10) if species == "puffino" else (-0.45, 0.028)
+    mouth_y = -0.57 if species == "puffino" else -0.48
     details = [
         ("Horn_L", (-0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
         ("Horn_R", (0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
-        ("Eye_L", (-0.24, -0.45, 1.20), (0.185, 0.028, 0.205), eyes, "head"),
-        ("Eye_R", (0.24, -0.45, 1.20), (0.185, 0.028, 0.205), eyes, "head"),
+        ("Eye_L", (-0.24, eye_y, 1.20), (0.185, eye_depth, 0.205), eyes, "head"),
+        ("Eye_R", (0.24, eye_y, 1.20), (0.185, eye_depth, 0.205), eyes, "head"),
         ("Paw_L", (-0.32, -0.34, 0.61), (0.17, 0.18, 0.19), ivory, "body"),
         ("Paw_R", (0.32, -0.34, 0.61), (0.17, 0.18, 0.19), ivory, "body"),
         ("Foot_L", (-0.32, -0.25, 0.16), (0.23, 0.25, 0.12), coral, "body"),
         ("Foot_R", (0.32, -0.25, 0.16), (0.23, 0.25, 0.12), coral, "body"),
-        ("Nose", (0, -0.54, 1.02), (0.07, 0.05, 0.05), brown, "head"),
-        ("Mouth", (0, -0.48, 0.93), (0.12, 0.07, 0.08), dark, "jaw"),
+        ("Nose", (0, mouth_y-0.03, 1.02), (0.07, 0.05, 0.05), brown, "head"),
+        ("Mouth", (0, mouth_y, 0.93), (0.12, 0.07, 0.08), dark, "jaw"),
     ]
     if species != "puffino":
         details = [detail for detail in details if not detail[0].startswith("Horn_")]
