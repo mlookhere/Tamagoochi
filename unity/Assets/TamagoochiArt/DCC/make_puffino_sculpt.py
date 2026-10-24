@@ -191,7 +191,7 @@ def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profi
         segments, rings = (48, 32) if profile == "sculpt" else (32, 20)
         obj = sculpt_part(name, location, scale, mat, sculpt_subdiv,
                           segments=segments, rings=rings)
-    if name == "Head" and species == "puffino":
+    if name == "Head":
         relief = 0.0
         for vertex in obj.data.vertices:
             x, y, z = vertex.co
@@ -201,7 +201,7 @@ def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profi
             eye = math.hypot((abs(x) - 0.24) / 0.16, z / 0.19)
             socket = math.exp(-(eye / 0.63)**4)
             rim = math.exp(-((eye - 1.15) / 0.27)**2)
-            displacement = front * (0.032 * socket - 0.042 * cheek
+            displacement = front * (0.060 * socket - 0.042 * cheek
                                     - 0.053 * muzzle - 0.018 * rim)
             vertex.co.y += displacement
             relief = max(relief, abs(displacement))
@@ -330,8 +330,8 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     details = [
         ("Horn_L", (-0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
         ("Horn_R", (0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
-        ("Eye_L", (-0.24, -0.50, 1.20), (0.185, 0.05, 0.205), eyes, "head"),
-        ("Eye_R", (0.24, -0.50, 1.20), (0.185, 0.05, 0.205), eyes, "head"),
+        ("Eye_L", (-0.24, -0.45, 1.20), (0.185, 0.028, 0.205), eyes, "head"),
+        ("Eye_R", (0.24, -0.45, 1.20), (0.185, 0.028, 0.205), eyes, "head"),
         ("Paw_L", (-0.32, -0.34, 0.61), (0.17, 0.18, 0.19), ivory, "body"),
         ("Paw_R", (0.32, -0.34, 0.61), (0.17, 0.18, 0.19), ivory, "body"),
         ("Foot_L", (-0.32, -0.25, 0.16), (0.23, 0.25, 0.12), coral, "body"),
