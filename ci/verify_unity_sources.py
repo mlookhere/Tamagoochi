@@ -28,7 +28,7 @@ def _source_path(name: str) -> bool:
             path.suffix.lower() in CODE_EXTENSIONS | {".json", ".meta"}
         )
     if name.startswith("unity/ProjectSettings/"):
-        return path.suffix.lower() in CODE_EXTENSIONS
+        return True
     if not name.startswith("unity/Assets/"):
         return False
     if path.suffix.lower() in CODE_EXTENSIONS:
