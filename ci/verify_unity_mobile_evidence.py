@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path, PurePosixPath
 
-from ci.verify_unity_native import MINIMUM_EDITMODE_CASES, _validate_apk
+from ci.verify_unity_native import MINIMUM_EDITMODE_CASES, REQUIRED_TESTS, _validate_apk
 
 SHA40 = re.compile(r"[0-9a-f]{40}")
 SHA256 = re.compile(r"[0-9a-f]{64}")
@@ -156,6 +156,15 @@ def _nunit_report_passed(path: Path) -> None:
     names = [case.get("fullname") or case.get("name") for case in cases]
     if len(set(names)) != total or any(not name for name in names):
         raise ValueError("Archived Unity NUnit test identities are incomplete or duplicated")
+    authored = {
+        case.get("methodname")
+        for case in cases
+        if (case.get("name") == case.get("methodname") and
+            (case.get("classname") or "").startswith("Tamagoochi.Tests.") and
+            case.get("fullname") == f'{case.get("classname")}.{case.get("methodname")}')
+    }
+    if not REQUIRED_TESTS <= authored:
+        raise ValueError("Archived Unity NUnit report is missing authored gameplay sentinel tests")
 
 
 def _ios_build_evidence(ios: Path, provenance: str) -> None:
