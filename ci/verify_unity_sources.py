@@ -4,15 +4,19 @@ import argparse
 import re
 import subprocess
 import sys
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
 SHA = re.compile(r"[0-9a-f]{40}")
-CODE_EXTENSIONS = {
-    ".cs", ".asmdef", ".asmref", ".rsp", ".dll", ".shader", ".compute",
-    ".hlsl", ".cginc", ".so", ".dylib", ".a", ".aar", ".jar",
-}
-REVIEWED_FILES = {"unity/Packages/manifest.json", "unity/ProjectSettings/ProjectVersion.txt"}
-
+# Only files emitted by HomeSceneSetup.CreateOrOpen() may be untracked.
+GENERATED_ASSETS = frozenset({
+    "unity/Assets/Scenes.meta",
+    "unity/Assets/Scenes/Home.unity",
+    "unity/Assets/Scenes/Home.unity.meta",
+    "unity/Assets/Resources/TamagoochiPanel.asset",
+    "unity/Assets/Resources/TamagoochiPanel.asset.meta",
+    "unity/Assets/Resources/TamagoochiTheme.tss",
+    "unity/Assets/Resources/TamagoochiTheme.tss.meta",
+})
 
 def _git(root: Path, *args: str) -> bytes:
     result = subprocess.run(["git", "-C", str(root), *args], capture_output=True, check=True)
@@ -20,24 +24,11 @@ def _git(root: Path, *args: str) -> bytes:
 
 
 def _source_path(name: str) -> bool:
-    if name in REVIEWED_FILES:
-        return True
-    path = PurePosixPath(name)
+    if name.startswith("unity/Assets/"):
+        return name not in GENERATED_ASSETS
     if name.startswith("unity/Packages/"):
-        return name != "unity/Packages/packages-lock.json" and (
-            path.suffix.lower() in CODE_EXTENSIONS | {".json", ".meta"}
-        )
-    if name.startswith("unity/ProjectSettings/"):
-        return True
-    if not name.startswith("unity/Assets/"):
-        return False
-    if name.startswith("unity/Assets/Plugins/"):
-        return True  # Bundles/frameworks may contain extensionless executable binaries.
-    if path.suffix.lower() in CODE_EXTENSIONS:
-        return True
-    if name.startswith("unity/Assets/Resources/Art/") and path.suffix.lower() == ".png":
-        return True
-    return path.suffix.lower() == ".meta" and path.with_suffix("").suffix.lower() in CODE_EXTENSIONS
+        return name != "unity/Packages/packages-lock.json"
+    return name.startswith("unity/ProjectSettings/")
 
 
 def _reject_tracked_external_entries(repository: Path, scope: tuple[str, ...]) -> None:
