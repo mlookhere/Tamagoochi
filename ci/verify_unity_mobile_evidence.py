@@ -5,9 +5,10 @@ import hashlib
 import re
 import sys
 import xml.etree.ElementTree as ET
+import zipfile
 from pathlib import Path, PurePosixPath
 
-from ci.verify_unity_native import MINIMUM_EDITMODE_CASES
+from ci.verify_unity_native import MINIMUM_EDITMODE_CASES, _validate_apk
 
 SHA40 = re.compile(r"[0-9a-f]{40}")
 SHA256 = re.compile(r"[0-9a-f]{64}")
@@ -115,7 +116,9 @@ def verify(android: Path, ios: Path, migration_sha: str, workflow_sha: str,
         raise ValueError("Expected exactly one archived Android NUnit XML report")
     _matched_file(android, reports[0].relative_to(android).as_posix(), a["nunit_sha256"])
     _nunit_report_passed(reports[0])
+    apk = android / "unity/Builds/Tamagoochi.apk"
     _matched_file(android, "unity/Builds/Tamagoochi.apk", a["apk_sha256"])
+    _validate_apk(apk)
     provenance = (ios / "unity-ios-provenance.txt").read_text()
     _ios_build_evidence(ios, provenance)
     _ios_binary(ios, "unity-ios-executable.sha256", provenance, "/Unity-iPhone.app/Unity-iPhone")
@@ -134,7 +137,7 @@ def main() -> int:
     try:
         verify(args.android, args.ios, args.migration_sha, args.workflow_sha,
                args.android_run_id, args.ios_run_id)
-    except (OSError, ValueError, ET.ParseError) as error:
+    except (OSError, ValueError, ET.ParseError, zipfile.BadZipFile) as error:
         print(f"UNITY MOBILE EVIDENCE REJECTED: {error}", file=sys.stderr)
         return 1
     print("Native evidence matches reviewed SHAs and both Actions run IDs; signing/device QA not verified")
