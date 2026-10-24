@@ -177,6 +177,13 @@ def face_feature_keys(feature: bpy.types.Object) -> None:
             else:
                 co.z -= 0.045
 
+def _shape_plush_body(obj, species, part, scale):
+    if (species, part) == ("puffino", "Body"):
+        for vertex in obj.data.vertices:
+            taper = vertex.co.z / scale[2]
+            vertex.co.x *= 1.05 - 0.14 * taper
+            vertex.co.y *= 1.05 - 0.09 * taper
+
 def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile, lining):
     if name.startswith("Ear"):
         side = -1 if name.endswith("_L") else 1
@@ -189,11 +196,7 @@ def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profi
         segments, rings = (48, 32) if profile == "sculpt" else (32, 20)
         obj = sculpt_part(name, location, scale, mat, sculpt_subdiv,
                           segments=segments, rings=rings)
-    if species == "puffino" and name == "Body":
-        for vertex in obj.data.vertices:
-            taper = vertex.co.z / scale[2]
-            vertex.co.x *= 1.05 - 0.14 * taper
-            vertex.co.y *= 1.05 - 0.09 * taper
+    _shape_plush_body(obj, species, name, scale)
     if name == "Head":
         relief = 0.0
         for vertex in obj.data.vertices:
