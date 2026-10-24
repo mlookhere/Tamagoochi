@@ -2,6 +2,7 @@
 import hashlib
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 from ci.verify_unity_mobile_evidence import verify
@@ -35,7 +36,15 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
             f'passed="{MINIMUM_EDITMODE_CASES}" failed="0" skipped="0" inconclusive="0">'
             f'<test-suite>{cases}</test-suite></test-run>'
         )
-        apk.write_bytes(b"synthetic-apk")
+        manifest = b"\\x03\\x00\\x08\\x00" + (16).to_bytes(4, "little") + bytes(8)
+        dex = bytearray(0x70)
+        dex[:8] = b"dex\\n035\\x00"
+        dex[32:36] = len(dex).to_bytes(4, "little")
+        with zipfile.ZipFile(apk, "w") as archive:
+            archive.writestr("AndroidManifest.xml", manifest)
+            archive.writestr("classes.dex", dex)
+            archive.writestr("lib/arm64-v8a/libunity.so", b"\\x7fELF" + bytes(60))
+            archive.writestr("assets/bin/Data/globalgamemanagers", b"synthetic-player")
         (self.android / "unity-native-provenance.txt").write_text(
             f"migration_sha={MIGRATION}\nworkflow_sha={WORKFLOW}\nrun_id=101\n"
             f"nunit_sha256={_digest(report.read_bytes())}\napk_sha256={_digest(apk.read_bytes())}\n"
@@ -156,6 +165,26 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
         (self.android / "unity" / "Builds" / "Tamagoochi.apk").write_bytes(b"replaced")
         with self.assertRaisesRegex(ValueError, "hash mismatch"):
             verify(self.android, self.ios, MIGRATION, WORKFLOW, '101', '102')
+
+    def test_invalid_apk_with_matching_digest_fails(self):
+        apk = self.android / "unity" / "Builds" / "Tamagoochi.apk"
+        original = _digest(apk.read_bytes())
+        apk.write_bytes(b"not-an-android-archive")
+        provenance = self.android / "unity-native-provenance.txt"
+        provenance.write_text(provenance.read_text().replace(original, _digest(apk.read_bytes())))
+        with self.assertRaisesRegex(ValueError, "Native Android APK"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
+
+    def test_missing_unity_runtime_with_matching_digest_fails(self):
+        apk = self.android / "unity" / "Builds" / "Tamagoochi.apk"
+        original = _digest(apk.read_bytes())
+        with zipfile.ZipFile(apk, "w") as archive:
+            archive.writestr("AndroidManifest.xml", bytes(16))
+            archive.writestr("classes.dex", bytes(0x70))
+        provenance = self.android / "unity-native-provenance.txt"
+        provenance.write_text(provenance.read_text().replace(original, _digest(apk.read_bytes())))
+        with self.assertRaisesRegex(ValueError, "Android manifest"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
 
     def test_duplicate_nunit_reports_fail(self):
         (self.android / "unity-test-results" / "another.xml").write_text("<test-run/>")
