@@ -293,8 +293,9 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     coral = material(species + "_Accent", accent_color)
     pink = material(species + "_Fin", fin_color)
     dark = material(species + "_Eyes", eye_color)
-    eyes = material(species + "_PaintedEyes", accent_color)
-    configure_fur_albedo(eyes, accent_color, texture_dir, eye=True)
+    iris_color = (0.47, 0.23, 0.13, 1) if species == "puffino" else accent_color
+    eyes = material(species + "_PaintedEyes", iris_color)
+    configure_fur_albedo(eyes, iris_color, texture_dir, eye=True)
     shine = material(species + "_Light", (1.0, 0.98, 0.92, 1))
     brown = material(species + "_Nubs", (0.63, 0.30, 0.18, 1))
     tail_bands = material(species + "_TailBands", accent_color)
@@ -336,12 +337,13 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     for name, location, scale, mat, bone, tip in parts:
         _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profile, pink)
     eye_y, eye_depth = (-0.555, 0.10) if species == "puffino" else (-0.45, 0.028)
+    eye_scale = (0.21, eye_depth, 0.23) if species == "puffino" else (0.185, eye_depth, 0.205)
     mouth_y = -0.57 if species == "puffino" else -0.48
     details = [
         ("Horn_L", (-0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
         ("Horn_R", (0.19, -0.07, 1.62), (0.10, 0.10, 0.18), brown, "head"),
-        ("Eye_L", (-0.24, eye_y, 1.20), (0.185, eye_depth, 0.205), eyes, "head"),
-        ("Eye_R", (0.24, eye_y, 1.20), (0.185, eye_depth, 0.205), eyes, "head"),
+        ("Eye_L", (-0.24, eye_y, 1.20), eye_scale, eyes, "head"),
+        ("Eye_R", (0.24, eye_y, 1.20), eye_scale, eyes, "head"),
         ("Paw_L", (-0.32, -0.34, 0.61), (0.17, 0.18, 0.19), ivory, "body"),
         ("Paw_R", (0.32, -0.34, 0.61), (0.17, 0.18, 0.19), ivory, "body"),
         ("Foot_L", (-0.32, -0.25, 0.16), (0.23, 0.25, 0.12), coral, "body"),
