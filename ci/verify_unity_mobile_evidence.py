@@ -49,6 +49,61 @@ def _matched_file(root: Path, relative: str, expected: str) -> None:
         raise ValueError(f"Evidence hash mismatch: {relative}")
 
 
+
+MACHO_ARM64 = 0x0100000C
+MACHO_THIN = {b"\xcf\xfa\xed\xfe": "little", b"\xfe\xed\xfa\xcf": "big"}
+MACHO_FAT = {
+    b"\xca\xfe\xba\xbe": ("big", 4),
+    b"\xbe\xba\xfe\xca": ("little", 4),
+    b"\xca\xfe\xba\xbf": ("big", 8),
+    b"\xbf\xba\xfe\xca": ("little", 8),
+}
+
+
+def _thin_arm64(binary, expected_type: int) -> bool:
+    magic = binary.read(4)
+    endian = MACHO_THIN.get(magic)
+    header = binary.read(12)
+    return bool(endian and len(header) == 12 and
+                int.from_bytes(header[:4], endian) == MACHO_ARM64 and
+                int.from_bytes(header[8:12], endian) == expected_type)
+
+
+def _arm64_macho(path: Path, expected_type: int) -> bool:
+    with path.open("rb") as binary:
+        magic = binary.read(4)
+        if magic in MACHO_THIN:
+            binary.seek(0)
+            return _thin_arm64(binary, expected_type)
+        format_info = MACHO_FAT.get(magic)
+        if not format_info:
+            return False
+        endian, width = format_info
+        count_bytes = binary.read(4)
+        if len(count_bytes) != 4:
+            return False
+        count = int.from_bytes(count_bytes, endian)
+        if not 1 <= count <= 32:
+            return False
+        record_size = 12 + 2 * width
+        entries = binary.read(count * record_size)
+        if len(entries) != count * record_size:
+            return False
+        archive_size = path.stat().st_size
+        for index in range(count):
+            record = entries[index * record_size:(index + 1) * record_size]
+            if int.from_bytes(record[:4], endian) != MACHO_ARM64:
+                continue
+            offset = int.from_bytes(record[8:8 + width], endian)
+            size = int.from_bytes(record[8 + width:8 + 2 * width], endian)
+            if offset < 8 + count * record_size or size < 32 or offset + size > archive_size:
+                continue
+            binary.seek(offset)
+            if _thin_arm64(binary, expected_type):
+                return True
+    return False
+
+
 def _ios_binary(root: Path, hash_name: str, provenance: str, suffix: str) -> None:
     raw = (root / hash_name).read_text().strip()
     parts = raw.split(maxsplit=1)
@@ -62,6 +117,9 @@ def _ios_binary(root: Path, hash_name: str, provenance: str, suffix: str) -> Non
     if raw not in provenance:
         raise ValueError(f"iOS binary hash absent from run provenance: {hash_name}")
     _matched_file(root, relative, parts[0])
+    expected_type = 2 if suffix.endswith("/Unity-iPhone.app/Unity-iPhone") else 6
+    if not _arm64_macho(root / relative, expected_type):
+        raise ValueError(f"iOS product is not an ARM64 Mach-O of the expected type: {relative}")
 
 
 def _nunit_report_passed(path: Path) -> None:
