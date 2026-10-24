@@ -40,9 +40,9 @@ def _source_path(name: str) -> bool:
 
 def _reject_tracked_external_entries(repository: Path, scope: tuple[str, ...]) -> None:
     entries = _git(repository, "ls-files", "--stage", "-z", "--", *scope)
-    for record in entries.split(b"\\0"):
+    for record in entries.split(b"\0"):
         if record and record.split(b" ", 1)[0] in {b"120000", b"160000"}:
-            path = record.split(b"\\t", 1)[1].decode("utf-8", "surrogateescape")
+            path = record.split(b"\t", 1)[1].decode("utf-8", "surrogateescape")
             raise ValueError("Unity tracked symlink or submodule is not permitted: " + path)
 
 
