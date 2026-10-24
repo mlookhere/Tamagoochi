@@ -148,6 +148,15 @@ class UnitySourceIntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "packages-lock.json"):
             self.verify()
 
+    def test_untracked_project_settings_fail(self):
+        for filename in ("Injected.asset", "Injected.json", "InjectedSettings"):
+            with self.subTest(filename=filename):
+                file = self.project_setting.parent / filename
+                file.write_text("unreviewed build or import setting")
+                with self.assertRaisesRegex(ValueError, filename):
+                    self.verify()
+                file.unlink()
+
     def test_untracked_embedded_package_code_fails(self):
         injected = self.migration / "unity/Packages/Embedded/Injected.cs"
         injected.parent.mkdir(parents=True)
