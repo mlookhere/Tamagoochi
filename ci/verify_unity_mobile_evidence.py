@@ -141,6 +141,24 @@ def _ios_binary(root: Path, hash_name: str, provenance: str, suffix: str) -> Non
         raise ValueError(f"iOS product is not an ARM64 Mach-O of the expected type: {relative}")
 
 
+def _require_unique_case_identities(cases: list[ET.Element], total: int) -> None:
+    names = [case.get("fullname") or case.get("name") for case in cases]
+    if len(set(names)) != total or any(not name for name in names):
+        raise ValueError("Archived Unity NUnit test identities are incomplete or duplicated")
+
+
+def _require_authored_gameplay_sentinels(cases: list[ET.Element]) -> None:
+    authored = {
+        case.get("methodname")
+        for case in cases
+        if (case.get("name") == case.get("methodname") and
+            (case.get("classname") or "").startswith("Tamagoochi.Tests.") and
+            case.get("fullname") == f'{case.get("classname")}.{case.get("methodname")}')
+    }
+    if not REQUIRED_TESTS <= authored:
+        raise ValueError("Archived Unity NUnit report is missing authored gameplay sentinel tests")
+
+
 def _nunit_report_passed(path: Path) -> None:
     root = ET.parse(path).getroot()
     attributes = root.attrib
@@ -153,18 +171,8 @@ def _nunit_report_passed(path: Path) -> None:
     if (total < MINIMUM_EDITMODE_CASES or passed != total or len(cases) != total or
             any(case.get("result") != "Passed" for case in cases)):
         raise ValueError("Archived Unity NUnit report has missing, failed or inconsistent test cases")
-    names = [case.get("fullname") or case.get("name") for case in cases]
-    if len(set(names)) != total or any(not name for name in names):
-        raise ValueError("Archived Unity NUnit test identities are incomplete or duplicated")
-    authored = {
-        case.get("methodname")
-        for case in cases
-        if (case.get("name") == case.get("methodname") and
-            (case.get("classname") or "").startswith("Tamagoochi.Tests.") and
-            case.get("fullname") == f'{case.get("classname")}.{case.get("methodname")}')
-    }
-    if not REQUIRED_TESTS <= authored:
-        raise ValueError("Archived Unity NUnit report is missing authored gameplay sentinel tests")
+    _require_unique_case_identities(cases, total)
+    _require_authored_gameplay_sentinels(cases)
 
 
 def _ios_build_evidence(ios: Path, provenance: str) -> None:
