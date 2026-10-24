@@ -141,6 +141,28 @@ class UnitySourceIntegrityTests(unittest.TestCase):
                     self.verify()
                 path.unlink()
 
+    def test_committed_symlink_to_external_sources_fails(self):
+        outside = self.migration.parent / "linked-scripts"
+        outside.mkdir()
+        (outside / "Injected.cs").write_text("class Injected {}")
+        link = self.migration / "unity/Assets/LinkedScripts"
+        try:
+            link.symlink_to(outside, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Creating filesystem symlinks requires platform permissions")
+        self.migration_sha = _commit(self.migration)
+        with self.assertRaisesRegex(ValueError, "tracked symlink or submodule"):
+            self.verify()
+
+    def test_committed_gitlink_to_external_submodule_fails(self):
+        _git(self.migration, "update-index", "--add", "--cacheinfo",
+             f"160000,{self.migration_sha},unity/Assets/External")
+        _git(self.migration, "-c", "user.name=CI", "-c", "user.email=ci@example.invalid",
+             "commit", "-qm", "Synthetic submodule entry")
+        self.migration_sha = _git(self.migration, "rev-parse", "HEAD")
+        with self.assertRaisesRegex(ValueError, "tracked symlink or submodule"):
+            self.verify()
+
     def test_untracked_symlinked_data_file_fails(self):
         outside = self.migration.parent / "outside-data.bin"
         outside.write_bytes(b"unreviewed data")
