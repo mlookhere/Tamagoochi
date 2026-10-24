@@ -181,6 +181,20 @@ class UnitySourceIntegrityTests(unittest.TestCase):
                     self.verify()
                 plugin.unlink()
 
+    def test_extensionless_native_bundle_payload_fails(self):
+        for path in [
+            "unity/Assets/Plugins/Custom.bundle/Contents/MacOS/Custom",
+            "unity/Assets/Plugins/Game.framework/Versions/A/Game",
+            "unity/Assets/Plugins/NativePlugin/no-extension",
+        ]:
+            with self.subTest(path=path):
+                binary = self.migration / path
+                binary.parent.mkdir(parents=True, exist_ok=True)
+                binary.write_bytes(b"unreviewed native executable")
+                with self.assertRaisesRegex(ValueError, binary.name):
+                    self.verify()
+                binary.unlink()
+
     def test_changed_package_manifest_fails(self):
         self.manifest.write_text('{"dependencies":{"unreviewed":"latest"}}')
         with self.assertRaisesRegex(ValueError, "manifest.json"):
