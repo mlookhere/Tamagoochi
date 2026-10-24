@@ -1,8 +1,4 @@
-"""Organic detail layer for Tamagoochi sculpt studies.
-
-This is geometry with actual editable topology, not decorative 2D images.
-Keep the silhouette expressive and distinct at mobile camera distance.
-"""
+"""Editable organic meshes, sculpt UVs, and creature fur materials."""
 
 import math
 from pathlib import Path
@@ -13,7 +9,7 @@ import bpy
 def petal_ear(name, location, dimensions, material, side, species, inner_material):
     """Folded petal with an inset, colored front surface in one deformable mesh."""
     width, depth, height = dimensions
-    rings, sides = 20, 20
+    rings, sides = ((32, 24) if species == "puffino" else (20, 20))
     vertices, faces = [], []
     for row in range(rings + 1):
         t = row / rings
@@ -22,7 +18,9 @@ def petal_ear(name, location, dimensions, material, side, species, inner_materia
         radius = depth * (0.18 + 0.82 * fullness)
         lean = side * (0.13 * t*t + 0.035 * math.sin(math.pi*t))
         if species == "puffino":
-            taper *= 1.22
+            taper *= 2.12 * (0.82 + 0.18*t)
+            radius *= 1.45
+            lean += side * (0.12*t + 0.11*math.sin(math.pi*t))
         elif species == "sproutle":
             lean += side * 0.23*t
             taper *= 1.15
@@ -36,10 +34,11 @@ def petal_ear(name, location, dimensions, material, side, species, inner_materia
         for column in range(sides):
             angle = math.tau * column / sides
             front = max(0.0, -math.sin(angle))
-            cup = 0.045 * fullness * front**8
+            cup = (0.075 if species == "puffino" else 0.045) * fullness * front**8
             vertices.append((taper*math.cos(angle) + lean,
                              radius*math.sin(angle) - 0.04*fullness + cup,
-                             (t-0.5)*height))
+                             (t-0.5)*height + (0.028*fullness*math.cos(3*angle+4*t)
+                                               if species == "puffino" else 0)))
             if row < rings:
                 a = row*sides + column
                 b = row*sides + (column+1) % sides
