@@ -46,8 +46,7 @@ def sculpt_part(
     segments: int = 48,
     rings: int = 32,
 ) -> bpy.types.Object:
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=segments, ring_count=rings,
-                                         location=location)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=segments, ring_count=rings, location=location)
     obj = bpy.context.object
     obj.name = name
     obj.scale = dimensions
@@ -155,7 +154,6 @@ def face_keys(head: bpy.types.Object) -> None:
                 co.z += 0.05 * front
 
 def face_feature_keys(feature: bpy.types.Object) -> None:
-    """Make separately modeled eyes and mouth respond to exported facial morphs."""
     feature.shape_key_add(name="Basis", from_mix=False)
     for name in ("Smile", "Pout", "Curious"):
         key = feature.shape_key_add(name=name, from_mix=False)
@@ -201,8 +199,10 @@ def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profi
             eye = math.hypot((abs(x) - 0.24) / 0.16, z / 0.19)
             socket = math.exp(-(eye / 0.63)**4)
             rim = math.exp(-((eye - 1.15) / 0.27)**2)
-            displacement = front * (0.060 * socket - 0.042 * cheek
+            displacement = front * (0.060 * socket
+                                    - (0.085 if species == "puffino" else 0.042) * cheek
                                     - 0.053 * muzzle - 0.018 * rim)
+            vertex.co.x *= 1 + (0.10 * cheek if species == "puffino" else 0)
             vertex.co.y += displacement
             relief = max(relief, abs(displacement))
         obj["integrated_face_relief"] = relief
