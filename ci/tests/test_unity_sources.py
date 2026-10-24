@@ -259,6 +259,12 @@ class UnitySourceIntegrityTests(unittest.TestCase):
                               preflight_step)
                 self.assertIn("--migration-sha", preflight_step)
                 self.assertIn("--workflow-sha", preflight_step)
+                reviewed = "64b432e7-41fa03c3-8909e5b8-053b8f19-40de33e1"
+                self.assertIn("REVIEWED_MIGRATION_GROUPS: " + reviewed, preflight_step)
+                self.assertIn('pinned_sha="${REVIEWED_MIGRATION_GROUPS//-/}"', preflight_step)
+                self.assertIn('[[ "$MIGRATION_SHA" == "$pinned_sha" ]]', preflight_step)
+                self.assertLess(preflight_step.index('[[ "$MIGRATION_SHA" == "$pinned_sha" ]]'),
+                                preflight_step.index("python3 -I -B"))
                 self.assertNotIn("secrets.", preflight_step)
 
     def test_native_workflows_enforce_source_gate_before_accepting_evidence(self):
