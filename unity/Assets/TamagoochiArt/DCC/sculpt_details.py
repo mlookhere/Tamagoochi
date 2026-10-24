@@ -142,14 +142,14 @@ def configure_fur_albedo(material, base, texture_dir=None, eye=False):
             if eye:
                 x, y = 2 * u - 1, 2 * v - 1
                 radius = math.hypot(x, y)
-                if radius < 0.38:
+                if radius < 0.42:
                     color = (0.055, 0.040, 0.065)
-                elif radius < 0.87:
-                    shade = 0.65 + 0.65 * (radius - 0.38) / 0.49
+                elif radius < 0.89:
+                    shade = (0.70 + 0.55 * (radius - 0.42) / 0.47) * (0.87 + 0.13 * math.sin(64 * math.atan2(y, x) + 12 * radius))
                     color = tuple(min(1.0, base[c] * shade) for c in range(3))
                 else:
                     color = (0.075, 0.052, 0.075)
-                if (x + 0.30) ** 2 + (y - 0.34) ** 2 < 0.028:
+                if (x + 0.30) ** 2 + (y - 0.34) ** 2 < 0.038 or (x - 0.28) ** 2 + (y + 0.35) ** 2 < 0.008:
                     color = (1.0, 0.98, 0.94)
                 pixels.extend((*color, 1.0))
                 continue
