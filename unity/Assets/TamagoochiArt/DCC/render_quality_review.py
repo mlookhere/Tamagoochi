@@ -1,11 +1,4 @@
-"""Fail-closed visual QA renderer for the original stylized creature studies.
-
-Run in Blender 4.x:
-  blender -b -P render_quality_review.py -- --output /absolute/review
-
-Generates front/3-quarter/side/back plus expression proof renders per species.
-It NEVER grants creative/art approval automatically; reviewers inspect the PNGs.
-"""
+"""Generate Blender proof renders and fail-closed mechanical metrics; art needs review."""
 
 from __future__ import annotations
 
@@ -151,6 +144,13 @@ def mesh_metrics(species: str) -> dict:
     for part in ("Body", "Head"):
         if not 0.01 <= bpy.data.objects[part].get("fur_surface_relief", 0) <= 0.05:
             missing_details.append(part + ":SculptedFur")
+    for suffix in ("L", "R") if species == "puffino" else ():
+        eye, head = bpy.data.objects["Eye_" + suffix], bpy.data.objects["Head"]
+        local = eye.location - head.location
+        hit, face, *_ = head.ray_cast(Vector((local.x, -2, local.z)), Vector((0, 1, 0)))
+        exposed = face.y + head.location.y - eye.location.y + eye.dimensions.y / 2
+        if not hit or not 0.05 <= exposed <= 0.30:
+            missing_details.append("Eye_" + suffix + ":Occluded")
     skinned, triangles, uv_failures, weight_failures = _skin_metrics()
     missing_morphs, weak_morphs = _morph_metrics()
     missing_features, weak_features = _expression_feature_metrics()
