@@ -35,8 +35,7 @@ def petal_ear(name, location, dimensions, material, side, species, inner_materia
                 a = row*sides + column
                 b = row*sides + (column+1) % sides
                 faces.append((a, b, b+sides, a+sides))
-    faces.extend((tuple(reversed(range(sides))),
-                  tuple(rings*sides+i for i in range(sides))))
+    faces.extend((tuple(reversed(range(sides))), tuple(rings*sides+i for i in range(sides))))
     mesh = bpy.data.meshes.new(name + "Topology")
     mesh.from_pydata(vertices, [], faces)
     mesh.update()
@@ -134,8 +133,7 @@ def configure_fur_shader(material):
 def configure_fur_albedo(material, base, texture_dir=None, eye=False):
     """UV-friendly handoff color map that survives Blender-to-glTF export."""
     size = 256
-    image = bpy.data.images.new(
-        name=material.name + "_Albedo", width=size, height=size, alpha=True)
+    image = bpy.data.images.new(name=material.name + "_Albedo", width=size, height=size, alpha=True)
     pixels = []
     for row in range(size):
         v = row / max(1, size - 1)
@@ -176,8 +174,7 @@ def configure_fur_albedo(material, base, texture_dir=None, eye=False):
     node = material.node_tree.nodes.new("ShaderNodeTexImage")
     node.name = "ExportableFurAlbedo"
     node.image = image
-    material.node_tree.links.new(
-        node.outputs["Color"], surface.inputs["Base Color"])
+    material.node_tree.links.new(node.outputs["Color"], surface.inputs["Base Color"])
 
 
 def configure_tail_bands(material, cream, accent, texture_dir=None, pattern="puffino"):
