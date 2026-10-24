@@ -225,6 +225,12 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "ARM64 Mach-O"):
             verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
 
+    def test_hash_matched_truncated_macho_header_fails(self):
+        self._replace_ios_product(self.launcher, "unity-ios-executable.sha256",
+                                  _synthetic_macho(2)[:16])
+        with self.assertRaisesRegex(ValueError, "ARM64 Mach-O"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
+
     def test_hash_matched_non_arm64_ios_binary_fails(self):
         self._replace_ios_product(self.framework, "unity-ios-framework.sha256",
                                   _synthetic_macho(6, cpu=7))
