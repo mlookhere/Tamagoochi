@@ -189,6 +189,11 @@ def _add_primary_part(name, location, scale, mat, bone, tip, rig, species, profi
         segments, rings = (48, 32) if profile == "sculpt" else (32, 20)
         obj = sculpt_part(name, location, scale, mat, sculpt_subdiv,
                           segments=segments, rings=rings)
+    if species == "puffino" and name == "Body":
+        for vertex in obj.data.vertices:
+            taper = vertex.co.z / scale[2]
+            vertex.co.x *= 1.05 - 0.14 * taper
+            vertex.co.y *= 1.05 - 0.09 * taper
     if name == "Head":
         relief = 0.0
         for vertex in obj.data.vertices:
