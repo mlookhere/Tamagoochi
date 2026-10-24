@@ -103,6 +103,26 @@ class UnitySourceIntegrityTests(unittest.TestCase):
                     self.verify()
                 asset.unlink()
 
+    def test_preflight_requires_pristine_untracked_unity_sources(self):
+        for relative in [
+            "unity/Assets/Scenes/Home.unity",
+            "unity/Assets/Resources/TamagoochiTheme.tss",
+            "unity/Packages/packages-lock.json",
+        ]:
+            with self.subTest(relative=relative):
+                path = self.migration / relative
+                if relative.endswith("packages-lock.json"):
+                    _git(self.migration, "rm", "-q", relative)
+                    self.migration_sha = _commit(self.migration)
+                else:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("synthetic generated input before Unity invocation")
+                self.verify()  # Post-build mode accepts the allowlisted file.
+                with self.assertRaisesRegex(ValueError, path.name.replace(".", r"\.")):
+                    verify(self.migration, self.control, self.migration_sha,
+                           self.workflow_sha, preflight=True)
+                path.unlink()
+
     def test_modified_csharp_source_fails(self):
         self.script.write_text("class Pet { public bool Rewritten = true; }")
         with self.assertRaisesRegex(ValueError, "Pet.cs"):
@@ -310,6 +330,7 @@ class UnitySourceIntegrityTests(unittest.TestCase):
                               preflight_step)
                 self.assertIn("--migration-sha", preflight_step)
                 self.assertIn("--workflow-sha", preflight_step)
+                self.assertIn("--preflight", preflight_step)
                 reviewed = "64b432e7-41fa03c3-8909e5b8-053b8f19-40de33e1"
                 self.assertIn("REVIEWED_MIGRATION_GROUPS: " + reviewed, preflight_step)
                 self.assertIn('pinned_sha="${REVIEWED_MIGRATION_GROUPS//-/}"', preflight_step)
