@@ -1,0 +1,66 @@
+name: Expo dependency security compatibility probe
+
+on:
+  push:
+    branches: [work/43-expo-dependency-audit]
+    paths: [.github/workflows/expo-dependency-probe.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Test patched Zod with Expo 57
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Stage isolated high-severity Zod patch
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const path = 'package.json';
+          const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+          pkg.overrides = { ...pkg.overrides, zod: '^4.6.6' };
+          fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
+          NODE
+      - name: Generate real registry lockfile with npm
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Validate deterministic install and resolved dependencies
+        run: |
+          npm ci --no-fund
+          npm ls zod --all
+      - name: Enforce unchanged high-severity audit
+        run: npm audit --audit-level=high
+      - name: Verify Expo CLI and application compatibility
+        run: |
+          npx expo config --type public --json > /dev/null
+          npm run typecheck
+          npm test
+          npm run build:ci
+      - name: Emit validated lockfile for GitHub branch update
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const lock = fs.readFileSync('package-lock.json').toString('base64');
+          console.log('LOCK_B64_BEGIN');
+          for (const chunk of lock.match(/.{1,4000}/g) || []) console.log(chunk);
+          console.log('LOCK_B64_END');
+          NODE
+      - name: Upload dependency-probe evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: expo-security-probe-${{ github.run_id }}
+          path: |
+            package.json
+            package-lock.json
+          retention-days: 14
