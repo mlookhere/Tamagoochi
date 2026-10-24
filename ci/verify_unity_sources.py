@@ -31,6 +31,8 @@ def _source_path(name: str) -> bool:
         return True
     if not name.startswith("unity/Assets/"):
         return False
+    if name.startswith("unity/Assets/Plugins/"):
+        return True  # Bundles/frameworks may contain extensionless executable binaries.
     if path.suffix.lower() in CODE_EXTENSIONS:
         return True
     if name.startswith("unity/Assets/Resources/Art/") and path.suffix.lower() == ".png":
