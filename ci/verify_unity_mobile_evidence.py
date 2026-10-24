@@ -85,7 +85,7 @@ def _arm64_macho(path: Path, expected_type: int) -> bool:
         count = int.from_bytes(count_bytes, endian)
         if not 1 <= count <= 32:
             return False
-        record_size = 12 + 2 * width
+        record_size = 20 if width == 4 else 32
         entries = binary.read(count * record_size)
         if len(entries) != count * record_size:
             return False
