@@ -18,9 +18,13 @@ def _digest(data: bytes) -> str:
 
 
 def _synthetic_macho(filetype: int, cpu: int = 0x0100000C) -> bytes:
-    """Minimal 64-bit Mach-O header; not a compiled iOS executable."""
-    return (b"\xcf\xfa\xed\xfe" + cpu.to_bytes(4, "little") +
-            bytes(4) + filetype.to_bytes(4, "little") + bytes(16))
+    """Minimal 64-bit Mach-O load-command fixture; not an iOS executable."""
+    command = (0x19).to_bytes(4, "little") + (72).to_bytes(4, "little") + bytes(64)
+    header = (b"\xcf\xfa\xed\xfe" + cpu.to_bytes(4, "little") +
+              bytes(4) + filetype.to_bytes(4, "little") +
+              (1).to_bytes(4, "little") + len(command).to_bytes(4, "little") +
+              bytes(8))
+    return header + command
 
 
 def _synthetic_fat_macho(filetype: int, width: int = 4) -> bytes:
@@ -28,7 +32,7 @@ def _synthetic_fat_macho(filetype: int, width: int = 4) -> bytes:
     record_size = 20 if width == 4 else 32
     offset = 8 + record_size
     record = (0x0100000C).to_bytes(4, "big") + bytes(4)
-    record += offset.to_bytes(width, "big") + (32).to_bytes(width, "big")
+    record += offset.to_bytes(width, "big") + len(_synthetic_macho(filetype)).to_bytes(width, "big")
     record += bytes(record_size - 8 - 2 * width)
     return magic + (1).to_bytes(4, "big") + record + _synthetic_macho(filetype)
 
@@ -228,6 +232,27 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
     def test_hash_matched_truncated_macho_header_fails(self):
         self._replace_ios_product(self.launcher, "unity-ios-executable.sha256",
                                   _synthetic_macho(2)[:16])
+        with self.assertRaisesRegex(ValueError, "ARM64 Mach-O"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
+
+    def test_hash_matched_macho_without_load_commands_fails(self):
+        payload = _synthetic_macho(2)
+        header_only = payload[:16] + bytes(16)
+        self._replace_ios_product(self.launcher, "unity-ios-executable.sha256", header_only)
+        with self.assertRaisesRegex(ValueError, "ARM64 Mach-O"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
+
+    def test_hash_matched_truncated_macho_load_command_fails(self):
+        payload = _synthetic_macho(2)
+        self._replace_ios_product(self.launcher, "unity-ios-executable.sha256",
+                                  payload[:-20])
+        with self.assertRaisesRegex(ValueError, "ARM64 Mach-O"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
+
+    def test_hash_matched_invalid_macho_command_size_fails(self):
+        payload = bytearray(_synthetic_macho(2))
+        payload[36:40] = (4).to_bytes(4, "little")
+        self._replace_ios_product(self.launcher, "unity-ios-executable.sha256", bytes(payload))
         with self.assertRaisesRegex(ValueError, "ARM64 Mach-O"):
             verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
 
