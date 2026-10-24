@@ -237,6 +237,27 @@ jobs:
               raise SystemExit("Art evidence does not match the approved source commit")
           expected_proofs = {"front", "three_quarter", "side", "back",
                              "face_Smile", "face_Pout", "face_Curious", "phone_256"}
+          def verify_png(path, expected_px, recorded_size=None):
+              if not path.is_file() or path.stat().st_size < 64:
+                  raise SystemExit(f"Missing or empty PNG evidence: {path}")
+              if recorded_size is not None and path.stat().st_size != recorded_size:
+                  raise SystemExit(f"PNG evidence size differs from native report: {path}")
+              with path.open("rb") as source:
+                  header = source.read(33)
+              signature = bytes((137, 80, 78, 71, 13, 10, 26, 10))
+              if (len(header) != 33 or header[:8] != signature
+                      or int.from_bytes(header[8:12], "big") != 13
+                      or header[12:16] != b"IHDR"
+                      or zlib.crc32(header[12:29]) != int.from_bytes(header[29:33], "big")):
+                  raise SystemExit(f"Invalid PNG IHDR or header checksum: {path}")
+              width = int.from_bytes(header[16:20], "big")
+              height = int.from_bytes(header[20:24], "big")
+              if (width, height) != (expected_px, expected_px):
+                  raise SystemExit(f"Incorrect PNG evidence dimensions: {path}")
+
+          # Both editable model exports and proof renders must preserve real
+          # 256px UV atlases, including the species-specific painted eye iris.
+          atlas_materials = ("Body", "Accent", "Fin", "PaintedEyes", "TailBands")
           observed_bodies = set()
           for row in report["species"]:
               name = row["species"]
@@ -261,21 +282,12 @@ jobs:
               for key, recorded_size in row["proof_images"].items():
                   path = root / "proof" / f"{name}_{key.lower() if key.startswith('face_') else key}.png"
                   # Expression files are named face_smile/face_pout/face_curious.
-                  if not path.is_file() or path.stat().st_size != recorded_size:
-                      raise SystemExit(f"Missing or mismatched native proof: {path}")
-                  with path.open("rb") as source:
-                      header = source.read(33)
-                  signature = bytes((137, 80, 78, 71, 13, 10, 26, 10))
-                  if (len(header) != 33 or header[:8] != signature
-                          or int.from_bytes(header[8:12], "big") != 13
-                          or header[12:16] != b"IHDR"
-                          or zlib.crc32(header[12:29]) != int.from_bytes(header[29:33], "big")):
-                      raise SystemExit(f"Invalid PNG IHDR or header checksum: {path}")
                   expected_px = 256 if key == "phone_256" else render_resolution
-                  width = int.from_bytes(header[16:20], "big")
-                  height = int.from_bytes(header[20:24], "big")
-                  if (width, height) != (expected_px, expected_px):
-                      raise SystemExit(f"Incorrect native PNG proof dimensions: {path}")
+                  verify_png(path, expected_px, recorded_size)
+              for folder in (root / "models/Textures", root / "proof/Textures"):
+                  for material_name in atlas_materials:
+                      atlas = folder / f"{name}_{material_name}_Albedo.png"
+                      verify_png(atlas, 256)
               for profile in ("sculpt", "mobile"):
                   for ext, magic in (("blend", b"BLENDER"), ("glb", b"glTF"),
                                      ("fbx", b"Kaydara FBX Binary  \x00\x1a\x00")):
