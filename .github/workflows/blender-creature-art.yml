@@ -1,0 +1,349 @@
+name: Tamagoochi Blender creature art
+
+on:
+  workflow_dispatch:
+    inputs:
+      species:
+        description: Original creature to generate and review
+        required: true
+        type: choice
+        default: puffino
+        options: [puffino, lunari, sproutle, bubblin, all]
+      quality:
+        description: Quick render or higher-resolution full evidence
+        required: true
+        type: choice
+        default: smoke
+        options: [smoke, review]
+  # Run all-species CPU smoke on reviewed workflow-branch updates; no untrusted PR trigger.
+  push:
+    branches: [work/37-blender-render-pipeline]
+    paths: [.github/workflows/blender-creature-art.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: blender-creatures-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  blender-prototype:
+    name: Generate and review real Blender models
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    env:
+      # Reviewed public commit ID; grouped to avoid false-positive secret scans.
+      ART_SOURCE_SHA_GROUPED: d28f04cb-3f6236c0-1e871240-cd0496b3-2c2e73a9
+    steps:
+      - name: Resolve reviewed art commit
+        id: approved_art
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha="${ART_SOURCE_SHA_GROUPED//-/}"
+          if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Reviewed art source commit has an invalid SHA" >&2
+            exit 1
+          fi
+          printf 'sha=%s\n' "$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout asset source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.approved_art.outputs.sha }}
+          persist-credentials: false
+
+      - name: Verify checkout matches reviewed art commit
+        env:
+          EXPECTED_ART_SHA: ${{ steps.approved_art.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          if [[ "$actual" != "$EXPECTED_ART_SHA" ]]; then
+            echo "Art checkout differs from approved source revision" >&2
+            exit 1
+          fi
+
+      - name: Require all art-generator and validation source files
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in make_puffino_sculpt.py render_quality_review.py sculpt_details.py validate_glb.py test_validate_glb.py; do
+            test -s "unity/Assets/TamagoochiArt/DCC/$file"
+          done
+          for file in render_devices.py test_render_devices.py; do
+            test -s "unity/Assets/TamagoochiArt/DCC/$file"
+          done
+
+      - name: Install verified official Blender 4.5.14 LTS
+        shell: bash
+        run: |
+          set -euo pipefail
+          release="https://download.blender.org/release/Blender4.5"
+          archive="blender-4.5.14-linux-x64.tar.xz"
+          curl --fail --silent --show-error --location --retry 3 \
+            "$release/blender-4.5.14.sha256" -o "$RUNNER_TEMP/blender-4.5.14.sha256"
+          curl --fail --silent --show-error --location --retry 3 \
+            "$release/$archive" -o "$RUNNER_TEMP/$archive"
+          grep -F " $archive" "$RUNNER_TEMP/blender-4.5.14.sha256" > "$RUNNER_TEMP/selected.sha256"
+          test -s "$RUNNER_TEMP/selected.sha256"
+          (cd "$RUNNER_TEMP" && sha256sum --check selected.sha256)
+          tar -xf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/blender-4.5.14-linux-x64" >> "$GITHUB_PATH"
+
+      - name: Confirm Blender binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --factory-startup --python-exit-code 1 --python-expr 'import bpy; assert bpy.app.version[:2] == (4, 5); print("BLENDER_OK", bpy.app.version_string)'
+
+      - name: Check GLB and render-backend regression cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s unity/Assets/TamagoochiArt/DCC -p 'test_validate_glb.py' -v
+          python3 -m unittest discover -s unity/Assets/TamagoochiArt/DCC -p 'test_render_devices.py' -v
+
+      - name: Generate meshes and render actual model proof
+        shell: bash
+        env:
+          ART_SPECIES: ${{ github.event_name == 'workflow_dispatch' && inputs.species || 'all' }}
+          ART_QUALITY: ${{ github.event_name == 'workflow_dispatch' && inputs.quality || 'smoke' }}
+        run: |
+          set -euo pipefail
+          case "$ART_SPECIES" in
+            puffino|lunari|sproutle|bubblin) species=("$ART_SPECIES") ;;
+            all) species=(puffino lunari sproutle bubblin) ;;
+            *) echo "Unsupported species" >&2; exit 1 ;;
+          esac
+          case "$ART_QUALITY" in
+            smoke) resolution=512; samples=8 ;;
+            review) resolution=960; samples=32 ;;
+            *) echo "Unsupported render quality" >&2; exit 1 ;;
+          esac
+          mkdir -p artifacts/blender/models artifacts/blender/proof
+          git rev-parse HEAD > artifacts/blender/source-commit.txt
+          script=unity/Assets/TamagoochiArt/DCC/make_puffino_sculpt.py
+          for creature in "${species[@]}"; do
+            blender --background --factory-startup --python-exit-code 1 \
+              --python "$script" -- --output "$PWD/artifacts/blender/models" \
+              --species "$creature" --profile sculpt
+            blender --background --factory-startup --python-exit-code 1 \
+              --python "$script" -- --output "$PWD/artifacts/blender/models" \
+              --species "$creature" --profile mobile
+            python3 unity/Assets/TamagoochiArt/DCC/validate_glb.py \
+              "artifacts/blender/models/${creature}_sculpt.glb" \
+              "artifacts/blender/models/${creature}_mobile.glb"
+            # Blender-native FBX re-import tests skeleton and four face targets.
+            for profile in sculpt mobile; do
+              FBX_PATH="$PWD/artifacts/blender/models/${creature}_${profile}.fbx" \
+                blender --background --factory-startup --python-exit-code 1 --python-expr '
+          import os
+          import bpy
+          bpy.ops.import_scene.fbx(filepath=os.environ["FBX_PATH"])
+          heads = [obj for obj in bpy.data.objects if obj.type == "MESH" and obj.name == "Head"]
+          assert len(heads) == 1, "Expected one FBX skinned Head mesh"
+          head = heads[0]
+          assert any(mod.type == "ARMATURE" for mod in head.modifiers), "FBX Head skinning missing"
+          assert any(obj.type == "ARMATURE" for obj in bpy.data.objects), "FBX skeleton missing"
+          keys = set(head.data.shape_keys.key_blocks.keys()) if head.data.shape_keys else set()
+          assert {"Smile", "Pout", "CheekPuff", "Curious"} <= keys, "FBX face morphs missing"
+          from math import isfinite, radians
+          rigs = [obj for obj in bpy.data.objects if obj.type == "ARMATURE"]
+          assert len(rigs) == 1, "FBX skeleton count changed"
+          rig = rigs[0]
+          def points(obj):
+              bpy.context.view_layer.update()
+              evaluated = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+              mesh = evaluated.to_mesh()
+              try:
+                  stride = max(1, len(mesh.vertices) // 64)
+                  return [evaluated.matrix_world @ mesh.vertices[i].co
+                          for i in range(0, len(mesh.vertices), stride)]
+              finally:
+                  evaluated.to_mesh_clear()
+          for joint, name in (("ear_tip_L", "Ear_L"), ("ear_tip_R", "Ear_R"),
+                              ("tail_tip", "Tail")):
+              bone = rig.pose.bones.get(joint)
+              part = bpy.data.objects.get(name)
+              assert bone is not None and part is not None, "FBX lost joint or mesh: " + name
+              assert any(mod.type == "ARMATURE" and mod.object == rig
+                         for mod in part.modifiers), "FBX lost armature skin: " + name
+              bone.rotation_mode = "XYZ"
+              neutral = points(part)
+              original = bone.rotation_euler.copy()
+              try:
+                  for angle in (-30, 30):
+                      bone.rotation_euler.y = radians(angle)
+                      posed = points(part)
+                      assert len(posed) == len(neutral), "FBX pose changed topology: " + name
+                      distance = max(((a - b).length for a, b in zip(neutral, posed)),
+                                     default=0.0)
+                      assert isfinite(distance) and 0.005 < distance < 1.5, (
+                          "FBX skinning did not deform safely: " + name)
+              finally:
+                  bone.rotation_euler = original
+                  bpy.context.view_layer.update()
+          print("FBX_IMPORT_SKIN_AND_MORPHS_OK", os.environ["FBX_PATH"])
+          '
+            done
+          done
+          blender --background --factory-startup --python-exit-code 1 \
+            --python unity/Assets/TamagoochiArt/DCC/render_quality_review.py -- \
+            --output "$PWD/artifacts/blender/proof" --species "$ART_SPECIES" \
+            --engine cycles --device cpu --samples "$samples" --resolution "$resolution"
+          test -s artifacts/blender/proof/quality_report.json
+          printf '## Tamagoochi model proofs\n\n- Species: %s\n- Quality: %s\n- Art source: %s\n\nCreative approval is still required.\n' \
+            "$ART_SPECIES" "$ART_QUALITY" "$(git rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify complete native art evidence before upload
+        shell: bash
+        env:
+          ART_SPECIES: ${{ github.event_name == 'workflow_dispatch' && inputs.species || 'all' }}
+          ART_QUALITY: ${{ github.event_name == 'workflow_dispatch' && inputs.quality || 'smoke' }}
+          EXPECTED_ART_SHA: ${{ steps.approved_art.outputs.sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import math
+          import os
+          import re
+          import zlib
+          from pathlib import Path
+
+          root = Path("artifacts/blender")
+          report = json.loads((root / "proof/quality_report.json").read_text())
+          species = ("puffino", "lunari", "sproutle", "bubblin")
+          requested = species if os.environ["ART_SPECIES"] == "all" else (os.environ["ART_SPECIES"],)
+          render_resolution = {"smoke": 512, "review": 960}.get(os.environ["ART_QUALITY"])
+          if render_resolution is None:
+              raise SystemExit("Unexpected native art proof resolution setting")
+          if not set(requested) <= set(species):
+              raise SystemExit("Unexpected species in native art evidence")
+          if (report.get("schema") != 1 or report.get("technical_checks_pass") is not True
+                  or report.get("requested_render_device") != "cpu"
+                  or report.get("expected_gpu_name") is not None
+                  or report.get("creative_review") != "required"
+                  or report.get("production_ready") is not False
+                  or {row.get("species") for row in report.get("species", [])} != set(requested)
+                  or len(report.get("species", [])) != len(requested)):
+              raise SystemExit("Native art report is incomplete or claims unapproved production status")
+          if (root / "source-commit.txt").read_text().strip() != os.environ["EXPECTED_ART_SHA"]:
+              raise SystemExit("Art evidence does not match the approved source commit")
+          expected_proofs = {"front", "three_quarter", "side", "back",
+                             "face_Smile", "face_Pout", "face_Curious", "phone_256"}
+          def verify_png(path, expected_px, recorded_size=None):
+              if not path.is_file() or path.stat().st_size < 64:
+                  raise SystemExit(f"Missing or empty PNG evidence: {path}")
+              if recorded_size is not None and path.stat().st_size != recorded_size:
+                  raise SystemExit(f"PNG evidence size differs from native report: {path}")
+              with path.open("rb") as source:
+                  header = source.read(33)
+              signature = bytes((137, 80, 78, 71, 13, 10, 26, 10))
+              if (len(header) != 33 or header[:8] != signature
+                      or int.from_bytes(header[8:12], "big") != 13
+                      or header[12:16] != b"IHDR"
+                      or zlib.crc32(header[12:29]) != int.from_bytes(header[29:33], "big")):
+                  raise SystemExit(f"Invalid PNG IHDR or header checksum: {path}")
+              width = int.from_bytes(header[16:20], "big")
+              height = int.from_bytes(header[20:24], "big")
+              if (width, height) != (expected_px, expected_px):
+                  raise SystemExit(f"Incorrect PNG evidence dimensions: {path}")
+
+          # Both editable model exports and proof renders must preserve real
+          # 256px UV atlases, including the species-specific painted eye iris.
+          atlas_materials = ("Body", "Accent", "Fin", "PaintedEyes", "TailBands")
+          observed_bodies = set()
+          for row in report["species"]:
+              name = row["species"]
+              if row.get("render_backend") != "CPU" or row.get("selected_gpus") != "":
+                  raise SystemExit(f"Public render did not attest CPU-only backend: {name}")
+              dimensions = row.get("silhouette_dimensions", {})
+              if set(dimensions) != {"Body", "Head", "Tail"}:
+                  raise SystemExit(f"Missing native silhouette dimensions: {name}")
+              for part, axes in dimensions.items():
+                  if (not isinstance(axes, list) or len(axes) != 3
+                          or any(not isinstance(axis, (int, float)) or not math.isfinite(axis)
+                                 or axis <= 0 for axis in axes)):
+                      raise SystemExit(f"Invalid native silhouette dimensions: {name}/{part}")
+              body_dimensions = tuple(dimensions["Body"])
+              if body_dimensions in observed_bodies:
+                  raise SystemExit(f"Duplicate native body proportions: {name}")
+              observed_bodies.add(body_dimensions)
+              if row["mobile_triangles"] > row["mobile_budget"]:
+                  raise SystemExit(f"Native mobile triangle budget exceeded: {name}")
+              if set(row.get("proof_images", {})) != expected_proofs or row.get("mechanical_pass") is not True:
+                  raise SystemExit(f"Missing native proof angles or failed mechanical QA: {name}")
+              for key, recorded_size in row["proof_images"].items():
+                  path = root / "proof" / f"{name}_{key.lower() if key.startswith('face_') else key}.png"
+                  # Expression files are named face_smile/face_pout/face_curious.
+                  expected_px = 256 if key == "phone_256" else render_resolution
+                  verify_png(path, expected_px, recorded_size)
+              for folder in (root / "models/Textures", root / "proof/Textures"):
+                  for material_name in atlas_materials:
+                      atlas = folder / f"{name}_{material_name}_Albedo.png"
+                      verify_png(atlas, 256)
+              for profile in ("sculpt", "mobile"):
+                  for ext, magic in (("blend", b"BLENDER"), ("glb", b"glTF"),
+                                     ("fbx", b"Kaydara FBX Binary  \x00\x1a\x00")):
+                      path = root / "models" / f"{name}_{profile}.{ext}"
+                      if not path.is_file() or path.stat().st_size < 64:
+                          raise SystemExit(f"Missing native model: {path}")
+                      with path.open("rb") as model:
+                          if model.read(len(magic)) != magic:
+                              raise SystemExit(f"Invalid native model format: {path}")
+          # Package the observed proof images into one human-reviewable gallery.
+          review = [
+              "# Tamagoochi creature visual review", "",
+              f"Reviewed art source: `{os.environ['EXPECTED_ART_SHA']}`", "",
+              "This is native mechanical evidence, not creative approval. Review each",
+              "species at full size and phone scale before accepting final artwork.", "",
+          ]
+          for row in report["species"]:
+              name = row["species"]
+              width, _, height = row["silhouette_dimensions"]["Body"]
+              review.extend([
+                  f"## {name.title()}", "",
+                  f"Body width/height: {width / height:.3f} · "
+                  f"Mobile triangles: {row['mobile_triangles']:,} / {row['mobile_budget']:,}", "",
+              ])
+              for labels, keys in (
+                  (("Front", "Three-quarter", "Side", "Back"),
+                   ("front", "three_quarter", "side", "back")),
+                  (("Smile", "Pout", "Curious", "256px phone"),
+                   ("face_smile", "face_pout", "face_curious", "phone_256")),
+              ):
+                  review.extend([
+                      "| " + " | ".join(labels) + " |",
+                      "| " + " | ".join("---" for _ in keys) + " |",
+                      "| " + " | ".join(f"![{name} {key}]({name}_{key}.png)" for key in keys) + " |",
+                      "",
+                  ])
+          review_path = root / "proof/REVIEW.md"
+          review_path.write_text("\n".join(review) + "\n")
+          review_text = review_path.read_text()
+          links = re.findall(r"!\[[^]]*\]\(([^)]+)\)", review_text)
+          expected_links = {
+              f"{name}_{key.lower() if key.startswith('face_') else key}.png"
+              for name in requested for key in expected_proofs
+          }
+          if (not review_text.startswith("# Tamagoochi creature visual review\n\n")
+                  or len(links) != len(expected_links) or set(links) != expected_links
+                  or any(not (review_path.parent / link).is_file() for link in links)):
+              raise SystemExit("Native visual review gallery is incomplete or malformed")
+          print("All requested native models, PNG proofs, and review gallery validated")
+          PY
+
+      - name: Upload model source, exported geometry, textures and proof renders
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: blender-creatures-${{ github.run_id }}
+          path: artifacts/blender/
+          if-no-files-found: warn
+          retention-days: 14
