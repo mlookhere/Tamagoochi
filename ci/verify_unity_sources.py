@@ -38,6 +38,14 @@ def _source_path(name: str) -> bool:
     return path.suffix.lower() == ".meta" and path.with_suffix("").suffix.lower() in CODE_EXTENSIONS
 
 
+def _reject_tracked_external_entries(repository: Path, scope: tuple[str, ...]) -> None:
+    entries = _git(repository, "ls-files", "--stage", "-z", "--", *scope)
+    for record in entries.split(b"\\0"):
+        if record and record.split(b" ", 1)[0] in {b"120000", b"160000"}:
+            path = record.split(b"\\t", 1)[1].decode("utf-8", "surrogateescape")
+            raise ValueError("Unity tracked symlink or submodule is not permitted: " + path)
+
+
 def verify(repository: Path, control: Path, migration_sha: str, workflow_sha: str) -> None:
     if not SHA.fullmatch(migration_sha) or not SHA.fullmatch(workflow_sha):
         raise ValueError("Expected full reviewed 40-character migration and workflow SHAs")
@@ -48,6 +56,7 @@ def verify(repository: Path, control: Path, migration_sha: str, workflow_sha: st
     if _git(control, "status", "--porcelain=v1", "--ignored=matching", "--untracked-files=all").strip():
         raise ValueError("Trusted verifier checkout is modified, ignored or contains injected files")
     scope = ("unity/Assets", "unity/Packages", "unity/ProjectSettings")
+    _reject_tracked_external_entries(repository, scope)
     modified = _git(repository, "diff", "--name-only", "-z", "HEAD", "--", *scope)
     untracked = _git(repository, "ls-files", "--others", "-z", "--", *scope)
     reviewed_changes = [p.decode("utf-8", "surrogateescape") for p in modified.split(b"\0") if p]
