@@ -23,7 +23,9 @@ def _git(root: Path, *args: str) -> bytes:
     return result.stdout
 
 
-def _source_path(name: str) -> bool:
+def _source_path(name: str, preflight: bool) -> bool:
+    if preflight:
+        return True  # Before Unity runs, no untracked project inputs are expected.
     if name.startswith("unity/Assets/"):
         return name not in GENERATED_ASSETS
     if name.startswith("unity/Packages/"):
@@ -39,7 +41,8 @@ def _reject_tracked_external_entries(repository: Path, scope: tuple[str, ...]) -
             raise ValueError("Unity tracked symlink or submodule is not permitted: " + path)
 
 
-def verify(repository: Path, control: Path, migration_sha: str, workflow_sha: str) -> None:
+def verify(repository: Path, control: Path, migration_sha: str, workflow_sha: str,
+           preflight: bool = False) -> None:
     if not SHA.fullmatch(migration_sha) or not SHA.fullmatch(workflow_sha):
         raise ValueError("Expected full reviewed 40-character migration and workflow SHAs")
     if _git(repository, "rev-parse", "HEAD").decode().strip() != migration_sha:
@@ -56,7 +59,7 @@ def verify(repository: Path, control: Path, migration_sha: str, workflow_sha: st
     added_files = [p.decode("utf-8", "surrogateescape") for p in untracked.split(b"\0") if p]
     changed_sources = sorted(set(reviewed_changes) | {
         name for name in added_files
-        if _source_path(name) or (repository / name).is_symlink()
+        if _source_path(name, preflight) or (repository / name).is_symlink()
     })
     if changed_sources:
         raise ValueError("Reviewed Unity assets or executable sources changed: " + ", ".join(changed_sources))
@@ -68,9 +71,11 @@ def main() -> int:
     parser.add_argument("--control", type=Path, required=True)
     parser.add_argument("--migration-sha", required=True)
     parser.add_argument("--workflow-sha", required=True)
+    parser.add_argument("--preflight", action="store_true")
     args = parser.parse_args()
     try:
-        verify(args.repository, args.control, args.migration_sha, args.workflow_sha)
+        verify(args.repository, args.control, args.migration_sha, args.workflow_sha,
+               preflight=args.preflight)
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         print(f"UNITY REVIEWED SOURCE INTEGRITY FAILED: {error}", file=sys.stderr)
         return 1
