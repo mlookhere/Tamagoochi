@@ -17,6 +17,22 @@ def _digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _synthetic_macho(filetype: int, cpu: int = 0x0100000C) -> bytes:
+    """Minimal 64-bit Mach-O header; not a compiled iOS executable."""
+    return (b"\xcf\xfa\xed\xfe" + cpu.to_bytes(4, "little") +
+            bytes(4) + filetype.to_bytes(4, "little") + bytes(16))
+
+
+def _synthetic_fat_macho(filetype: int, width: int = 4) -> bytes:
+    magic = b"\xca\xfe\xba\xbe" if width == 4 else b"\xca\xfe\xba\xbf"
+    record_size = 20 if width == 4 else 32
+    offset = 8 + record_size
+    record = (0x0100000C).to_bytes(4, "big") + bytes(4)
+    record += offset.to_bytes(width, "big") + (32).to_bytes(width, "big")
+    record += bytes(record_size - 8 - 2 * width)
+    return magic + (1).to_bytes(4, "big") + record + _synthetic_macho(filetype)
+
+
 def _synthetic_apk(path: Path, include_runtime: bool = True) -> None:
     """Minimal structural APK fixture, not a real Unity build."""
     manifest = b"\x03\x00\x08\x00" + (16).to_bytes(4, "little") + bytes(8)
@@ -60,8 +76,8 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
         self.framework = products / "UnityFramework.framework" / "UnityFramework"
         self.launcher.parent.mkdir(parents=True)
         self.framework.parent.mkdir(parents=True)
-        self.launcher.write_bytes(b"synthetic-launcher")
-        self.framework.write_bytes(b"synthetic-framework")
+        self.launcher.write_bytes(_synthetic_macho(2))
+        self.framework.write_bytes(_synthetic_macho(6))
         records = []
         for name, binary in [
             ("unity-ios-executable.sha256", self.launcher),
@@ -194,6 +210,39 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
         (self.android / "unity-test-results" / "another.xml").write_text("<test-run/>")
         with self.assertRaisesRegex(ValueError, "exactly one"):
             verify(self.android, self.ios, MIGRATION, WORKFLOW, '101', '102')
+
+    def _replace_ios_product(self, binary: Path, name: str, data: bytes) -> None:
+        record_path = self.ios / name
+        before = record_path.read_text().strip()
+        binary.write_bytes(data)
+        after = f"{_digest(data)}  {binary.relative_to(self.ios).as_posix()}"
+        record_path.write_text(after + "\n")
+        provenance = self.ios / "unity-ios-provenance.txt"
+        provenance.write_text(provenance.read_text().replace(before, after))
+
+    def test_hash_matched_non_macho_ios_binary_fails(self):
+        self._replace_ios_product(self.launcher, "unity-ios-executable.sha256", b"not Mach-O")
+        with self.assertRaisesRegex(ValueError, "ARM64 Mach-O"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
+
+    def test_hash_matched_non_arm64_ios_binary_fails(self):
+        self._replace_ios_product(self.framework, "unity-ios-framework.sha256",
+                                  _synthetic_macho(6, cpu=7))
+        with self.assertRaisesRegex(ValueError, "ARM64 Mach-O"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
+
+    def test_hash_matched_wrong_macho_product_type_fails(self):
+        self._replace_ios_product(self.launcher, "unity-ios-executable.sha256",
+                                  _synthetic_macho(6))
+        with self.assertRaisesRegex(ValueError, "expected type"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
+
+    def test_hash_matched_fat_arm64_ios_binary_passes(self):
+        for width in (4, 8):
+            with self.subTest(architecture_record_width=width):
+                self._replace_ios_product(self.launcher, "unity-ios-executable.sha256",
+                                          _synthetic_fat_macho(2, width))
+                verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
 
     def test_ios_framework_digest_tampering_fails(self):
         self.framework.write_bytes(b"replaced")
