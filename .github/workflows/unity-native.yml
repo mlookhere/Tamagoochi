@@ -39,9 +39,15 @@ jobs:
         env:
           MIGRATION_SHA: ${{ inputs.migration_sha }}
           WORKFLOW_SHA: ${{ github.workflow_sha }}
+          REVIEWED_MIGRATION_GROUPS: 64b432e7-41fa03c3-8909e5b8-053b8f19-40de33e1
         shell: bash
         run: |
           set -euo pipefail
+          pinned_sha="${REVIEWED_MIGRATION_GROUPS//-/}"
+          [[ "$MIGRATION_SHA" == "$pinned_sha" ]] || {
+            echo "Requested Unity source differs from CI-reviewed pinned migration revision" >&2
+            exit 1
+          }
           python3 -I -B .unity-ci-control/ci/verify_unity_sources.py \
             --repository . --control .unity-ci-control \
             --migration-sha "$MIGRATION_SHA" --workflow-sha "$WORKFLOW_SHA"
