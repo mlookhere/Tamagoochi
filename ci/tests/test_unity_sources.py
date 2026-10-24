@@ -66,6 +66,43 @@ class UnitySourceIntegrityTests(unittest.TestCase):
         generated.write_text("legitimate generated Home scene")
         self.verify()
 
+    def test_generated_home_scene_panel_theme_and_metadata_pass(self):
+        generated = [
+            "unity/Assets/Scenes.meta",
+            "unity/Assets/Scenes/Home.unity",
+            "unity/Assets/Scenes/Home.unity.meta",
+            "unity/Assets/Resources/TamagoochiPanel.asset",
+            "unity/Assets/Resources/TamagoochiPanel.asset.meta",
+            "unity/Assets/Resources/TamagoochiTheme.tss",
+            "unity/Assets/Resources/TamagoochiTheme.tss.meta",
+        ]
+        for name in generated:
+            asset = self.migration / name
+            asset.parent.mkdir(parents=True, exist_ok=True)
+            asset.write_text("synthetic generated Home scene resource")
+        self.verify()
+
+    def test_unreviewed_serialized_content_and_other_assets_fail(self):
+        for relative in [
+            "unity/Assets/Scenes/Backdoor.unity",
+            "unity/Assets/Scenes/Backdoor.unity.meta",
+            "unity/Assets/Resources/Payload.asset",
+            "unity/Assets/Resources/Payload.asset.meta",
+            "unity/Assets/Resources/Config.json",
+            "unity/Assets/Resources/Art/companions/Replacement.prefab",
+            "unity/Assets/StreamingAssets/injected-data",
+            "unity/Assets/Editor/Injected.uxml",
+            "unity/Assets/Scenes/Home.prefab",
+            "unity/Packages/Embedded/unknown-setup",
+        ]:
+            with self.subTest(relative=relative):
+                asset = self.migration / relative
+                asset.parent.mkdir(parents=True, exist_ok=True)
+                asset.write_text("unreviewed Unity importer or serialized data")
+                with self.assertRaisesRegex(ValueError, asset.name.replace(".", r"\.")):
+                    self.verify()
+                asset.unlink()
+
     def test_modified_csharp_source_fails(self):
         self.script.write_text("class Pet { public bool Rewritten = true; }")
         with self.assertRaisesRegex(ValueError, "Pet.cs"):
