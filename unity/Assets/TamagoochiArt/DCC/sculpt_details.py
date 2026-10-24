@@ -73,8 +73,8 @@ def curled_puffino_tail(material, profile):
     from mathutils import Vector
     rings, sides = (40, 24) if profile == "sculpt" else (24, 16)
     pivot = Vector((0.53, 0.32, 0.75))
-    p0, p1 = Vector((0.25, 0.28, 0.61)), Vector((0.62, 0.31, 0.52))
-    p2, p3 = Vector((1.10, 0.40, 0.72)), Vector((1.18, 0.43, 1.02))
+    p0, p1 = Vector((0.25, 0.28, 0.61)), Vector((0.74, 0.39, 0.36))
+    p2, p3 = Vector((1.45, 0.46, 0.69)), Vector((1.03, 0.41, 1.18))
     vertices, faces = [], []
     for i in range(rings + 1):
         t = i / rings
@@ -83,12 +83,13 @@ def curled_puffino_tail(material, profile):
         tangent = (3*u*u*(p1-p0) + 6*u*t*(p2-p1) + 3*t*t*(p3-p2)).normalized()
         across = Vector((-tangent.z, 0, tangent.x)).normalized()
         depth = tangent.cross(across).normalized()
-        fullness = math.sin(math.pi * t)**0.55
-        radius = 0.015 + 0.35 * fullness + 0.09 * u**7
+        fullness = max(0.0, math.sin(math.pi * t))**0.42
+        rounded_tip = 0.13 * math.exp(-((t-0.81)/0.16)**2)
+        radius = 0.018 + 0.33 * fullness + rounded_tip + 0.07 * u**7
         for j in range(sides):
             angle = math.tau * j / sides
-            scallop = 1 + fullness**2 * (0.085*math.sin(5*angle+10*t)
-                                          + 0.038*math.sin(7*angle-6*t))
+            scallop = 1 + fullness**2 * (0.125*math.sin(5*angle+10*t)
+                                          + 0.050*math.sin(7*angle-6*t))
             point = center + radius * scallop * (math.cos(angle)*across + math.sin(angle)*depth)
             vertices.append(tuple(point-pivot))
             if i < rings:
