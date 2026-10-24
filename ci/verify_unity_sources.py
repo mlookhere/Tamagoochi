@@ -52,7 +52,10 @@ def verify(repository: Path, control: Path, migration_sha: str, workflow_sha: st
     untracked = _git(repository, "ls-files", "--others", "-z", "--", *scope)
     reviewed_changes = [p.decode("utf-8", "surrogateescape") for p in modified.split(b"\0") if p]
     added_files = [p.decode("utf-8", "surrogateescape") for p in untracked.split(b"\0") if p]
-    changed_sources = sorted(set(reviewed_changes) | {name for name in added_files if _source_path(name)})
+    changed_sources = sorted(set(reviewed_changes) | {
+        name for name in added_files
+        if _source_path(name) or (repository / name).is_symlink()
+    })
     if changed_sources:
         raise ValueError("Reviewed Unity assets or executable sources changed: " + ", ".join(changed_sources))
 
