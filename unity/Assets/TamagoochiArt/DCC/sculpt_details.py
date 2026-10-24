@@ -249,8 +249,8 @@ def decorate_face(species, rig, sculpt_part, skin, palette):
 
     for side, suffix in ((-1, "L"), (1, "R")):
         detail("LowerLid_" + suffix,
-               (side * 0.24, -0.50, 1.085),
-               (0.185, 0.022, 0.035), pink, "head")
+               (side * 0.24, -0.455, 1.085),
+               (0.155, 0.014, 0.024), pink, "head")
         detail("Brow_" + suffix,
                (side * 0.25, -0.45, 1.40),
                (0.16, 0.034, 0.035), ivory, "head")
