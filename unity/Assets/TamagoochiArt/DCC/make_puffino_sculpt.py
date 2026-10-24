@@ -271,8 +271,7 @@ def _add_creature_details(rig, details, pink):
                 vertex.co.y -= 0.018 * max(0.0, -vertex.co.y / 0.25)**2
             for polygon in obj.data.polygons:
                 c = polygon.center
-                polygon.material_index = int(
-                    c.y < -0.12 and c.z < 0.025 and abs(c.x) < 0.18)
+                polygon.material_index = int(c.y < -0.12 and c.z < 0.025 and abs(c.x) < 0.18)
         if name in ("Mouth", "Eye_L", "Eye_R"):
             face_feature_keys(obj)
         skin(obj, rig, bone)
@@ -300,8 +299,7 @@ def build_creature(rig: bpy.types.Object, species: str, profile: str, texture_di
     brown = material(species + "_Nubs", (0.63, 0.30, 0.18, 1))
     tail_bands = material(species + "_TailBands", accent_color)
     configure_tail_bands(tail_bands, body_color, accent_color, texture_dir, species)
-    for fur, color in ((ivory, body_color), (coral, accent_color),
-                       (pink, fin_color)):
+    for fur, color in ((ivory, body_color), (coral, accent_color), (pink, fin_color)):
         configure_fur_albedo(fur, color, texture_dir)
         configure_fur_shader(fur)
     eye_node = eyes.node_tree.nodes.get("Principled BSDF")
