@@ -1,0 +1,194 @@
+name: Unity native validation (licensed; manually gated)
+
+on:
+  workflow_dispatch:
+    inputs:
+      migration_sha:
+        description: Exact reviewed 40-character SHA at work/31-unity6-migration HEAD
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unity-native-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  unity-native:
+    name: Unity EditMode and Android evidence
+    runs-on: ubuntu-latest
+    environment: unity-native
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.migration_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out trusted workflow verifier separately
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: .unity-ci-control
+          persist-credentials: false
+
+      - name: Reject unreviewed Unity sources before licensed execution
+        env:
+          MIGRATION_SHA: ${{ inputs.migration_sha }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+          REVIEWED_MIGRATION_GROUPS: 64b432e7-41fa03c3-8909e5b8-053b8f19-40de33e1
+        shell: bash
+        run: |
+          set -euo pipefail
+          pinned_sha="${REVIEWED_MIGRATION_GROUPS//-/}"
+          [[ "$MIGRATION_SHA" == "$pinned_sha" ]] || {
+            echo "Requested Unity source differs from CI-reviewed pinned migration revision" >&2
+            exit 1
+          }
+          python3 -I -B .unity-ci-control/ci/verify_unity_sources.py \
+            --repository . --control .unity-ci-control \
+            --migration-sha "$MIGRATION_SHA" --workflow-sha "$WORKFLOW_SHA" --preflight
+
+      - name: Verify trusted ref, project, and activation
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          MIGRATION_SHA: ${{ inputs.migration_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$GITHUB_REF" in
+            refs/heads/main|refs/heads/dev) ;;
+            *) echo "Native validation requires a reviewed migration or integration ref" >&2; exit 1 ;;
+          esac
+          [[ "$MIGRATION_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid migration SHA" >&2; exit 1; }
+          [[ "$(git rev-parse HEAD)" == "$MIGRATION_SHA" ]] || { echo "Wrong checkout SHA" >&2; exit 1; }
+          git fetch --quiet --no-tags origin refs/heads/work/31-unity6-migration
+          [[ "$(git rev-parse FETCH_HEAD)" == "$MIGRATION_SHA" ]] || {
+            echo "Only the current reviewed migration branch HEAD can be validated" >&2
+            exit 1
+          }
+          grep -qx 'm_EditorVersion: 6000.0.62f1' unity/ProjectSettings/ProjectVersion.txt
+          if [[ -z "$UNITY_EMAIL" || -z "$UNITY_PASSWORD" ]] ||
+             [[ -z "$UNITY_LICENSE" && -z "$UNITY_SERIAL" ]] ||
+             [[ -n "$UNITY_LICENSE" && -n "$UNITY_SERIAL" ]]; then
+            echo "Unity activation requires email/password and exactly one of license or serial" >&2
+            exit 1
+          fi
+
+      - name: Build and verify Android player via pinned Unity
+        uses: game-ci/unity-builder@4423ee75828dff56037d1d1cfdac6b68e3a6ba00 # v4.8.2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity
+          unityVersion: 6000.0.62f1
+          targetPlatform: Android
+          buildMethod: Tamagoochi.Editor.HomeSceneSetup.BuildAndroidDevelopment
+          buildsPath: unity/Builds
+
+      - name: Run actual Unity EditMode tests
+        uses: game-ci/unity-test-runner@32e57712352b500e17974b245a6dce9e11a73213 # v4.4.0
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity
+          unityVersion: 6000.0.62f1
+          testMode: EditMode
+          cliVersion: v0.1.72
+          githubToken: '' # No checks:write; fail-closed NUnit/APK evidence is authoritative.
+          artifactsPath: unity-test-results
+          coverageEnabled: false
+
+      - name: Reject mutation of reviewed Unity test sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet HEAD -- unity/Assets/Tests/EditMode unity/ProjectSettings/ProjectVersion.txt; then
+            echo "Unity test fixtures or pinned Editor version changed during native execution" >&2
+            exit 1
+          fi
+          if [[ -n "$(git ls-files --others --exclude-standard -- unity/Assets/Tests/EditMode)" ]]; then
+            echo "Unity native run introduced unreviewed EditMode source files" >&2
+            exit 1
+          fi
+
+      - name: Verify trusted evidence verifier was not modified by Unity code
+        env:
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git -C .unity-ci-control rev-parse HEAD)" == "$WORKFLOW_SHA" ]] || {
+            echo "Native evidence verifier checkout is not the trusted workflow commit" >&2
+            exit 1
+          }
+          if [[ -n "$(git -C .unity-ci-control status --porcelain=v1 --ignored=matching --untracked-files=all)" ]]; then
+            echo "Unity execution changed or added files within the trusted verifier checkout" >&2
+            exit 1
+          fi
+          if [[ ! -f .unity-ci-control/ci/verify_unity_native.py ]]; then
+            echo "Trusted native evidence verifier is absent" >&2
+            exit 1
+          fi
+
+      - name: Reject modified or injected Unity executable source after Editor execution
+        env:
+          MIGRATION_SHA: ${{ inputs.migration_sha }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -I -B .unity-ci-control/ci/verify_unity_sources.py \
+            --repository . --control .unity-ci-control \
+            --migration-sha "$MIGRATION_SHA" --workflow-sha "$WORKFLOW_SHA"
+
+      - name: Reject missing/failed NUnit reports or Android APK
+        run: python3 -I -B .unity-ci-control/ci/verify_unity_native.py --project unity --tests unity-test-results --apk unity/Builds/Tamagoochi.apk
+
+      - name: Confirm migration SHA is still current and record provenance
+        env:
+          MIGRATION_SHA: ${{ inputs.migration_sha }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --quiet --no-tags origin refs/heads/work/31-unity6-migration
+          if [[ "$(git rev-parse HEAD)" != "$MIGRATION_SHA" ||
+                "$(git rev-parse FETCH_HEAD)" != "$MIGRATION_SHA" ]]; then
+            echo "Unity migration head changed during native validation; evidence is stale" >&2
+            exit 1
+          fi
+          report=$(find unity-test-results -type f -name '*.xml' -print -quit)
+          [[ -n "$report" && -s "$report" && -s unity/Builds/Tamagoochi.apk ]] || {
+            echo "Cannot record provenance without verified NUnit XML and APK" >&2
+            exit 1
+          }
+          read -r report_hash _ < <(sha256sum "$report")
+          read -r apk_hash _ < <(sha256sum unity/Builds/Tamagoochi.apk)
+          printf 'migration_sha=%s\nworkflow_sha=%s\nrun_id=%s\nnunit_sha256=%s\napk_sha256=%s\n' \
+            "$MIGRATION_SHA" "$WORKFLOW_SHA" "$GITHUB_RUN_ID" \
+            "$report_hash" "$apk_hash" > unity-native-provenance.txt
+
+      - name: Preserve Unity build and test evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: unity-native-${{ github.run_id }}
+          path: |
+            unity-test-results/
+            unity/Builds/
+            unity-native-provenance.txt
+          if-no-files-found: warn
+          retention-days: 14

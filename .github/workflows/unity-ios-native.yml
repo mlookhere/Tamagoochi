@@ -1,0 +1,202 @@
+name: Unity iOS Xcode compile (licensed; manually gated)
+
+on:
+  workflow_dispatch:
+    inputs:
+      migration_sha:
+        description: Exact reviewed 40-character SHA at work/31-unity6-migration HEAD
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unity-ios-native-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  unity-ios-compile:
+    name: Unity iOS export and unsigned Xcode compile
+    runs-on: macos-15
+    environment: unity-ios-native
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.migration_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out trusted Unity integrity verifier separately
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: .unity-ci-control
+          persist-credentials: false
+
+      - name: Reject unreviewed Unity sources before licensed execution
+        env:
+          MIGRATION_SHA: ${{ inputs.migration_sha }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+          REVIEWED_MIGRATION_GROUPS: 64b432e7-41fa03c3-8909e5b8-053b8f19-40de33e1
+        shell: bash
+        run: |
+          set -euo pipefail
+          pinned_sha="${REVIEWED_MIGRATION_GROUPS//-/}"
+          [[ "$MIGRATION_SHA" == "$pinned_sha" ]] || {
+            echo "Requested Unity source differs from CI-reviewed pinned migration revision" >&2
+            exit 1
+          }
+          python3 -I -B .unity-ci-control/ci/verify_unity_sources.py \
+            --repository . --control .unity-ci-control \
+            --migration-sha "$MIGRATION_SHA" --workflow-sha "$WORKFLOW_SHA" --preflight
+
+      - name: Verify reviewed Unity source and protected activation
+        env:
+          MIGRATION_SHA: ${{ inputs.migration_sha }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$GITHUB_REF" in
+            refs/heads/main|refs/heads/dev) ;;
+            *) echo "iOS validation requires a trusted integration ref" >&2; exit 1 ;;
+          esac
+          [[ "$MIGRATION_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid migration SHA" >&2; exit 1; }
+          [[ "$(git rev-parse HEAD)" == "$MIGRATION_SHA" ]] || { echo "Wrong source checkout" >&2; exit 1; }
+          git fetch --quiet --no-tags origin refs/heads/work/31-unity6-migration
+          [[ "$(git rev-parse FETCH_HEAD)" == "$MIGRATION_SHA" ]] || {
+            echo "Migration branch HEAD is not the reviewed SHA" >&2
+            exit 1
+          }
+          grep -qx 'm_EditorVersion: 6000.0.62f1' unity/ProjectSettings/ProjectVersion.txt
+          if [[ -z "$UNITY_EMAIL" || -z "$UNITY_PASSWORD" ]] ||
+             [[ -z "$UNITY_LICENSE" && -z "$UNITY_SERIAL" ]] ||
+             [[ -n "$UNITY_LICENSE" && -n "$UNITY_SERIAL" ]]; then
+            echo "Protected Unity activation is absent or ambiguous" >&2
+            exit 1
+          fi
+          xcodebuild -version | tee unity-ios-xcode-version.txt
+
+      - name: Generate Xcode project using pinned Unity
+        uses: game-ci/unity-builder@4423ee75828dff56037d1d1cfdac6b68e3a6ba00 # v4.8.2
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          projectPath: unity
+          unityVersion: 6000.0.62f1
+          targetPlatform: iOS
+          buildMethod: Tamagoochi.Editor.HomeSceneSetup.BuildIOSDevelopment
+          buildsPath: unity/Builds
+
+      - name: Reject changed reviewed Unity source or absent Xcode project
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet HEAD -- unity/Assets/Tests/EditMode unity/ProjectSettings/ProjectVersion.txt; then
+            echo "Reviewed Unity test sources or Editor version changed" >&2
+            exit 1
+          fi
+          if [[ -n "$(git ls-files --others --exclude-standard -- unity/Assets/Tests/EditMode)" ]]; then
+            echo "Unreviewed Unity EditMode test source was generated" >&2
+            exit 1
+          fi
+          test -s unity-ios-xcode-version.txt
+          test -d unity/Builds/Tamagoochi-iOS/Unity-iPhone.xcodeproj
+          test -s unity/Builds/Tamagoochi-iOS/Unity-iPhone.xcodeproj/project.pbxproj
+
+      - name: Reject modified or injected Unity executable source after Editor export
+        env:
+          MIGRATION_SHA: ${{ inputs.migration_sha }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git -C .unity-ci-control rev-parse HEAD)" == "$WORKFLOW_SHA" ]] || {
+            echo "Trusted iOS source verifier HEAD does not match the workflow revision" >&2
+            exit 1
+          }
+          [[ -z "$(git -C .unity-ci-control status --porcelain=v1 --ignored=matching --untracked-files=all)" ]] || {
+            echo "Trusted iOS source verifier was modified during Unity export" >&2
+            exit 1
+          }
+          python3 -I -B .unity-ci-control/ci/verify_unity_sources.py \
+            --repository . --control .unity-ci-control \
+            --migration-sha "$MIGRATION_SHA" --workflow-sha "$WORKFLOW_SHA"
+
+      - name: Compile iOS device player with Xcode (unsigned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project unity/Builds/Tamagoochi-iOS/Unity-iPhone.xcodeproj \
+            -scheme Unity-iPhone \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath unity/Builds/iOS-derived \
+            CODE_SIGNING_ALLOWED=NO build 2>&1 | tee unity-ios-xcode-build.log
+          product=unity/Builds/iOS-derived/Build/Products/Release-iphoneos/Unity-iPhone.app
+          test -d "$product"
+          test -s "$product/Info.plist"
+          executable=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$product/Info.plist")
+          [[ "$executable" != */* && -n "$executable" ]] || exit 1
+          test -s "$product/$executable"
+          file "$product/$executable" | grep -q 'Mach-O'
+          shasum -a 256 "$product/$executable" > unity-ios-executable.sha256
+          framework=unity/Builds/iOS-derived/Build/Products/Release-iphoneos/UnityFramework.framework/UnityFramework
+          if [[ ! -s "$framework" ]]; then
+            framework="$product/Frameworks/UnityFramework.framework/UnityFramework"
+          fi
+          test -s "$framework" || {
+            echo "UnityFramework Mach-O binary was not produced by the Xcode build" >&2
+            exit 1
+          }
+          file "$framework" | grep -q 'Mach-O'
+          xcrun lipo -archs "$product/$executable" | grep -qw arm64
+          xcrun lipo -archs "$framework" | grep -qw arm64
+          shasum -a 256 "$framework" > unity-ios-framework.sha256
+
+      - name: Reject stale reviewed SHA and record unsigned compile evidence
+        env:
+          MIGRATION_SHA: ${{ inputs.migration_sha }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --quiet --no-tags origin refs/heads/work/31-unity6-migration
+          [[ "$(git rev-parse HEAD)" == "$MIGRATION_SHA" &&
+             "$(git rev-parse FETCH_HEAD)" == "$MIGRATION_SHA" ]] || {
+            echo "Unity migration revision moved; iOS compile evidence is stale" >&2
+            exit 1
+          }
+          test -s unity-ios-executable.sha256
+          test -s unity-ios-framework.sha256
+          printf 'migration_sha=%s\nworkflow_sha=%s\nrun_id=%s\nresult=unsigned_xcode_compile_only\n' \
+            "$MIGRATION_SHA" "$WORKFLOW_SHA" "$GITHUB_RUN_ID" > unity-ios-provenance.txt
+          cat unity-ios-xcode-version.txt >> unity-ios-provenance.txt
+          cat unity-ios-executable.sha256 >> unity-ios-provenance.txt
+          cat unity-ios-framework.sha256 >> unity-ios-provenance.txt
+
+      - name: Preserve iOS export, Xcode logs and compile evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: unity-ios-${{ github.run_id }}
+          path: |
+            unity-ios-xcode-version.txt
+            unity-ios-xcode-build.log
+            unity-ios-executable.sha256
+            unity-ios-framework.sha256
+            unity-ios-provenance.txt
+            unity/Builds/Tamagoochi-iOS/
+            unity/Builds/iOS-derived/Build/Products/Release-iphoneos/
+          if-no-files-found: warn
+          retention-days: 14
