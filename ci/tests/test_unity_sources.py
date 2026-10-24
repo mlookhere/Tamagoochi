@@ -240,6 +240,27 @@ class UnitySourceIntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Trusted verifier checkout"):
             self.verify()
 
+    def test_native_workflows_verify_sources_before_activation(self):
+        workflows = Path(__file__).resolve().parents[2] / ".github/workflows"
+        for name, activation, builder in [
+            ("unity-native.yml", "      - name: Verify trusted ref, project, and activation",
+             "      - name: Build and verify Android player via pinned Unity"),
+            ("unity-ios-native.yml", "      - name: Verify reviewed Unity source and protected activation",
+             "      - name: Generate Xcode project using pinned Unity"),
+        ]:
+            with self.subTest(workflow=name):
+                contents = (workflows / name).read_text()
+                preflight = "      - name: Reject unreviewed Unity sources before licensed execution"
+                self.assertEqual(contents.count(preflight), 1)
+                self.assertLess(contents.index(preflight), contents.index(activation))
+                self.assertLess(contents.index(activation), contents.index(builder))
+                preflight_step = contents.split(preflight, 1)[1].split(activation, 1)[0]
+                self.assertIn("python3 -I -B .unity-ci-control/ci/verify_unity_sources.py",
+                              preflight_step)
+                self.assertIn("--migration-sha", preflight_step)
+                self.assertIn("--workflow-sha", preflight_step)
+                self.assertNotIn("secrets.", preflight_step)
+
     def test_native_workflows_enforce_source_gate_before_accepting_evidence(self):
         workflows = Path(__file__).resolve().parents[2] / ".github/workflows"
         for name, before, after in [
