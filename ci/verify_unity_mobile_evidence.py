@@ -60,13 +60,32 @@ MACHO_FAT = {
 }
 
 
-def _thin_arm64(binary, expected_type: int) -> bool:
+def _thin_arm64(binary, expected_type: int, available: int) -> bool:
     magic = binary.read(4)
     endian = MACHO_THIN.get(magic)
     header = binary.read(28)
-    return bool(endian and len(header) == 28 and
-                int.from_bytes(header[:4], endian) == MACHO_ARM64 and
-                int.from_bytes(header[8:12], endian) == expected_type)
+    if not endian or available < 40 or len(header) != 28:
+        return False
+    cpu = int.from_bytes(header[:4], endian)
+    filetype = int.from_bytes(header[8:12], endian)
+    count = int.from_bytes(header[12:16], endian)
+    commands_size = int.from_bytes(header[16:20], endian)
+    if (cpu != MACHO_ARM64 or filetype != expected_type or
+            not 1 <= count <= 1024 or
+            not 8 * count <= commands_size <= min(1024 * 1024, available - 32)):
+        return False
+    consumed = 0
+    for _ in range(count):
+        command = binary.read(8)
+        if len(command) != 8:
+            return False
+        size = int.from_bytes(command[4:8], endian)
+        if size < 8 or size % 8 != 0 or consumed + size > commands_size:
+            return False
+        if len(binary.read(size - 8)) != size - 8:
+            return False
+        consumed += size
+    return consumed == commands_size
 
 
 def _arm64_macho(path: Path, expected_type: int) -> bool:
@@ -74,7 +93,7 @@ def _arm64_macho(path: Path, expected_type: int) -> bool:
         magic = binary.read(4)
         if magic in MACHO_THIN:
             binary.seek(0)
-            return _thin_arm64(binary, expected_type)
+            return _thin_arm64(binary, expected_type, path.stat().st_size)
         format_info = MACHO_FAT.get(magic)
         if not format_info:
             return False
@@ -99,7 +118,7 @@ def _arm64_macho(path: Path, expected_type: int) -> bool:
             if offset < 8 + count * record_size or size < 32 or offset + size > archive_size:
                 continue
             binary.seek(offset)
-            if _thin_arm64(binary, expected_type):
+            if _thin_arm64(binary, expected_type, size):
                 return True
     return False
 
