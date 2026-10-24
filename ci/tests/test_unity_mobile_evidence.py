@@ -6,7 +6,7 @@ import zipfile
 from pathlib import Path
 
 from ci.verify_unity_mobile_evidence import verify
-from ci.verify_unity_native import MINIMUM_EDITMODE_CASES
+from ci.verify_unity_native import MINIMUM_EDITMODE_CASES, REQUIRED_TESTS
 
 MIGRATION = "a" * 40
 WORKFLOW = "b" * 40
@@ -62,8 +62,14 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
         apk = self.android / "unity" / "Builds" / "Tamagoochi.apk"
         report.parent.mkdir(parents=True)
         apk.parent.mkdir(parents=True)
-        cases = "".join(
-            f'<test-case name="Case{i}" result="Passed"/>' for i in range(MINIMUM_EDITMODE_CASES)
+        sentinels = "".join(
+            f'<test-case name="{method}" classname="Tamagoochi.Tests.SyntheticTests" '
+            f'methodname="{method}" fullname="Tamagoochi.Tests.SyntheticTests.{method}" '
+            f'result="Passed"/>' for method in sorted(REQUIRED_TESTS)
+        )
+        cases = sentinels + "".join(
+            f'<test-case name="Case{i}" result="Passed"/>'
+            for i in range(MINIMUM_EDITMODE_CASES - len(REQUIRED_TESTS))
         )
         report.write_text(
             f'<test-run result="Passed" total="{MINIMUM_EDITMODE_CASES}" '
@@ -123,6 +129,20 @@ class CrossPlatformEvidenceTests(unittest.TestCase):
         self._replace_archived_report('name="Case1"', 'name="Case0"')
         with self.assertRaisesRegex(ValueError, "duplicated"):
             verify(self.android, self.ios, MIGRATION, WORKFLOW, '101', '102')
+
+    def test_hash_matched_missing_authored_gameplay_test_fails(self):
+        method = sorted(REQUIRED_TESTS)[0]
+        self._replace_archived_report(f'name="{method}"', 'name="ForgedSyntheticCase"')
+        with self.assertRaisesRegex(ValueError, "authored gameplay sentinel"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
+
+    def test_hash_matched_forged_gameplay_suite_identity_fails(self):
+        method = sorted(REQUIRED_TESTS)[0]
+        self._replace_archived_report(
+            f'fullname="Tamagoochi.Tests.SyntheticTests.{method}"',
+            f'fullname="Tamagoochi.Tests.UnreviewedTests.{method}"')
+        with self.assertRaisesRegex(ValueError, "authored gameplay sentinel"):
+            verify(self.android, self.ios, MIGRATION, WORKFLOW, "101", "102")
 
     def test_invalid_xml_with_matching_digest_fails(self):
         self._replace_archived_report("</test-run>", "")
