@@ -17,20 +17,12 @@ def petal_ear(name, location, dimensions, material, side, species, inner_materia
         taper = width * (0.09 + 0.91 * fullness)
         radius = depth * (0.18 + 0.82 * fullness)
         lean = side * (0.13 * t*t + 0.035 * math.sin(math.pi*t))
-        if species == "puffino":
-            taper *= 2.12 * (0.82 + 0.18*t)
-            radius *= 1.45
-            lean += side * (0.12*t + 0.11*math.sin(math.pi*t))
-        elif species == "sproutle":
-            lean += side * 0.23*t
-            taper *= 1.15
-        elif species == "lunari":
-            lean -= side * 0.06 * math.sin(math.pi*t)
-            taper *= 0.65
-            radius *= 0.77
-        elif species == "bubblin":
-            lean += side * 0.24*t*t
-            taper *= 1.20
+        taper *= {"puffino": 2.12*(0.82+0.18*t), "sproutle": 1.15,
+                  "lunari": 0.65, "bubblin": 1.20}.get(species, 1.0)
+        radius *= {"puffino": 1.45, "lunari": 0.77}.get(species, 1.0)
+        lean += side * {"puffino": 0.12*t+0.11*math.sin(math.pi*t),
+                        "sproutle": 0.23*t, "lunari": -0.06*math.sin(math.pi*t),
+                        "bubblin": 0.24*t*t}.get(species, 0.0)
         for column in range(sides):
             angle = math.tau * column / sides
             front = max(0.0, -math.sin(angle))
