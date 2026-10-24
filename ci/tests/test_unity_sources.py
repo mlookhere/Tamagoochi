@@ -123,6 +123,32 @@ class UnitySourceIntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Hidden.cs"):
             self.verify()
 
+    def test_untracked_symlinked_unreviewed_source_directory_fails(self):
+        outside = self.migration.parent / "external-unreviewed"
+        outside.mkdir()
+        (outside / "Injected.cs").write_text("class Injected {}")
+        for path in [
+            self.migration / "unity/Assets/Shared",
+            self.migration / "unity/Packages/Shared",
+            self.migration / "unity/ProjectSettings/Shared",
+        ]:
+            with self.subTest(path=path):
+                try:
+                    path.symlink_to(outside, target_is_directory=True)
+                except (OSError, NotImplementedError):
+                    self.skipTest("Creating filesystem symlinks requires platform permissions")
+                with self.assertRaisesRegex(ValueError, "Shared"):
+                    self.verify()
+                path.unlink()
+
+    def test_untracked_symlinked_data_file_fails(self):
+        outside = self.migration.parent / "outside-data.bin"
+        outside.write_bytes(b"unreviewed data")
+        link = self.migration / "unity/Assets/Resources/Art/world/external-data"
+        link.symlink_to(outside)
+        with self.assertRaisesRegex(ValueError, "external-data"):
+            self.verify()
+
     def test_untracked_native_plugin_fails(self):
         for filename in ["libunityhack.so", "unreviewed.aar", "plugin.jar"]:
             with self.subTest(filename=filename):
